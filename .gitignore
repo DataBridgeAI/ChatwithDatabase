@@ -1,0 +1,6 @@
+venv/
+.env
+databridgeai-540737dbbfd1.json
+schema.json
+faiss_index/
+__pycache__/
