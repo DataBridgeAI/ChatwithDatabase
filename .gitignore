@@ -1,0 +1,4 @@
+venv/
+.env
+databridgeai-540737dbbfd1.json
+schema.json
