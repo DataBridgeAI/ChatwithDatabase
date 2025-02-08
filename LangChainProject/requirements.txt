@@ -1,0 +1,9 @@
+streamlit
+google-generativeai
+python-dotenv
+langchain
+PyPFD2
+chromadb
+faiss-cpy
+pdf2image
+sqlite3
