@@ -4,3 +4,12 @@ databridgeai-540737dbbfd1.json
 schema.json
 faiss_index/
 __pycache__/
+Data_MlOps/.env
+Data_MlOps/bigquery.json
+Data_MlOps/faiss_index/
+Data_MlOps/ai/__pycache__/
+Data_MlOps/config/__pycache__/
+Data_MlOps/database/__pycache__/
+Data_MlOps/feedback/__pycache__/
+Data_MlOps/ui/__pycache__/
+Data_MlOps/feedback_db/
