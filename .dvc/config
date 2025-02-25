@@ -1,0 +1,5 @@
+[core]
+    remote = gcs_remote
+['remote "gcs_remote"']
+    url = gs://schema-embeddings-db
+    credentialpath = C:\Users\divya\Repos\ChatwithDatabase\chatwithdata-451800-7dafb88f2a22.json
