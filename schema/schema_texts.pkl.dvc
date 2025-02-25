@@ -1,0 +1,5 @@
+outs:
+- md5: 9d29c77bdba5142e883104a529678c31
+  size: 1953
+  hash: md5
+  path: schema_texts.pkl

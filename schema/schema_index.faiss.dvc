@@ -1,0 +1,5 @@
+outs:
+- md5: 34898c3f2946b6eeaf25548485587549
+  size: 64628
+  hash: md5
+  path: schema_index.faiss
