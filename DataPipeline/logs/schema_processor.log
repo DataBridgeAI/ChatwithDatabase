@@ -1,0 +1,12 @@
+2025-02-26 15:26:51,645 - __main__ - INFO - Uploaded schema_data/tables/Songs_data_schema.json to bigquery-schema-store
+2025-02-26 15:26:51,988 - __main__ - INFO - Uploaded schema_data/prompt_schema.md to bigquery-schema-store
+2025-02-26 15:26:52,305 - __main__ - INFO - Uploaded schema_data/all_schemas.json to bigquery-schema-store
+2025-02-26 15:26:52,305 - __main__ - INFO - Successfully processed schema for 1 tables
+2025-02-26 16:13:16,139 - __main__ - INFO - Uploaded schema_data/tables/Customers_schema.json to bigquery-schema-store
+2025-02-26 16:13:16,641 - __main__ - INFO - Uploaded schema_data/tables/OrderItems_schema.json to bigquery-schema-store
+2025-02-26 16:13:17,119 - __main__ - INFO - Uploaded schema_data/tables/Orders_schema.json to bigquery-schema-store
+2025-02-26 16:13:17,606 - __main__ - INFO - Uploaded schema_data/tables/ProductReviews_schema.json to bigquery-schema-store
+2025-02-26 16:13:18,096 - __main__ - INFO - Uploaded schema_data/tables/Products_schema.json to bigquery-schema-store
+2025-02-26 16:13:18,424 - __main__ - INFO - Uploaded schema_data/prompt_schema.md to bigquery-schema-store
+2025-02-26 16:13:18,765 - __main__ - INFO - Uploaded schema_data/all_schemas.json to bigquery-schema-store
+2025-02-26 16:13:18,765 - __main__ - INFO - Successfully processed schema for 5 tables
