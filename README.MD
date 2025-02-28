@@ -45,16 +45,11 @@
    f. Set up environment variables:
       ```bash
       export GOOGLE_APPLICATION_CREDENTIALS="path_to_service_account_json"
-      export BIGQUERY_PROJECT_ID="databridgeai"
-      export BIGQUERY_DATASET="llmops_dataset"
-      export BIGQUERY_TABLE="sample_table"
+      export OPEN_AI_API_KEY="api_key"
       ```
 
 ## Running the Application
 5. Start the application:
    ```bash
-   python app.py
+   streamlit run app.py
    ```
-
-6. The script will generate a `schema.json` file. 
-   - After extracting the schema, the code will encounter errors. 
