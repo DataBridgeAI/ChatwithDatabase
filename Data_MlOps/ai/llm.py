@@ -1,9 +1,9 @@
-from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
+from langchain.chat_models import ChatOpenAI
 
 # Initialize LLM
-llm = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0.3)
+llm = ChatOpenAI(model_name="gpt-4", temperature=0.3)
 
 def clean_sql(raw_sql):
     """Remove unnecessary markdown and whitespace from SQL"""
