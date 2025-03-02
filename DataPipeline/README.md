@@ -136,6 +136,6 @@ docker compose up airflow-init
 docker compose up
 ```
 
-Following these steps will ensure a smooth deployment of the data pipeline on GCP and local environments.
+Following these steps will ensure a smooth deployment of the data pipeline on GCP and local environment.
 
 
