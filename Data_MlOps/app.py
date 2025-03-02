@@ -1,10 +1,13 @@
 import streamlit as st
 import pandas as pd
 from database.query_executor import execute_bigquery_query
+from database.schema import get_bigquery_schema
+
 from ai.llm import generate_sql
 from ui.layout import render_sidebar
 from ui.visualization import visualize_data
-
+ 
+ 
 st.set_page_config(page_title="BigQuery Analytics", layout="wide", page_icon="📊")
 
 # Initialize session state
