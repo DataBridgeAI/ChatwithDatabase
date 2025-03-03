@@ -1,4 +1,4 @@
-streamlit 
+streamlit==1.42.2
 google-cloud-bigquery
 langchain
 langchain-community
