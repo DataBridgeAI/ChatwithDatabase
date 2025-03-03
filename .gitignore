@@ -16,3 +16,7 @@ src/feedback_db/
 src/bigquery.json
 .DS_Store
 .dvc/
+DataPipeline/config/gcpconnectkey.json
+DataPipeline/docker-compose.yaml
+DataPipeline/Dockerfile
+DataPipeline/logs/
