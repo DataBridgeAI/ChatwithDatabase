@@ -4,7 +4,7 @@ import plotly.express as px
 def visualize_data(df):
     """Render visualizations for query results in Streamlit based on data types."""
     if df is None or df.empty:
-        st.warning("⚠ No data available for visualization.")
+        st.warning("No data available for visualization.")
         return
 
     st.subheader("📈 Data Visualization")
@@ -16,9 +16,7 @@ def visualize_data(df):
 
     # Check if data is completely categorical (applies to all cases)
     if not num_cols and cat_cols:
-        st.info(
-            "Visualization cannot be done as this dataset contains only categorical data"
-        )
+        st.info("Visualization cannot be done as this dataset contains only categorical data")
         return
 
     # Handle based on number of columns
@@ -28,7 +26,6 @@ def visualize_data(df):
             st.info("Histogram of given single numerical dataset")
             fig = px.histogram(df, x=col, title=f"Distribution of {col}")
             st.plotly_chart(fig, use_container_width=True)
-        # No else needed; categorical case is caught by the check above
         return
 
     # Two columns case
@@ -36,6 +33,7 @@ def visualize_data(df):
         if len(num_cols) == 2:  # Both numerical
             chart_options = ["Scatter", "Line", "Histogram"]
             chart_type = st.selectbox("Select Visualization Type", options=chart_options, index=0)
+
             if chart_type == "Scatter":
                 x_col = st.selectbox("X-axis", num_cols, key="x_scatter")
                 y_col = st.selectbox("Y-axis", num_cols, key="y_scatter")
@@ -47,9 +45,11 @@ def visualize_data(df):
             elif chart_type == "Histogram":
                 num_col = st.selectbox("Numerical Column", num_cols, key="hist_col")
                 fig = px.histogram(df, x=num_col, title=f"Distribution of {num_col}")
+
         elif len(num_cols) == 1 and len(cat_cols) == 1:  # One numerical, one categorical
             chart_options = ["Bar", "Pie"]
             chart_type = st.selectbox("Select Visualization Type", options=chart_options, index=0)
+
             if chart_type == "Bar":
                 x_col = cat_cols[0]
                 y_col = num_cols[0]
@@ -58,17 +58,17 @@ def visualize_data(df):
                 names_col = cat_cols[0]
                 values_col = num_cols[0]
                 fig = px.pie(df, names=names_col, values=values_col, title=f"{values_col} Distribution")
-        # No need for elif len(cat_cols) == 2; handled by the initial categorical check
+
         st.plotly_chart(fig, use_container_width=True)
         return
 
     # Three or more columns case
-    if num_cols and cat_cols:  # Mixed data
+    if num_cols and cat_cols:
         chart_options = ["Bar", "Line", "Pie", "Histogram"]
-    elif num_cols and not cat_cols:  # All numerical
+    elif num_cols and not cat_cols:
         chart_options = ["Line", "Scatter", "Histogram"]
     else:
-        st.warning("⚠ Unable to determine data types for visualization.")
+        st.warning("Unable to determine data types for visualization.")
         return
 
     chart_type = st.selectbox("Select Visualization Type", options=chart_options, index=0)
