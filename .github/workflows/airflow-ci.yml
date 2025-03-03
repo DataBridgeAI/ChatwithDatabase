@@ -4,11 +4,12 @@ on:
   push:
     branches:
       - main  # Run on push to main
+      - airflow-ci-cd-fixes
       
   pull_request:
     branches:
       - main  # Run on PRs to main
-
+      - airflow-ci-cd-fixes
 jobs:
   test:
     name: Run Unit Tests
@@ -63,5 +64,5 @@ jobs:
 
       - name: Deploy DAGs to Cloud Composer
         run: |
-          gsutil -m cp -r DataPipeline/dags/extract_bigquery_schema.py gs://${{ secrets.CLOUD_COMPOSER_BUCKET }}/dags/
-          gsutil -m cp -r DataPipeline/scripts/schema_processor.py gs://${{ secrets.CLOUD_COMPOSER_BUCKET }}/dags/scripts/
+          gsutil -m cp -r DataPipeline/dags/ gs://${{ secrets.CLOUD_COMPOSER_BUCKET }}/dags/
+          gsutil -m cp -r DataPipeline/scripts/ gs://${{ secrets.CLOUD_COMPOSER_BUCKET }}/dags/scripts/
