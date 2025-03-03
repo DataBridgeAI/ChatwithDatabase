@@ -1,8 +1,0 @@
-streamlit 
-google-cloud-bigquery
-langchain
-langchain-community
-python-dotenv 
-plotly
-db-dtypes
-pydantic-ai
