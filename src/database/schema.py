@@ -19,7 +19,7 @@ def get_bigquery_schema(project_id, dataset_id):
 
             # Fetch table schema
             table_ref = client.get_table(f"{project_id}.{dataset_id}.{table_id}")
-            schema_info += "Columns:\n"
+            schema_info += "\nColumns:\n"
 
             for field in table_ref.schema:
                 schema_info += f"- `{field.name}` ({field.field_type})\n"
