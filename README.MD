@@ -39,7 +39,11 @@ pip install -r requirements.txt
    OPENAI_API_KEY="your-openai-api-key"
    GOOGLE_APPLICATION_CREDENTIALS="path/to/your/service-account-key.json"
    ```
-
+   Set up environment variables:
+      ```bash
+      export GOOGLE_APPLICATION_CREDENTIALS="path_to_service_account_json"
+      export OPEN_AI_API_KEY="api_key"
+      ```
 2. For OpenAI API:
    - Visit the [OpenAI API Key Page](https://platform.openai.com/account/api-keys)
    - Create an API key and add it to your `.env` file as `OPENAI_API_KEY`
