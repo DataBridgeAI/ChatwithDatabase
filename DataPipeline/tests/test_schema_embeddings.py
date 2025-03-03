@@ -69,42 +69,6 @@ class TestSchemaEmbeddingProcessor(unittest.TestCase):
             metadatas=[{"text": "id: INTEGER name: STRING"}]
         )
 
-# class TestSchemaEmbeddingProcessor(unittest.TestCase):
-
-#     @patch("scripts.schema_embedding.shutil.make_archive")  # Mock make_archive to avoid actual file creation
-#     @patch("scripts.schema_embedding.storage.Client")  # Mock the GCS Client
-#     def test_save_chromadb_to_gcs(self, mock_storage_client, mock_make_archive):
-#         """Test saving the Chroma database to Google Cloud Storage."""
-
-#         # Mock the GCS client and bucket
-#         mock_client = MagicMock()
-#         mock_bucket = MagicMock()
-#         mock_blob = MagicMock()
-
-#         # Set up the mock objects
-#         mock_storage_client.return_value = mock_client
-#         mock_client.bucket.return_value = mock_bucket
-#         mock_bucket.blob.return_value = mock_blob
-
-#         # Simulate the behavior of blob.upload_from_filename (no actual file is uploaded)
-#         mock_blob.upload_from_filename.return_value = None  # Simulate a successful upload
-
-#         # Create a temporary directory using tempfile for cross-platform compatibility
-#         with patch("scripts.schema_embedding.tempfile.TemporaryDirectory") as mock_tmpdir:
-#             mock_tmpdir.return_value = "C:\\Users\\mansi\\AppData\\Local\\Temp\\tmp_testdir"  # Simulate temp directory path for Windows
-
-#             # Call the function under test
-#             save_chromadb_to_gcs()
-
-#             # Check if the mock methods were called as expected
-#             mock_storage_client.assert_called_once()  # Check if the GCS client was created
-#             mock_client.bucket.assert_called_once_with("bigquery-embeddings-store")  # Check if the correct bucket was accessed
-#             mock_bucket.blob.assert_called_once_with("RetailDataset/chromadb_store.zip")  # Check if the correct blob was created
-#             mock_blob.upload_from_filename.assert_called_once_with("C:\\Users\\mansi\\AppData\\Local\\Temp\\tmp_testdir\\chromadb_store.zip")  # Check if the file upload was called with the correct path
-#             mock_make_archive.assert_called_once_with("C:\\Users\\mansi\\AppData\\Local\\Temp\\tmp_testdir", 'zip', "/tmp/chromadb_store")  # Ensure make_archive was called with correct arguments
-
-# if __name__ == "__main__":
-#     unittest.main()
 
 
     # @patch("schema_embedding.storage.Client")
@@ -116,7 +80,7 @@ class TestSchemaEmbeddingProcessor(unittest.TestCase):
     #     mock_bucket = mock_client.bucket.return_value
     #     mock_blob = mock_bucket.blob.return_value
         
-    #     # Simulate a successful upload to GCS
+    #     # Simulate a successful upload to GCS 
     #     mock_blob.upload_from_filename.return_value = None
         
     #     # Call the function to save Chroma DB

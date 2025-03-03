@@ -15,4 +15,5 @@ Data_MlOps/ui/__pycache__/
 Data_MlOps/feedback_db/
 DataPipeline/config/gcpconnectkey.json
 DataPipeline/logs/
+DataPipeline/schema_demo.py
 
