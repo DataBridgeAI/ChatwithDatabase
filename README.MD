@@ -1,11 +1,11 @@
 ## Getting Started
 
 ### Prerequisites
-- Google Cloud Account with billing enabled
+- OpenAI API Key
+- Google Cloud Account with billing enabled (if using GCP resources like BigQuery or Cloud Composer)
 - Python 3.10+
-- [Google Cloud SDK](https://cloud.google.com/sdk/docs/install)
+- [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) (for GCP-related resources)
 - MySQL database
-- Google Gemini API key (for AI-powered data processing)
 
 ## Setup Instructions
 
@@ -36,23 +36,22 @@ pip install -r requirements.txt
 #### Required API Keys
 1. Create a `.env` file in the project root with the following variables:
    ```
-   GOOGLE_API_KEY="your-google-gemini-api-key"
+   OPENAI_API_KEY="your-openai-api-key"
    GOOGLE_APPLICATION_CREDENTIALS="path/to/your/service-account-key.json"
    ```
 
-2. For Google Gemini API:
-   - Visit the [Google AI Studio](https://makersuite.google.com/app/apikey)
-   - Create an API key for the Gemini model
-   - Add it to your `.env` file as `GOOGLE_API_KEY`
+2. For OpenAI API:
+   - Visit the [OpenAI API Key Page](https://platform.openai.com/account/api-keys)
+   - Create an API key and add it to your `.env` file as `OPENAI_API_KEY`
 
 > **IMPORTANT:** Never commit your `.env` file or any files containing API keys to version control!
 
 ### 3. Database Setup
 
-1. Ensure you have a MySQL database with manufacturing data
+1. Ensure you have a MySQL database with manufacturing data.
 2. The application expects the following database structure:
-   - Tables for customers, orders, products, and other manufacturing entities
-   - Proper foreign key relationships between tables
+   - Tables for customers, orders, products, and other manufacturing entities.
+   - Proper foreign key relationships between tables.
 3. You can configure the database connection in the application's sidebar:
    - Host (default: localhost)
    - User (default: root)
@@ -99,7 +98,7 @@ streamlit run app.py
 ## Application Features
 
 ### Natural Language Queries
-- Transform English questions into SQL queries using Google Gemini AI
+- Transform English questions into SQL queries using OpenAI's GPT model
 - Example: "Show customer IDs and addresses for customers who ordered product ID 50"
 
 ### Data Visualization
@@ -178,7 +177,7 @@ bq --location=REGION mk --dataset YOUR_PROJECT_ID:$DATASET_NAME
 
 ### Common Issues
 
-1. **Google API Key Not Found**: Verify that your `.env` file contains a valid `GOOGLE_API_KEY`.
+1. **OpenAI API Key Not Found**: Verify that your `.env` file contains a valid `OPENAI_API_KEY`.
 
 2. **Database Connection Errors**: Check database credentials and ensure the MySQL server is running.
 
@@ -199,8 +198,8 @@ The application requires the following Python packages:
 - mysql-connector-python
 - pandas
 - plotly
+- openai
 - langchain
-- langchain-google-genai
 - python-dotenv
 - chromadb
 - sentence-transformers
