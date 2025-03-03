@@ -14,17 +14,17 @@ This repository contains a structured data pipeline implemented using Apache Air
 
 ## Data Acquisition
 The SQL chatbot operates on organizational data stored in BigQuery, where users execute queries to retrieve relevant information. Unlike RAG-based systems, our chatbot directly translates natural language queries into SQL without requiring external document retrieval.
-Since our use case does not involve data ingestion or ETL processes, our data pipeline focuses on three key workflows:
-**1. Schema Extraction:**
-Extracts metadata (table names, column names, data types, etc.) from BigQuery.
-Ensures that the chatbot understands the database structure to generate accurate SQL queries.
-**2. Schema Embeddings Generation:**
-Converts extracted schema information into vector embeddings.
-Enhances query generation by allowing semantic understanding of database structure.
-**3. Feedback Processing:**
-Collects user feedback on query results
-Adjusts future query generation by leveraging historical feedback for continuous improvement.
-Stores feedback data using ChromaDB for retrieval during query refinement.
+Since our use case does not involve data ingestion or ETL processes, our data pipeline focuses on three key workflows: <br>
+**1. Schema Extraction:** <br>
+Extracts metadata (table names, column names, data types, etc.) from BigQuery. <br>
+Ensures that the chatbot understands the database structure to generate accurate SQL queries. <br>
+**2. Schema Embeddings Generation:**<br>
+Converts extracted schema information into vector embeddings.<br>
+Enhances query generation by allowing semantic understanding of database structure.<br>
+**3. Feedback Processing:**<br>
+Collects user feedback on query results<br>
+Adjusts future query generation by leveraging historical feedback for continuous improvement.<br>
+Stores feedback data using ChromaDB for retrieval during query refinement.<br>
 
 Since the pipeline does not involve direct data acquisition from APIs or external sources, our focus is on schema understanding, embeddings, and iterative feedback integration to enhance SQL generation accuracy.  
 
