@@ -2,6 +2,7 @@ import pytest
 import pandas as pd
 import tarfile
 import os
+import tempfile
 from unittest.mock import patch, MagicMock
 from google.cloud import bigquery
 import chromadb
@@ -43,12 +44,18 @@ def test_generate_embeddings():
     mock_collection = MagicMock()
     mock_chroma_client.get_or_create_collection.return_value = mock_collection
     
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".csv") as temp_file:
+        df.to_csv(temp_file.name, index=False)  # Ensuring the file exists
+    
     with patch("sentence_transformers.SentenceTransformer", return_value=mock_embedding_model):
         with patch("chromadb.PersistentClient", return_value=mock_chroma_client):
-            with patch("pandas.DataFrame.to_csv") as mock_to_csv:
-                from feedback_processing import generate_embeddings
-                generate_embeddings()
-                mock_to_csv.assert_called_with(test_processed_csv_path, index=False)
+            with patch("pandas.read_csv", return_value=df):  # Mock read_csv to prevent file not found error
+                with patch("pandas.DataFrame.to_csv") as mock_to_csv:
+                    from feedback_processing import generate_embeddings
+                    generate_embeddings()
+                    mock_to_csv.assert_called_with(test_processed_csv_path, index=False)
+    
+    os.unlink(temp_file.name)  # Clean up temporary file
 
 def test_archive_and_upload_chromadb():
     os.makedirs(test_chromadb_path, exist_ok=True)
