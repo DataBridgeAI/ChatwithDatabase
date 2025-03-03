@@ -63,6 +63,12 @@ jobs:
         uses: google-github-actions/setup-gcloud@v2
 
       - name: Deploy DAGs to Cloud Composer
-        run: |
-          gsutil -m cp -r DataPipeline/dags/ gs://${{ secrets.CLOUD_COMPOSER_BUCKET }}/dags/
-          gsutil -m cp -r DataPipeline/scripts/ gs://${{ secrets.CLOUD_COMPOSER_BUCKET }}/dags/scripts/
+        run: gsutil -m cp -r DataPipeline/dags/* gs://${{ secrets.CLOUD_COMPOSER_BUCKET }}/dags/
+
+      - name: Upload Scripts
+        run: gsutil -m cp -r DataPipeline/scripts/* gs://${{ secrets.CLOUD_COMPOSER_BUCKET }}/dags/scripts/
+
+      # - name: Deploy DAGs to Cloud Composer
+      #   run: |
+      #     gsutil -m cp -r DataPipeline/dags/* gs://${{ secrets.CLOUD_COMPOSER_BUCKET }}/dags/
+      #     gsutil -m cp -r DataPipeline/scripts/* gs://${{ secrets.CLOUD_COMPOSER_BUCKET }}/dags/scripts/
