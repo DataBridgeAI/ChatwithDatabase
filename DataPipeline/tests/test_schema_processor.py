@@ -1,214 +1,77 @@
-# import unittest
-# from unittest.mock import patch, MagicMock
-# import json
-# import sys
-# from google.cloud import bigquery  # Import actual BigQuery schema classes
-
-# import os
-# # Add the scripts folder to Python's path
-# sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../scripts')))
-
-# from schema_processor import get_table_schema, format_schema_for_prompt, upload_to_gcs, main
-
-# class TestSchemaProcessor(unittest.TestCase):
-
-#     @patch("schema_processor.bigquery.Client")
-#     def test_get_table_schema(self, mock_bq_client):
-#         """Test retrieving schema from BigQuery."""
-#         mock_client = mock_bq_client.return_value
-#         mock_table = MagicMock()
-       
-        
-
-       
-
-#         mock_table.schema = [
-#         MagicMock(spec=bigquery.SchemaField, **{"name.return_value": "id", "field_type": "INTEGER", "mode": "REQUIRED", "description": "Primary key"}),
-#         MagicMock(spec=bigquery.SchemaField, **{"name.return_value": "name", "field_type": "STRING", "mode": "NULLABLE", "description": "User name"})
-#     ]
-
-
-
-#         mock_table.num_rows = 100
-#         mock_table.description = "User data table"
-#         mock_table.created = None
-#         mock_table.modified = None
-#         mock_client.get_table.return_value = mock_table
-
-#         schema = get_table_schema(mock_client, "test_project", "test_dataset", "test_table")
-
-#         self.assertEqual(schema["table_id"], "test_table")
-#         self.assertEqual(schema["schema"][0]["name"], "id")
-#         self.assertEqual(schema["num_rows"], 100)
-
-#     def test_format_schema_for_prompt(self):
-#         """Test formatting schema for prompts."""
-#         schemas = {
-#             "users": {
-#                 "description": "User details",
-#                 "num_rows": 500,
-#                 "schema": [
-#                     {"name": "id", "type": "INTEGER", "mode": "REQUIRED", "description": "Primary key"},
-#                     {"name": "email", "type": "STRING", "mode": "NULLABLE", "description": "User email"}
-#                 ]
-#             }
-#         }
-
-#         formatted_schema = format_schema_for_prompt(schemas)
-
-#         self.assertIn("## Table: users", formatted_schema)
-#         self.assertIn("id (INTEGER, REQUIRED) - Primary key", formatted_schema)
-#         self.assertIn("Approximate row count: 500", formatted_schema)
-
-#     @patch("schema_processor.storage.Client")
-#     def test_upload_to_gcs(self, mock_storage_client):
-#         """Test uploading to GCS."""
-#         mock_client = mock_storage_client.return_value
-#         mock_bucket = mock_client.bucket.return_value
-#         mock_blob = mock_bucket.blob.return_value
-
-#         success = upload_to_gcs("test_bucket", "test_path/file.json", "{}")
-
-#         mock_bucket.blob.assert_called_with("test_path/file.json")
-#         mock_blob.upload_from_string.assert_called_once()
-#         self.assertTrue(success)
-
-#     @patch("schema_processor.bigquery.Client")
-#     @patch("schema_processor.storage.Client")
-#     def test_main(self, mock_storage_client, mock_bq_client):
-#         """Test the main function with mocks."""
-#         mock_client = mock_bq_client.return_value
-#         mock_storage = mock_storage_client.return_value
-
-#         # Mock BigQuery table
-#         mock_table = MagicMock()
-#         mock_table.table_id = "users"
-#         mock_client.list_tables.return_value = [mock_table]
-
-#         # Mock schema retrieval
-#         mock_client.get_table.return_value = MagicMock(
-#             schema=[
-#                 MagicMock(spec=bigquery.SchemaField, **{"name.return_value": "id", "field_type": "INTEGER", "mode": "REQUIRED", "description": "Primary key"}),
-#                 MagicMock(spec=bigquery.SchemaField, **{"name.return_value": "name", "field_type": "STRING", "mode": "NULLABLE", "description": "User name"})
-#             ],
-#             num_rows=100,
-#             description="User data table",
-#             created=None,
-#             modified=None
-#         )
-
-#         # Mock GCS upload success
-#         mock_storage.bucket.return_value.blob.return_value.upload_from_string.return_value = None
-
-#         # Run the function
-#         success = main("test_project", "test_dataset", "test_bucket", "output_path")
-        
-#         # Assert success
-#         self.assertTrue(success)
-
-# if __name__ == "__main__":
-#     unittest.main()
 import unittest
 from unittest.mock import patch, MagicMock
 import json
 import sys
-from google.cloud import bigquery  # Import actual BigQuery schema classes
+from google.cloud import bigquery, storage
 
 import os
 # Add the scripts folder to Python's path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../scripts')))
 
-from schema_processor import get_table_schema, format_schema_for_prompt, upload_to_gcs, main
+from schema_embedding import extract_schema, create_embeddings, save_chromadb_to_gcs
 
-class TestSchemaProcessor(unittest.TestCase):
+class TestSchemaEmbeddingProcessor(unittest.TestCase):
 
-    @patch("schema_processor.bigquery.Client")
-    def test_get_table_schema(self, mock_bq_client):
-        """Test retrieving schema from BigQuery."""
+    @patch("schema_embedding_processor.bigquery.Client")
+    def test_extract_schema(self, mock_bq_client):
+        """Test extracting schema data from BigQuery."""
         mock_client = mock_bq_client.return_value
+        mock_dataset = MagicMock()
         mock_table = MagicMock()
-       
+
+        # Mock BigQuery dataset and table schema
+        mock_dataset_ref = MagicMock()
+        mock_table.table_id = "test_table"
         mock_table.schema = [
             bigquery.SchemaField(name="id", field_type="INTEGER", mode="REQUIRED", description="Primary key"),
             bigquery.SchemaField(name="name", field_type="STRING", mode="NULLABLE", description="User name")
         ]
-
-        mock_table.num_rows = 100
-        mock_table.description = "User data table"
-        mock_table.created = None
-        mock_table.modified = None
+        mock_client.dataset.return_value = mock_dataset
+        mock_client.list_tables.return_value = [mock_table]
         mock_client.get_table.return_value = mock_table
 
-        schema = get_table_schema(mock_client, "test_project", "test_dataset", "test_table")
+        # Call the function and assert the result
+        schema_data = extract_schema(mock_client, "test_dataset")
+        self.assertEqual(len(schema_data), 1)
+        self.assertEqual(schema_data[0]["id"], "test_table")
+        self.assertIn("id: INTEGER", schema_data[0]["text"])
 
-        self.assertEqual(schema["table_id"], "test_table")
-        self.assertEqual(schema["schema"][0]["name"], "id")
-        self.assertEqual(schema["num_rows"], 100)
+    @patch("schema_embedding_processor.VertexAIEmbeddings.embed_documents")
+    @patch("schema_embedding_processor.chromadb.PersistentClient")
+    def test_create_embeddings(self, mock_chroma_client, mock_embed_documents):
+        """Test creating embeddings for schema data."""
+        mock_chroma_client_instance = mock_chroma_client.return_value
+        mock_collection = MagicMock()
+        mock_chroma_client_instance.get_or_create_collection.return_value = mock_collection
+        
+        # Mock embedding return value
+        mock_embed_documents.return_value = [[0.1, 0.2, 0.3, 0.4]]
+        
+        schema_data = [{"id": "test_table", "text": "id: INTEGER name: STRING"}]
+        
+        # Call the function and assert that the embeddings are created and added to the collection
+        create_embeddings(schema_data)
+        mock_chroma_client_instance.get_or_create_collection.assert_called_once_with(name="RetailDataset")
+        mock_collection.add.assert_called_once_with(
+            ids=["test_table"],
+            embeddings=[[0.1, 0.2, 0.3, 0.4]],
+            metadatas=[{"text": "id: INTEGER name: STRING"}]
+        )
 
-    def test_format_schema_for_prompt(self):
-        """Test formatting schema for prompts."""
-        schemas = {
-            "users": {
-                "description": "User details",
-                "num_rows": 500,
-                "schema": [
-                    {"name": "id", "type": "INTEGER", "mode": "REQUIRED", "description": "Primary key"},
-                    {"name": "email", "type": "STRING", "mode": "NULLABLE", "description": "User email"}
-                ]
-            }
-        }
-
-        formatted_schema = format_schema_for_prompt(schemas)
-
-        self.assertIn("## Table: users", formatted_schema)
-        self.assertIn("id (INTEGER, REQUIRED) - Primary key", formatted_schema)
-        self.assertIn("Approximate row count: 500", formatted_schema)
-
-    @patch("schema_processor.storage.Client")
-    def test_upload_to_gcs(self, mock_storage_client):
-        """Test uploading to GCS."""
+    @patch("schema_embedding_processor.storage.Client")
+    def test_save_chromadb_to_gcs(self, mock_storage_client):
+        """Test saving the Chroma database to Google Cloud Storage."""
         mock_client = mock_storage_client.return_value
         mock_bucket = mock_client.bucket.return_value
         mock_blob = mock_bucket.blob.return_value
 
-        success = upload_to_gcs("test_bucket", "test_path/file.json", "{}")
-
-        mock_bucket.blob.assert_called_with("test_path/file.json")
-        mock_blob.upload_from_string.assert_called_once()
-        self.assertTrue(success)
-
-    @patch("schema_processor.bigquery.Client")
-    @patch("schema_processor.storage.Client")
-    def test_main(self, mock_storage_client, mock_bq_client):
-        """Test the main function with mocks."""
-        mock_client = mock_bq_client.return_value
-        mock_storage = mock_storage_client.return_value
-
-        # Mock BigQuery table
-        mock_table = MagicMock()
-        mock_table.table_id = "users"
-        mock_client.list_tables.return_value = [mock_table]
-
-        # Mock schema retrieval
-        mock_client.get_table.return_value = MagicMock(
-            schema=[
-                bigquery.SchemaField(name="id", field_type="INTEGER", mode="REQUIRED", description="Primary key"),
-                bigquery.SchemaField(name="name", field_type="STRING", mode="NULLABLE", description="User name")
-            ],
-            num_rows=100,
-            description="User data table",
-            created=None,
-            modified=None
-        )
-
-        # Mock GCS upload success
-        mock_storage.bucket.return_value.blob.return_value.upload_from_string.return_value = None
-
-        # Run the function
-        success = main("test_project", "test_dataset", "test_bucket", "output_path")
+        # Simulate a successful upload to GCS
+        mock_blob.upload_from_filename.return_value = None
         
-        # Assert success
-        self.assertTrue(success)
+        # Call the function and assert that the blob upload method is called
+        save_chromadb_to_gcs()
+        mock_bucket.blob.assert_called_with("RetailDataset/chromadb_store.zip")
+        mock_blob.upload_from_filename.assert_called_once_with("/tmp/chromadb_store.zip")
 
 if __name__ == "__main__":
     unittest.main()
