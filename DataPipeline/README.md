@@ -12,22 +12,49 @@ This repository contains a structured data pipeline implemented using Apache Air
 - **Logging and Monitoring**: Uses Airflow logging and Python's logging module for tracking.
 - **Anomaly Detection**: Identifies missing values and data inconsistencies.
 
-## Data Acquisition
+## 1. Data Acquisition
 The SQL chatbot operates on organizational data stored in BigQuery, where users execute queries to retrieve relevant information. Unlike RAG-based systems, our chatbot directly translates natural language queries into SQL without requiring external document retrieval.
 Since our use case does not involve data ingestion or ETL processes, our data pipeline focuses on three key workflows: <br>
 **1. Schema Extraction:** <br>
 Extracts metadata (table names, column names, data types, etc.) from BigQuery. <br>
 Ensures that the chatbot understands the database structure to generate accurate SQL queries. <br>
-**2. Schema Embeddings Generation:**<br>
+**2. Schema Embeddings Generation:** <br>
 Converts extracted schema information into vector embeddings.<br>
 Enhances query generation by allowing semantic understanding of database structure.<br>
-**3. Feedback Processing:**<br>
-Collects user feedback on query results<br>
+**3. Feedback Processing:** <br>
+Collects user feedback on query results <br>
 Adjusts future query generation by leveraging historical feedback for continuous improvement.<br>
 Stores feedback data using ChromaDB for retrieval during query refinement.<br>
 
 Since the pipeline does not involve direct data acquisition from APIs or external sources, our focus is on schema understanding, embeddings, and iterative feedback integration to enhance SQL generation accuracy.  
 
+## 3. TestModules
+To ensure the robustness and reliability of our SQL chatbot pipeline, we implement unit tests using pytest and unittest. These tests cover critical components such as schema extraction, embeddings generation, and feedback processing.
+We have unit tests using pytest or unittest for: <br>
+Schema extraction integrity. <br>
+Embeddings generation correctness. <br>
+Feedback processing (validating correct storage and retrieval). <br>
+These tests help maintain accuracy, reliability, and adaptability in our chatbot pipeline
+
+## 4. Pipeline Orchestration
+The pipeline orchestration is handled by Apache Airflow to manage the workflow, automate tasks, and ensure proper execution. Our approach relies on file-based storage (ChromaDB for storing embeddings) and modular task dependencies to manage data flow between tasks. <br>
+1. DAG 1: Schema Extraction <br>
+Extract the schema of the database (e.g., table names, columns, and types) from BigQuery.
+A task in the DAG will use BigQuery’s Python client to pull the schema data. This can be stored in a local or cloud-based file or a database for subsequent tasks to use.
+2. DAG 2: Schema Embeddings <br>
+Generate embeddings for schema schema information into embeddings.
+Implementation: After schema extraction, this task will process the schemainto vector embeddings using VertexAIEmbeddings.
+
+## 5. DVC
+DVC is primarily used for versioning static datasets, but it’s not suitable for our SQL chatbot for these reasons:
+
+Data-Independent Use Case: The chatbot queries live data from BigQuery rather than relying on static datasets. There’s no need to version the dynamic data as it is always up-to-date.
+
+BigQuery as the Source of Truth: Our chatbot works directly with BigQuery, which constantly evolves. There's no local dataset that requires version tracking.
+
+No Data Transformation: The chatbot doesn’t generate or transform datasets but dynamically creates SQL queries based on user input, making DVC unnecessary.
+
+In conclusion, since the chatbot doesn't depend on static datasets or transformations, DVC doesn't provide value in this scenario. The focus is on querying live data from BigQuery and processing user feedback.
 
 ## Exclusions
 This project does not include bias detection, data slicing for subgroup analysis, or bias mitigation techniques, as these are not relevant to the scope of manufacturing data analytics.
