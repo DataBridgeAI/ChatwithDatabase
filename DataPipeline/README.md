@@ -1,4 +1,4 @@
-# Data Pipeline for Manufacturing Analytics
+# Data Pipeline
 
 ## Overview
 This repository contains a structured data pipeline implemented using Apache Airflow for orchestrating data processing workflows. The pipeline covers data acquisition, preprocessing, testing, logging, version control, and monitoring to ensure high-quality data processing and reproducibility.
