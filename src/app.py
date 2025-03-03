@@ -25,12 +25,13 @@ if "generated_sql" not in st.session_state:
 # Render sidebar & fetch project ID and dataset
 project_id, dataset_id = render_sidebar()
 
-# Display Schema (Only for the User-Specified Dataset)
+st.title("📊 BigQuery Analytics Dashboard")
+
+# Display Schema
 if st.session_state.schema:
     st.divider()
-    st.markdown(st.session_state.schema)
-
-st.title("📊 BigQuery Analytics Dashboard")
+    with st.expander("Schema Overview", expanded=False):
+        st.markdown(st.session_state.schema)
 
 user_query = st.text_area(
     "Enter your question:",

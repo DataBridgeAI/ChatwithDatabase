@@ -9,17 +9,17 @@ def get_bigquery_schema(project_id, dataset_id):
         tables = list(client.list_tables(dataset_ref))
 
         if not tables:
-            return f"⚠ No tables found in dataset `{dataset_id}`."
+            return f"No tables found in dataset `{dataset_id}`."
 
-        schema_info = f"📚 **BigQuery Schema for `{dataset_id}`**\n"
+        schema_info = f"BigQuery Schema for `{dataset_id}`\n"
 
         for table in tables:
             table_id = table.table_id
-            schema_info += f"\n### Table: `{table_id}`\n"
+            schema_info += f"\nTable: `{table_id}`\n"
 
             # Fetch table schema
             table_ref = client.get_table(f"{project_id}.{dataset_id}.{table_id}")
-            schema_info += "**Columns:**\n"
+            schema_info += "\nColumns:\n"
 
             for field in table_ref.schema:
                 schema_info += f"- `{field.name}` ({field.field_type})\n"
