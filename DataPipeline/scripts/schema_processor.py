@@ -4,14 +4,6 @@ import argparse
 from google.cloud import bigquery, storage
 import logging
 
-# Configure logging
-# logging.basicConfig(
-#     level=logging.INFO,
-#     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-#     handlers=[logging.FileHandler('logs/schema_processor.log'), logging.StreamHandler()]
-# )
-# logger = logging.getLogger(__name__)
-
 # Use Airflow's logging system instead of writing to a file
 logger = logging.getLogger("airflow.task")
 logger.setLevel(logging.INFO)
