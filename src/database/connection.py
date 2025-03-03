@@ -1,5 +1,5 @@
-from google.cloud import bigquery
 import os
+from google.cloud import bigquery
 
 def get_bigquery_client():
     """Initialize Google BigQuery client using service account credentials."""

@@ -25,7 +25,6 @@ def get_bigquery_schema(project_id, dataset_id):
                 schema_info += f"- `{field.name}` ({field.field_type})\n"
 
         return schema_info
-
-    except Exception as e:
-        st.error(f"Schema retrieval error: {e}")
+    except Exception as error:
+        st.error(f"Schema retrieval error: {error}")
         return None

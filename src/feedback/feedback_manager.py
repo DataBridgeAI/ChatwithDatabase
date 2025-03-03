@@ -1,11 +1,14 @@
-import chromadb
 import time
 import uuid
+import chromadb
+
 
 chroma_client = chromadb.PersistentClient(path="./feedback_db")
 
-def store_feedback(user_query, generated_sql, feedback, execution_success=None, execution_time=None):
-    """Store feedback in ChromaDB"""
+
+def store_feedback(user_query, generated_sql, feedback, 
+                   execution_success=None, execution_time=None):
+    """Store feedback in ChromaDB."""
     try:
         doc_id = str(uuid.uuid4())
         metadata = {
@@ -17,30 +20,33 @@ def store_feedback(user_query, generated_sql, feedback, execution_success=None, 
             "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
         }
         return True
-    except Exception as e:
+    except Exception:
         return False
-    
+
+
 def get_relevant_feedback(user_query):
     """Retrieve relevant positive feedback examples from ChromaDB using RAG."""
     try:
         feedback_collection = chroma_client.get_or_create_collection(name="query_feedback")
-        
+
         results = feedback_collection.query(
             query_texts=[user_query],
             where={"feedback": "positive"},
             n_results=3
         )
-        
+
         examples = []
-        for i in range(len(results["ids"][0])):
+        for i, metadata in enumerate(results["metadatas"][0]):
             example = (
-                f"Example {i+1}:\n"
-                f"Query: {results['metadatas'][0][i]['user_query']}\n"
-                f"SQL: {results['metadatas'][0][i]['generated_sql']}\n"
+                f"Example {i+1}:
+"
+                f"Query: {metadata['user_query']}
+"
+                f"SQL: {metadata['generated_sql']}
+"
             )
             examples.append(example)
-            
+
         return "\n".join(examples) if examples else "No relevant positive feedback examples found."
-    
-    except Exception as e:
+    except Exception:
         return "No relevant positive feedback examples found due to an error."

@@ -13,6 +13,5 @@ def execute_bigquery_query(query):
             return pd.DataFrame({"Message": ["No results found for the query."]})
 
         return df
-
-    except Exception as e:
-        return pd.DataFrame({"Error": [str(e)], "SQL": [query]})
+    except Exception as error:
+        return pd.DataFrame({"Error": [str(error)], "SQL": [query]})
