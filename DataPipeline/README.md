@@ -4,13 +4,30 @@
 This repository contains a structured data pipeline implemented using Apache Airflow for orchestrating data processing workflows. The pipeline covers data acquisition, preprocessing, testing, logging, version control, and monitoring to ensure high-quality data processing and reproducibility.
 
 ## Key Features
-- **Data Acquisition**: Extracts data from MySQL databases and APIs.
-- **Data Preprocessing**: Cleans and transforms manufacturing data for analytics.
+- **Data Acquisition**: Acquire database schema information, embeddings for queries, and feedback data from ChromaDB.
+- **Data Preprocessing**: Convert natural language queries into embeddings.
 - **Pipeline Orchestration**: Uses Apache Airflow to manage workflow execution.
 - **Testing Modules**: Includes unit tests for data transformations using pytest.
 - **Data Versioning**: Implements DVC for tracking dataset changes.
 - **Logging and Monitoring**: Uses Airflow logging and Python's logging module for tracking.
 - **Anomaly Detection**: Identifies missing values and data inconsistencies.
+
+## Data Acquisition
+The SQL chatbot operates on organizational data stored in BigQuery, where users execute queries to retrieve relevant information. Unlike RAG-based systems, our chatbot directly translates natural language queries into SQL without requiring external document retrieval.
+Since our use case does not involve data ingestion or ETL processes, our data pipeline focuses on three key workflows:
+**1. Schema Extraction:**
+Extracts metadata (table names, column names, data types, etc.) from BigQuery.
+Ensures that the chatbot understands the database structure to generate accurate SQL queries.
+**2. Schema Embeddings Generation:**
+Converts extracted schema information into vector embeddings.
+Enhances query generation by allowing semantic understanding of database structure.
+**3. Feedback Processing:**
+Collects user feedback on query results
+Adjusts future query generation by leveraging historical feedback for continuous improvement.
+Stores feedback data using ChromaDB for retrieval during query refinement.
+
+Since the pipeline does not involve direct data acquisition from APIs or external sources, our focus is on schema understanding, embeddings, and iterative feedback integration to enhance SQL generation accuracy.  
+
 
 ## Exclusions
 This project does not include bias detection, data slicing for subgroup analysis, or bias mitigation techniques, as these are not relevant to the scope of manufacturing data analytics.
