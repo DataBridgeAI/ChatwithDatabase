@@ -64,11 +64,11 @@ pip install -r requirements.txt
 
 Create a `.env` file in the project root with the following variables:
 ```
-GOOGLE_APPLICATION_CREDENTIALS="path/to/your/service-account-key.json"
-OPEN_AI_API_KEY="your-openai-api-key"
-BUCKET_NAME="your-gcs-bucket-name"
-DATASET_NAME="your-bigquery-dataset-name"
-PROJECT_ID="your-gcp-project-id"
+GOOGLE_APPLICATION_CREDENTIALS = "path/to/your/service-account-key.json"
+OPEN_AI_API_KEY = "your-openai-api-key"
+BUCKET_NAME = "your-gcs-bucket-name"
+DATASET_NAME = "your-bigquery-dataset-name"
+PROJECT_ID = "your-gcp-project-id"
 ```
 
 > **IMPORTANT:** Never commit your `.env` file or any files containing API keys to version control!
