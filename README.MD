@@ -4,7 +4,8 @@
 - Google Cloud Account with billing enabled
 - Python 3.10+
 - [Google Cloud SDK](https://cloud.google.com/sdk/docs/install)
-- OpenAI API key (for AI-powered data processing)
+- MySQL database
+- Google Gemini API key (for AI-powered data processing)
 
 ## Setup Instructions
 
@@ -30,7 +31,35 @@ python -m venv venv
 pip install -r requirements.txt
 ```
 
-### 2. Google Cloud Setup
+### 2. API Keys and Configuration
+
+#### Required API Keys
+1. Create a `.env` file in the project root with the following variables:
+   ```
+   GOOGLE_API_KEY="your-google-gemini-api-key"
+   GOOGLE_APPLICATION_CREDENTIALS="path/to/your/service-account-key.json"
+   ```
+
+2. For Google Gemini API:
+   - Visit the [Google AI Studio](https://makersuite.google.com/app/apikey)
+   - Create an API key for the Gemini model
+   - Add it to your `.env` file as `GOOGLE_API_KEY`
+
+> **IMPORTANT:** Never commit your `.env` file or any files containing API keys to version control!
+
+### 3. Database Setup
+
+1. Ensure you have a MySQL database with manufacturing data
+2. The application expects the following database structure:
+   - Tables for customers, orders, products, and other manufacturing entities
+   - Proper foreign key relationships between tables
+3. You can configure the database connection in the application's sidebar:
+   - Host (default: localhost)
+   - User (default: root)
+   - Password
+   - Database name (default: manufacturing)
+
+### 4. Google Cloud Setup (for Production/Cloud Deployment)
 
 #### Authentication and Configuration
 1. Install the [Google Cloud SDK](https://cloud.google.com/sdk/docs/install)
@@ -58,57 +87,48 @@ pip install -r requirements.txt
    - Storage Admin
    - Vertex AI User
 3. Create and download a JSON key for this service account
-4. Store the JSON key file securely
+4. Store the JSON key file securely and reference it in your `.env` file
 
-### 3. Configure API Keys and Environment Variables
-
-Create a `.env` file in the project root with the following variables:
-```
-GOOGLE_APPLICATION_CREDENTIALS = "path/to/your/service-account-key.json"
-OPEN_AI_API_KEY = "your-openai-api-key"
-BUCKET_NAME = "your-gcs-bucket-name"
-DATASET_NAME = "your-bigquery-dataset-name"
-PROJECT_ID = "your-gcp-project-id"
-```
-
-> **IMPORTANT:** Never commit your `.env` file or any files containing API keys to version control!
-
-### 4. GCP Resources Setup
-
-#### Enable Required APIs
-Enable the following APIs in Google Cloud Console:
-- BigQuery API
-- Cloud Composer API
-- Vertex AI API
-
-#### Create Cloud Storage Bucket
-```bash
-export BUCKET_NAME=your-bucket-name
-gcloud storage buckets create gs://$BUCKET_NAME --project YOUR_PROJECT_ID --location=REGION
-gsutil mkdir gs://$BUCKET_NAME/data
-```
-
-#### Create BigQuery Dataset
-```bash
-export DATASET_NAME=your-dataset-name
-bq --location=REGION mk --dataset YOUR_PROJECT_ID:$DATASET_NAME
-```
-
-### 5. Cloud Composer (Airflow) Configuration
-
-1. Create a Cloud Composer environment through Google Cloud Console
-2. Import Airflow variables from the provided environment file:
-   - Navigate to Composer → Airflow UI → Admin → Variables → Import Variables
-   - Upload the environment file
-
-### 6. Running the Application
+### 5. Running the Application
 
 Start the Streamlit application:
 ```bash
 streamlit run app.py
 ```
 
-## Pipeline Reproduction Instructions
+## Application Features
+
+### Natural Language Queries
+- Transform English questions into SQL queries using Google Gemini AI
+- Example: "Show customer IDs and addresses for customers who ordered product ID 50"
+
+### Data Visualization
+The dashboard supports various visualization types:
+- Bar charts
+- Line charts
+- Pie charts
+- Sunburst diagrams
+- Scatter plots
+- Histograms
+- Data summaries
+
+### Feedback and Improvement
+- Provide feedback on query results (👍 or 👎)
+- Automatic query correction based on negative feedback
+- Continuous improvement through Retrieval-Augmented Generation (RAG)
+
+### Safety Features
+- Input validation to prevent harmful or inappropriate queries
+- SQL safety checks to prevent destructive operations
+- Context-relevant query filtering
+
+## ChromaDB Feedback Storage
+The application uses ChromaDB to store and retrieve feedback:
+- Feedback is stored in a local persistent database (`./feedback_db`)
+- Historical feedback improves future query generation
+- Relevant examples are retrieved using semantic search
+
+## GCP Pipeline Reproduction Instructions
 
 To reproduce this data pipeline on a different GCP environment:
 
@@ -158,9 +178,30 @@ bq --location=REGION mk --dataset YOUR_PROJECT_ID:$DATASET_NAME
 
 ### Common Issues
 
-1. **Authentication Errors**: Verify that your service account has the necessary permissions and the `GOOGLE_APPLICATION_CREDENTIALS` environment variable points to the correct JSON key file.
+1. **Google API Key Not Found**: Verify that your `.env` file contains a valid `GOOGLE_API_KEY`.
 
-2. **Missing APIs**: Ensure all required APIs are enabled in your GCP project.
+2. **Database Connection Errors**: Check database credentials and ensure the MySQL server is running.
 
-3. **Region Consistency**: Make sure all resources are created in the same or compatible regions.
+3. **ChromaDB Errors**: Make sure the application has write permissions to create the `./feedback_db` directory.
 
+4. **Visualization Errors**: Ensure that the selected columns for visualization are appropriate for the chart type.
+
+5. **Authentication Errors**: Verify that your service account has the necessary permissions and the `GOOGLE_APPLICATION_CREDENTIALS` environment variable points to the correct JSON key file.
+
+6. **Missing APIs**: Ensure all required APIs are enabled in your GCP project.
+
+7. **Region Consistency**: Make sure all resources are created in the same or compatible regions.
+
+## Required Dependencies
+
+The application requires the following Python packages:
+- streamlit
+- mysql-connector-python
+- pandas
+- plotly
+- langchain
+- langchain-google-genai
+- python-dotenv
+- chromadb
+- sentence-transformers
+- uuid
