@@ -13,13 +13,14 @@ from airflow.providers.slack.operators.slack_webhook import SlackWebhookOperator
 from airflow.models import Variable
 from schema_embeddings_processor import create_embeddings, save_chromadb_to_gcs
 
-# Configuration Parameters
+# Configuration
 PROJECT_ID = "chatwithdata-451800"
 DATASET_ID = "RetailDataset"
 BUCKET_NAME = "bigquery-embeddings-store"
-VERTEX_MODEL = "textembedding-gecko@003"
 CHROMA_PATH = "/tmp/chromadb_store"
 GCS_CHROMA_PATH = f"{DATASET_ID}/chromadb_store.zip"
+VERTEX_MODEL = "textembedding-gecko@003"
+
 
 # Initialize Vertex AI Embeddings
 embedding_model = VertexAIEmbeddings(model=VERTEX_MODEL)
