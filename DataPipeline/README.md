@@ -128,8 +128,6 @@ The `airflow-ci.yml` workflow will:
   - **Host**: `https://hooks.slack.com/services/`
   - **Password**: Full Slack webhook URL
 
-Following these steps will ensure a smooth deployment of the data pipeline on GCP.
-
 ## Alternative: Running Locally
 To run the Airflow pipeline locally using Docker, follow these steps:
 ```sh
