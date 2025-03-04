@@ -1,179 +1,44 @@
-# Data Pipeline
+# Overview
 
-## Overview
-This repository contains a structured data pipeline implemented using Apache Airflow for orchestrating data processing workflows. The pipeline covers data acquisition, preprocessing, testing, logging, version control, and monitoring to ensure high-quality data processing and reproducibility.
+This project aims to develop an LLM-powered chatbot to generate SQL queries based on user input questions. The system will be built using Google Cloud Platform (GCP) and will incorporate MLOps best practices, including monitoring and CI/CD pipelines, to ensure robust and efficient operation.
 
-## Key Features
-- **Data Acquisition**: Acquire database schema information, embeddings for queries, and feedback data from ChromaDB.
-- **Data Preprocessing**: Convert natural language queries into embeddings.
-- **Pipeline Orchestration**: Uses Apache Airflow to manage workflow execution.
-- **Testing Modules**: Includes unit tests for data transformations using pytest.
-- **Data Versioning**: Implements DVC for tracking dataset changes.
-- **Logging and Monitoring**: Uses Airflow logging and Python's logging module for tracking.
-- **Anomaly Detection**: Identifies missing values and data inconsistencies.
+This repository hosts the data pipeline designed to process data in BigQuery. The pipeline is responsible for creating and managing a retail dataset, which includes the following tables:
+- **Customers**
+- **OrderItems**
+- **Orders**
+- **ProductReviews**
+- **Products**
 
-## 1. Data Acquisition
-The SQL chatbot operates on organizational data stored in BigQuery, where users execute queries to retrieve relevant information. Unlike RAG-based systems, our chatbot directly translates natural language queries into SQL without requiring external document retrieval.
-Since our use case does not involve data ingestion or ETL processes, our data pipeline focuses on three key workflows: <br>
-**1. Schema Extraction:** <br>
-Extracts metadata (table names, column names, data types, etc.) from BigQuery. <br>
-Ensures that the chatbot understands the database structure to generate accurate SQL queries. <br>
-**2. Schema Embeddings Generation:** <br>
-Converts extracted schema information into vector embeddings.<br>
-Enhances query generation by allowing semantic understanding of database structure.<br>
-**3. Feedback Processing:** <br>
-Collects user feedback on query results <br>
-Adjusts future query generation by leveraging historical feedback for continuous improvement.<br>
-Stores feedback data using ChromaDB for retrieval during query refinement.<br>
+# Data Pipeline - Key Components and Workflow
 
-Since the pipeline does not involve direct data acquisition from APIs or external sources, our focus is on schema understanding, embeddings, and iterative feedback integration to enhance SQL generation accuracy.  
+The data pipeline is implemented using Apache Airflow to orchestrate tasks that extract, transform, and load (ETL) data into BigQuery. It includes several DAGs (Directed Acyclic Graphs) to automate schema extraction, feedback processing, and embedding generation for enhanced query interpretation.
 
-## 3. TestModules
-To ensure the robustness and reliability of our SQL chatbot pipeline, we implement unit tests using pytest and unittest. These tests cover critical components such as schema extraction, embeddings generation, and feedback processing.
-We have unit tests using pytest or unittest for: <br>
-Schema extraction integrity. <br>
-Embeddings generation correctness. <br>
-Feedback processing (validating correct storage and retrieval). <br>
-These tests help maintain accuracy, reliability, and adaptability in our chatbot pipeline
+## Key Components:
+1. **Schema Extraction DAG (`extract_bigquery_schema`)**
+   - Extracts table schemas from BigQuery.
+   - Saves schema files to Google Cloud Storage (GCS) for further processing.
+   - Validates the schema extraction process.
+   - Sends notifications via Slack upon successful execution.
+   ![Logo](assets/extract_bigquery_schema_graph.png)
 
-## 4. Pipeline Orchestration
-The pipeline orchestration is handled by Apache Airflow to manage the workflow, automate tasks, and ensure proper execution. Our approach relies on file-based storage (ChromaDB for storing embeddings) and modular task dependencies to manage data flow between tasks. <br>
-1. DAG 1: Schema Extraction <br>
-Extract the schema of the database (e.g., table names, columns, and types) from BigQuery.
-A task in the DAG will use BigQuery’s Python client to pull the schema data. This can be stored in a local or cloud-based file or a database for subsequent tasks to use.
-2. DAG 2: Schema Embeddings <br>
-Generate embeddings for schema schema information into embeddings.
-Implementation: After schema extraction, this task will process the schemainto vector embeddings using VertexAIEmbeddings. <br>
+2. **Feedback Embeddings DAG (`feedback_embeddings_dag`)**
+   - Extracts user feedback data from BigQuery.
+   - Generates embeddings for feedback questions using `sentence-transformers`.
+   - Stores processed data and embeddings in GCS for downstream use.
+   - Archives and uploads a ChromaDB store of embeddings.
+   - Sends notifications via Slack upon successful execution.
 
-**Airflow Setup**
-1. Local Setup (Using Docker for Airflow) <br>
-For local development, Docker Compose is the easiest way to run Airflow. <br>
-Step 1: Install Docker and Docker Compose
-Install Docker: Download & Install Docker
-```bash
-pip install docker-compose
-```
-Step 2: Clone the Official Airflow Docker Repository
-Run the following command to get Airflow’s Docker Compose setup:
-```bash
-git clone https://github.com/apache/airflow.git
-cd airflow
-```
-Step 3: Create an .env File for Airflow Configuration <br>
-In the airflow directory, create a .env file to store environment variables: <br>
-```bash
-echo -e "AIRFLOW_UID=$(id -u)\nAIRFLOW_GID=0" > .env
-```
-Step 4: Initialize Airflow Database <br>
-Run the following command to set up the Airflow metadata database:
-```bash
-docker-compose up airflow-init
-```
-Step 6: Start Airflow <br>
-Once the initialization is done, start the Airflow services:
-```bash
-docker-compose up -d
-```
-This will start services like:
-Web Server (http://localhost:8080) <br>
-Scheduler <br>
-Workers <br>
-Metadata Database <br>
+3. **Schema Embeddings DAG (`schema_embeddings_dag`)**
+   - Creates embeddings for schema metadata using Vertex AI’s `textembedding-gecko@003` model.
+   - Stores embeddings in a ChromaDB instance.
+   - Saves the ChromaDB instance to GCS for efficient retrieval.
+   - Sends notifications via Slack upon successful execution.
 
-2. Cloud Setup (Using Google Cloud Composer) <br>
-Google Cloud Composer is a managed Airflow service on GCP. <br>
-Step 1: Enable Required GCP Services <br>
-Run these commands to enable services:
-```bash
-gcloud services enable composer.googleapis.com
-gcloud services enable bigquery.googleapis.com
-gcloud services enable aiplatform.googleapis.com
-```
-Step 2: Create a Cloud Composer Environment <br>
-Run the following command to create a Cloud Composer 2 environment:
-```bash
-gcloud composer environments create my-airflow-env \
-    --location=us-east1 \
-    --image-version=composer-2-airflow-2 \
-    --env-variables GOOGLE_APPLICATION_CREDENTIALS=/home/airflow/gcs/data/yourgcpkey.json
-```
-Step 3: Deploy DAGs to Cloud Composer
-Once the environment is ready, upload your DAGs: <br>
-```bash
-gsutil cp dags/my_dag.py gs://my-airflow-bucket/dags/
-```
-Step 4: Verify DAGs in Cloud Composer <br>
-Open Google Cloud Console → Composer. <br>
-Click on your Airflow Environment. <br>
-Open Airflow UI. <br>
-Ensure the DAGs appear and are in an "idle" state. <br>
-Step 5: Deploy Python Packages for DAGs <br>
-If your DAGs require extra Python packages (e.g., google-cloud-bigquery), install them:
-```bash
-gcloud composer environments update my-airflow-env \
-    --update-pypi-packages google-cloud-bigquery==3.10.0
-```
+## Workflow:
+1. **Schema Extraction:** The `extract_bigquery_schema` DAG retrieves table schemas from BigQuery, processes them for natural language prompts, and stores them in GCS.
+2. **Feedback Processing:** The `feedback_embeddings_dag` extracts user feedback, converts it into embeddings, and archives the embeddings for retrieval.
+3. **Schema Embeddings:** The `schema_embeddings_dag` generates embeddings for table schemas to facilitate SQL query generation.
+4. **Notifications:** Each DAG includes a Slack notification task to inform users of the pipeline’s execution status.
 
+This modular approach ensures a scalable and efficient pipeline, supporting AI-driven SQL generation and query interpretation.
 
-## 5. DVC
-DVC is primarily used for versioning static datasets, but it’s not suitable for our SQL chatbot for these reasons:
-
-Data-Independent Use Case: The chatbot queries live data from BigQuery rather than relying on static datasets. There’s no need to version the dynamic data as it is always up-to-date.
-
-BigQuery as the Source of Truth: Our chatbot works directly with BigQuery, which constantly evolves. There's no local dataset that requires version tracking.
-
-No Data Transformation: The chatbot doesn’t generate or transform datasets but dynamically creates SQL queries based on user input, making DVC unnecessary.
-
-In conclusion, since the chatbot doesn't depend on static datasets or transformations, DVC doesn't provide value in this scenario. The focus is on querying live data from BigQuery and processing user feedback.
-
-## Exclusions
-This project does not include bias detection, data slicing for subgroup analysis, or bias mitigation techniques, as these are not relevant to the scope of manufacturing data analytics.
-
-## Project Structure
-```
-/Project Repo
-├── Data-Pipeline/
-│   ├── dags/               # Apache Airflow DAG definitions
-│   ├── scripts/            # Python scripts for data processing
-│   ├── tests/              # Unit and integration tests
-│   ├── logs/               # Log files
-│   ├── requirements.txt    # Requirements for project
-│   └── README.md           # This file
-```
-
-### Running the Pipeline
-Start Airflow:
-```bash
-airflow standalone
-```
-Trigger DAG:
-```bash
-airflow dags trigger manufacturing_data_pipeline
-```
-Start Streamlit app:
-```bash
-streamlit run app.py
-```
-
-## Reproducibility
-- All data changes are tracked using DVC.
-- The project follows modular design for easy updates.
-- Detailed setup instructions ensure anyone can replicate the pipeline.
-
-## Error Handling & Logging
-- Logs are stored in `logs/` and monitored via Airflow.
-- Errors in data acquisition and transformation trigger alerts.
-
-## Testing
-Run unit tests:
-```bash
-pytest tests/
-```
-
-## Data Pipeline Process
-
-1. **Schema Extraction**: Extracts table and column metadata from BigQuery
-2. **Schema Formatting**: Processes schema into a format optimized for OpenAI prompts
-3. **Example Collection**: Gathers example NL-SQL pairs for evaluation and fine-tuning
-4. **Prompt Engineering**: Creates and tests different prompt templates
-5. **Evaluation**: Measures the quality of generated SQL
