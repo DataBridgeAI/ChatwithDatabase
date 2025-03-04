@@ -27,12 +27,14 @@ The data pipeline is implemented using Apache Airflow to orchestrate tasks that 
    - Stores processed data and embeddings in GCS for downstream use.
    - Archives and uploads a ChromaDB store of embeddings.
    - Sends notifications via Slack upon successful execution.
+   ![Logo](assets/Feedback_embeddings_graph.png)
 
 3. **Schema Embeddings DAG (`schema_embeddings_dag`)**
    - Creates embeddings for schema metadata using Vertex AI’s `textembedding-gecko@003` model.
    - Stores embeddings in a ChromaDB instance.
    - Saves the ChromaDB instance to GCS for efficient retrieval.
    - Sends notifications via Slack upon successful execution.
+   ![Logo](assets/schema_embeddings_graph.png)
 
 ## Workflow:
 1. **Schema Extraction:** The `extract_bigquery_schema` DAG retrieves table schemas from BigQuery, processes them for natural language prompts, and stores them in GCS.
