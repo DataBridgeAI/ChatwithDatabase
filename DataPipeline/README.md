@@ -80,8 +80,8 @@ Scheduler <br>
 Workers <br>
 Metadata Database <br>
 
-2. Cloud Setup (Using Google Cloud Composer)
-Google Cloud Composer is a managed Airflow service on GCP.
+2. Cloud Setup (Using Google Cloud Composer) <br>
+Google Cloud Composer is a managed Airflow service on GCP. <br>
 Step 1: Enable Required GCP Services <br>
 Run these commands to enable services:
 ```bash
