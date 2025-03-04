@@ -45,6 +45,59 @@ A task in the DAG will use BigQuery’s Python client to pull the schema data. T
 Generate embeddings for schema schema information into embeddings.
 Implementation: After schema extraction, this task will process the schemainto vector embeddings using VertexAIEmbeddings.
 
+1. Local Setup (Using Docker for Airflow)
+For local development, Docker Compose is the easiest way to run Airflow.
+
+Step 1: Install Docker and Docker Compose
+Install Docker: Download & Install Docker
+Install Docker Compose (if not included in Docker Desktop)
+pip install docker-compose
+Step 2: Clone the Official Airflow Docker Repository
+Run the following command to get Airflow’s Docker Compose setup:
+git clone https://github.com/apache/airflow.git
+cd airflow
+Step 3: Create an .env File for Airflow Configuration
+In the airflow directory, create a .env file to store environment variables:
+echo -e "AIRFLOW_UID=$(id -u)\nAIRFLOW_GID=0" > .env
+Step 4: Initialize Airflow Database
+Run the following command to set up the Airflow metadata database:
+docker-compose up airflow-init
+Step 6: Start Airflow
+Once the initialization is done, start the Airflow services:
+docker-compose up -d
+This will start services like:
+Web Server (http://localhost:8080)
+Scheduler
+Workers
+Metadata Database
+
+2. Cloud Setup (Using Google Cloud Composer)
+Google Cloud Composer is a managed Airflow service.
+Step 1: Enable Required GCP Services
+Run these commands to enable services:
+gcloud services enable composer.googleapis.com
+gcloud services enable bigquery.googleapis.com
+gcloud services enable aiplatform.googleapis.com
+Step 2: Create a Cloud Composer Environment
+Run the following command to create a Cloud Composer 2 environment:
+gcloud composer environments create my-airflow-env \
+    --location=us-east1 \
+    --image-version=composer-2-airflow-2 \
+    --env-variables GOOGLE_APPLICATION_CREDENTIALS=/home/airflow/gcs/data/yourgcpkey.json
+Step 3: Deploy DAGs to Cloud Composer
+Once the environment is ready, upload your DAGs:
+gsutil cp dags/my_dag.py gs://my-airflow-bucket/dags/
+Step 4: Verify DAGs in Cloud Composer
+Open Google Cloud Console → Composer.
+Click on your Airflow Environment.
+Open Airflow UI.
+Ensure the DAGs appear and are in an "idle" state.
+Step 5: Deploy Python Packages for DAGs
+If your DAGs require extra Python packages (e.g., google-cloud-bigquery), install them:
+gcloud composer environments update my-airflow-env \
+    --update-pypi-packages google-cloud-bigquery==3.10.0
+
+
 ## 5. DVC
 DVC is primarily used for versioning static datasets, but it’s not suitable for our SQL chatbot for these reasons:
 
