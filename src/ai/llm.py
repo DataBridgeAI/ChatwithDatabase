@@ -2,6 +2,7 @@ from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
 from langchain.chat_models import ChatOpenAI
 
+
 # Initializing LLM i.e GPT 4 for this project
 llm = ChatOpenAI(model_name="gpt-4", temperature=0.3)
 

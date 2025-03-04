@@ -13,10 +13,12 @@ src/database/__pycache__/
 src/feedback/__pycache__/
 src/ui/__pycache__/
 src/feedback_db/
-src/bigquery.json
+src/config/gcpconnectkey.json
+src/.env
 .DS_Store
 .dvc/
 DataPipeline/config/gcpconnectkey.json
 DataPipeline/docker-compose.yaml
 DataPipeline/Dockerfile
 DataPipeline/logs/
+myenv
