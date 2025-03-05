@@ -18,7 +18,5 @@ src/.env
 .DS_Store
 .dvc/
 DataPipeline/config/gcpconnectkey.json
-DataPipeline/docker-compose.yaml
-DataPipeline/Dockerfile
 DataPipeline/logs/
 myenv
