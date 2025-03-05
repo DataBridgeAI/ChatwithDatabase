@@ -182,10 +182,9 @@ The CI/CD pipeline is triggered by any push to the `main` branch or by a pull re
 Tracking and logging are essential for monitoring the data pipeline’s execution and detecting issues at each stage.
 
 ## In the Context of Our SQL Chatbot:
-- *Tracking: The execution flow of the pipeline (e.g., schema extraction, embedding generation, feedback processing) is tracked through **Airflow*. This helps to ensure that tasks are executed in the correct order and that issues are identified promptly.
+- **Tracking**: The execution flow of the pipeline (e.g., schema extraction, embedding generation, feedback processing) is tracked through **Airflow**. This helps to ensure that tasks are executed in the correct order and that issues are identified promptly.
   
-- *Logging*: Monitor logs from Airflow in the Composer environment for debugging. Logs are available for each task within the DAG.
-
+- **Logging**: Monitor logs from Airflow in the Composer environment for debugging. Logs are available for each task within the DAG.
 
 # Pipeline Flow Optimization
 
