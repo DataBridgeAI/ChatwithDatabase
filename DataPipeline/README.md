@@ -152,4 +152,27 @@ docker compose up
 
 Following these steps will ensure a smooth deployment of the data pipeline on GCP and local environment.
 
+# Test Module
+
+## Overview
+This repository contains a pipeline with several components, including feedback extraction, data embedding generation, and data upload. To ensure the robustness of each component, unit tests have been written to validate the functionality and reliability of the pipeline.
+
+The tests focus on the following areas:
+
+- **Data Preprocessing**: Validates the correct processing of raw data into a usable format.
+- **Data Transformation**: Ensures proper transformations are applied to data, such as generating embeddings.
+- **Data Upload**: Confirms that data is successfully archived and uploaded to storage services.
+
+Unit tests are written using `pytest` and `unittest` to ensure that the pipeline can handle edge cases, missing values, and anomalies.
+
+## Testing Frameworks
+We use the following testing frameworks:
+- `pytest`: For writing and running the tests.
+- `unittest`: For testing specific components like schema extraction and GCS uploading.
+
+## Workflow Structure
+The CI/CD pipeline is triggered by any push to the `main` branch or by a pull request targeting the `main` branch. The workflow consists of the following stages:
+
+- **Test Stage**: Run unit tests using `pytest` and `unittest`, ensuring all components are functioning as expected.
+- **Deploy Stage**: If tests pass successfully, the DAGs and associated scripts are deployed to Cloud Composer.
 
