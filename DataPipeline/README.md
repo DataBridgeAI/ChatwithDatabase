@@ -193,7 +193,7 @@ Tracking and logging are essential for monitoring the data pipeline’s executio
 To optimize the pipeline for performance and efficiency, ensuring that tasks are executed in the most efficient manner possible.
 
 ## In the Context of Our SQL Chatbot:
-- *Airflow Gantt Chart: **Airflow* provides a visual representation of task durations and dependencies in the form of a Gantt chart. This helps us identify tasks that are taking too long and investigate potential bottlenecks in the pipeline.
+- *Airflow Gantt Chart:* *Airflow* provides a visual representation of task durations and dependencies in the form of a Gantt chart. This helps us identify tasks that are taking too long and investigate potential bottlenecks in the pipeline.
 
 ![Logo](assets/extract_bigquery_schema_gantt.png)
 ![Logo](assets/Feedback_embeddings_gantt.png)
