@@ -176,3 +176,25 @@ The CI/CD pipeline is triggered by any push to the `main` branch or by a pull re
 - **Test Stage**: Run unit tests using `pytest` and `unittest`, ensuring all components are functioning as expected.
 - **Deploy Stage**: If tests pass successfully, the DAGs and associated scripts are deployed to Cloud Composer.
 
+# Tracking and Logging
+
+## Purpose:
+Tracking and logging are essential for monitoring the data pipeline’s execution and detecting issues at each stage.
+
+## In the Context of Our SQL Chatbot:
+- *Tracking: The execution flow of the pipeline (e.g., schema extraction, embedding generation, feedback processing) is tracked through **Airflow*. This helps to ensure that tasks are executed in the correct order and that issues are identified promptly.
+  
+- *Logging*: Monitor logs from Airflow in the Composer environment for debugging. Logs are available for each task within the DAG.
+
+
+# Pipeline Flow Optimization
+
+## Purpose:
+To optimize the pipeline for performance and efficiency, ensuring that tasks are executed in the most efficient manner possible.
+
+## In the Context of Our SQL Chatbot:
+- *Airflow Gantt Chart: **Airflow* provides a visual representation of task durations and dependencies in the form of a Gantt chart. This helps us identify tasks that are taking too long and investigate potential bottlenecks in the pipeline.
+
+![Logo](assets/extract_bigquery_schema_gantt.png)
+![Logo](assets/Feedback_embeddings_gantt.png)
+![Logo](assets/schema_embeddings_gantt.png)
