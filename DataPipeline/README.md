@@ -12,6 +12,20 @@ This repository hosts the data pipeline designed to process data in BigQuery. Th
 # Data Pipeline - Key Components and Workflow
 
 The data pipeline is implemented using Apache Airflow to orchestrate tasks that extract, transform, and load (ETL) data into BigQuery. It includes several DAGs (Directed Acyclic Graphs) to automate schema extraction, feedback processing, and embedding generation for enhanced query interpretation.
+## Data Acquistion 
+The SQL chatbot operates on data stored in BigQuery, where users execute queries to retrieve relevant information. Unlike RAG-based systems, our chatbot directly translates natural language queries into SQL without requiring external document retrieval. Since our use case does not involve data ingestion or ETL processes, our data pipeline focuses on three key workflows:
+1. **Schema Extraction**:
+   - Extracts metadata (table names, column names, data types, etc.) from BigQuery.
+   - Ensures that the chatbot understands the database structure to generate accurate SQL queries.
+2. **Schema Embeddings Generation**:
+   - Converts extracted schema information into vector embeddings.
+   - Enhances query generation by allowing semantic understanding of database structure.
+3. **Feedback Processing**:
+   - Collects user feedback on query results
+   - Adjusts future query generation by leveraging historical feedback for continuous improvement.
+   - Stores feedback data using ChromaDB for retrieval during query refinement.
+
+Since the pipeline does not involve direct data acquisition from APIs or external sources, our focus is on schema understanding, embeddings, and iterative feedback integration to enhance SQL generation accuracy.
 
 ## Key Components:
 1. **Schema Extraction DAG (`extract_bigquery_schema`)**
