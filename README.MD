@@ -52,15 +52,7 @@ pip install -r requirements.txt
 
 ### 3. Database Setup
 
-1. Ensure you have a MySQL database with manufacturing data.
-2. The application expects the following database structure:
-   - Tables for customers, orders, products, and other manufacturing entities.
-   - Proper foreign key relationships between tables.
-3. You can configure the database connection in the application's sidebar:
-   - Host (default: localhost)
-   - User (default: root)
-   - Password
-   - Database name (default: manufacturing)
+1. This project uses BigQuery Bucket Ids and Dataset Ids. Creating a bucket on BigQuery and storing data is required.
 
 ### 4. Google Cloud Setup (for Production/Cloud Deployment)
 
