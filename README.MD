@@ -2,10 +2,9 @@
 
 ### Prerequisites
 - OpenAI API Key
-- Google Cloud Account with billing enabled (if using GCP resources like BigQuery or Cloud Composer)
+- Google Cloud Account with billing enabled
 - Python 3.10+
-- [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) (for GCP-related resources)
-- MySQL database
+- [Google Cloud SDK](https://cloud.google.com/sdk/docs/install)
 
 ## Setup Instructions
 
@@ -45,14 +44,32 @@ pip install -r requirements.txt
       export OPEN_AI_API_KEY="api_key"
       ```
 2. For OpenAI API:
-   - Visit the [OpenAI API Key Page](https://platform.openai.com/account/api-keys)
+   - Visit the [OpenAI API Key](https://platform.openai.com/account/api-keys)
    - Create an API key and add it to your `.env` file as `OPENAI_API_KEY`
 
 > **IMPORTANT:** Never commit your `.env` file or any files containing API keys to version control!
 
-### 3. Database Setup
+### 3. BigQuery Setup
 
-1. This project uses BigQuery Bucket Ids and Dataset Ids. Creating a bucket on BigQuery and storing data is required.
+1. **Create a BigQuery Dataset**:
+   ```bash
+   bq --location=REGION mk --dataset YOUR_PROJECT_ID:DATASET_NAME
+   ```
+
+2. **Upload or Create Tables**: 
+   - You can upload data using the BigQuery console
+   - Or use the bq command-line tool:
+     ```bash
+     bq load --source_format=FORMAT DATASET_NAME.TABLE_NAME PATH_TO_DATA SCHEMA
+     ```
+
+3. **Verify Dataset Access**:
+   - Ensure your service account has at least `BigQuery Data Viewer` and `BigQuery Job User` roles
+   - For the application to run queries, the service account needs appropriate permissions
+
+4. **Configure Project and Dataset IDs**:
+   - When launching the application, you'll need to provide your GCP Project ID and BigQuery Dataset ID
+   - These can be entered in the sidebar of the Streamlit application
 
 ### 4. Google Cloud Setup (for Production/Cloud Deployment)
 
@@ -78,9 +95,9 @@ pip install -r requirements.txt
 #### Create Service Account Credentials
 1. In the Google Cloud Console, navigate to IAM & Admin > Service Accounts
 2. Create a new service account with the following roles:
-   - BigQuery Admin
-   - Storage Admin
-   - Vertex AI User
+   - BigQuery Admin (or more restrictive roles as needed)
+   - Storage Admin (if using GCS)
+   - Vertex AI User (if using Vertex AI)
 3. Create and download a JSON key for this service account
 4. Store the JSON key file securely and reference it in your `.env` file
 
@@ -95,7 +112,7 @@ streamlit run src/app.py
 
 ### Natural Language Queries
 - Transform English questions into SQL queries using OpenAI's GPT model
-- Example: "Show customer IDs and addresses for customers who ordered product ID 50"
+- Example: "Show top 10 artists based on popularity"
 
 ### Data Visualization
 The dashboard supports various visualization types:
@@ -175,7 +192,7 @@ bq --location=REGION mk --dataset YOUR_PROJECT_ID:$DATASET_NAME
 
 1. **OpenAI API Key Not Found**: Verify that your `.env` file contains a valid `OPENAI_API_KEY`.
 
-2. **Database Connection Errors**: Check database credentials and ensure the MySQL server is running.
+2. **BigQuery Connection Errors**: Check that your service account has the necessary permissions and that the project ID and dataset ID are correct.
 
 3. **ChromaDB Errors**: Make sure the application has write permissions to create the `./feedback_db` directory.
 
@@ -191,7 +208,7 @@ bq --location=REGION mk --dataset YOUR_PROJECT_ID:$DATASET_NAME
 
 The application requires the following Python packages:
 - streamlit
-- mysql-connector-python
+- google-cloud-bigquery
 - pandas
 - plotly
 - openai
