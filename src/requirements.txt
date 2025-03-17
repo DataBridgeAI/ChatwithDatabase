@@ -6,3 +6,5 @@ python-dotenv
 plotly
 db-dtypes
 pydantic-ai
+detoxify
+sentence-transformers

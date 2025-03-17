@@ -20,3 +20,5 @@ src/.env
 DataPipeline/config/gcpconnectkey.json
 DataPipeline/logs/
 myenv
+retrieved_chroma/
+retrieved_chroma.zip
