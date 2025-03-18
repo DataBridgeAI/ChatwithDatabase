@@ -1,6 +1,7 @@
 
 import streamlit as st
 import pandas as pd
+import time
 
 from database.query_executor import execute_bigquery_query
 from database.schema import get_bigquery_schema
@@ -11,6 +12,7 @@ from ai.query_validator import validate_query
 from feedback.feedback_manager import store_feedback
 from feedback.vector_search import retrieve_similar_query
 from feedback.chroma_setup import download_and_extract_chromadb
+from monitoring.mlflow_config import setup_mlflow, log_query_generation
 
 # Setup ChromaDB at startup
 try:
@@ -18,6 +20,12 @@ try:
 except Exception as e:
     st.error(f"Failed to setup ChromaDB: {str(e)}")
 
+# Initialize MLflow at startup - wrap in try-except to handle potential errors
+try:
+    experiment_id = setup_mlflow()
+    print(f"MLflow initialized with experiment ID: {experiment_id}")
+except Exception as e:
+    print(f"Error initializing MLflow: {str(e)}")
 
 st.set_page_config(
     page_title="BigQuery Analytics",
@@ -87,39 +95,69 @@ def reset_states():
     if "viz_option" in st.session_state:
         del st.session_state.viz_option
 
-def execute_new_query():
-    """Helper function to execute a new query generation"""
-    with st.spinner("Generating SQL query..."):
-        st.session_state.generated_sql = generate_sql(
-            st.session_state.user_query,
-            st.session_state.schema,
-            project_id,
-            dataset_id
-        )
+def execute_new_query(start_time):
+    """Execute new query generation with MLflow tracking"""
+    error = None
+    try:
+        with st.spinner("Generating SQL query..."):
+            st.session_state.generated_sql = generate_sql(
+                st.session_state.user_query,
+                st.session_state.schema,
+                project_id,
+                dataset_id
+            )
         
-    with st.spinner("Executing SQL query..."):
-        result = execute_bigquery_query(st.session_state.generated_sql)
-        if result.empty or "Error" in result.columns:
-            st.session_state.result = None
-            st.error("No data returned or an error occurred.")
-            if "Error" in result.columns:
-                st.error(result["Error"][0])
-        else:
-            st.session_state.result = result
+        with st.spinner("Executing SQL query..."):
+            result = execute_bigquery_query(st.session_state.generated_sql)
+            if result.empty or "Error" in result.columns:
+                st.session_state.result = None
+                error = "No data returned or an error occurred."
+                st.error(error)
+                if "Error" in result.columns:
+                    error = result["Error"][0]
+                    st.error(error)
+            else:
+                st.session_state.result = result
+    except Exception as e:
+        error = str(e)
+        st.error(f"Error: {error}")
+    finally:
+        try:
+            # Log to MLflow
+            log_query_generation(
+                user_query=st.session_state.user_query,
+                generated_sql=st.session_state.generated_sql,
+                execution_time=time.time() - start_time,
+                error=error,
+                similar_query_found=False,
+                metadata={
+                    "dataset": dataset_id,
+                    "project": project_id
+                }
+            )
+        except Exception as e:
+            print(f"Error logging to MLflow: {str(e)}")
 
 if st.button("Generate & Execute Query"):
     reset_states()
+    st.session_state.start_time = time.time()  # Store start_time in session state
     
     if not st.session_state.schema:
         st.error("Please load the BigQuery schema first!")
     else:
-        # First validate the query
+        # Validate query
         validation_error = validate_query(user_query)
         if validation_error:
             st.error(validation_error)
+            log_query_generation(
+                user_query=user_query,
+                generated_sql="",
+                execution_time=time.time() - st.session_state.start_time,
+                error=validation_error
+            )
             st.stop()
-            
-        # If validation passes, try to find a similar query
+        
+        # Try to find similar query
         similar_query, past_sql = retrieve_similar_query(user_query)
         
         if similar_query and past_sql:
@@ -128,8 +166,7 @@ if st.button("Generate & Execute Query"):
             st.session_state.showing_suggestion = True
             st.session_state.waiting_for_choice = True
         else:
-            # No similar query found, proceed with new generation
-            execute_new_query()
+            execute_new_query(st.session_state.start_time)  # Use start_time from session state
 
 if st.session_state.get('waiting_for_choice', False):
     st.write("Similar query found:", st.session_state.similar_query)
@@ -157,7 +194,7 @@ if st.session_state.get('waiting_for_choice', False):
                 else:
                     st.session_state.result = result
         else:  # No
-            execute_new_query()
+            execute_new_query(st.session_state.start_time)
 
 # Display Results and Collect Feedback
 if st.session_state.result is not None:
@@ -176,12 +213,26 @@ if st.session_state.result is not None:
         with col1:
             if st.button("👍 Yes"):
                 store_feedback(user_query, st.session_state.generated_sql, "👍 Yes")
+                log_query_generation(
+                    user_query=user_query,
+                    generated_sql=st.session_state.generated_sql,
+                    execution_time=time.time() - st.session_state.get('start_time', time.time()),
+                    feedback="👍 Yes",
+                    similar_query_found=bool(st.session_state.get('similar_query'))
+                )
                 st.session_state.feedback_submitted = True
                 st.success("Thank you for your feedback!")
                 
         with col2:
             if st.button("👎 No"):
                 store_feedback(user_query, st.session_state.generated_sql, "👎 No")
+                log_query_generation(
+                    user_query=user_query,
+                    generated_sql=st.session_state.generated_sql,
+                    execution_time=time.time() - st.session_state.get('start_time', time.time()),
+                    feedback="👎 No",
+                    similar_query_found=bool(st.session_state.get('similar_query'))
+                )
                 st.session_state.feedback_submitted = True
                 st.success("Thank you for your feedback!")
 

@@ -22,3 +22,6 @@ DataPipeline/logs/
 myenv
 retrieved_chroma/
 retrieved_chroma.zip
+mlruns/
+query_details.txt
+mlflow.db
