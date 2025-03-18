@@ -180,19 +180,43 @@ if st.session_state.get('waiting_for_choice', False):
     
     if use_suggested != "Select an option":
         st.session_state.waiting_for_choice = False  # Reset the flag
+        error = None
         
         if use_suggested == "Yes":
             st.session_state.generated_sql = st.session_state.past_sql
             # Execute the suggested query
-            with st.spinner("Executing suggested SQL query..."):
-                result = execute_bigquery_query(st.session_state.generated_sql)
-                if result.empty or "Error" in result.columns:
-                    st.session_state.result = None
-                    st.error("No data returned or an error occurred.")
-                    if "Error" in result.columns:
-                        st.error(result["Error"][0])
-                else:
-                    st.session_state.result = result
+            try:
+                with st.spinner("Executing suggested SQL query..."):
+                    result = execute_bigquery_query(st.session_state.generated_sql)
+                    if result.empty or "Error" in result.columns:
+                        st.session_state.result = None
+                        error = "No data returned or an error occurred."
+                        st.error(error)
+                        if "Error" in result.columns:
+                            error = result["Error"][0]
+                            st.error(error)
+                    else:
+                        st.session_state.result = result
+            except Exception as e:
+                error = str(e)
+                st.error(f"Error: {error}")
+            finally:
+                try:
+                    # Log to MLflow for suggested query
+                    log_query_generation(
+                        user_query=st.session_state.user_query,
+                        generated_sql=st.session_state.generated_sql,
+                        execution_time=time.time() - st.session_state.start_time,
+                        error=error,
+                        similar_query_found=True,  # This indicates we used a suggested query
+                        metadata={
+                            "dataset": dataset_id,
+                            "project": project_id,
+                            "query_source": "suggestion"
+                        }
+                    )
+                except Exception as e:
+                    print(f"Error logging to MLflow: {str(e)}")
         else:  # No
             execute_new_query(st.session_state.start_time)
 
