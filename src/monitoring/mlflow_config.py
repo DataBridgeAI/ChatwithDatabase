@@ -1,86 +1,174 @@
 import mlflow
 import os
 from datetime import datetime
+import sqlparse
+from typing import Dict, Any, Optional
+import time
 
-# MLflow tracking URI - using local filesystem
-MLFLOW_TRACKING_URI = "file:./mlruns"  # Changed to use local filesystem
-EXPERIMENT_NAME = "sql_generation_tracking"
+class QueryTracker:
+    def __init__(self):
+        self.MLFLOW_TRACKING_URI = "file:./mlruns"
+        self.EXPERIMENT_NAME = "sql_execution_tracking"
+        self.setup_mlflow()
 
-def setup_mlflow():
-    """Initialize MLflow configuration"""
-    # Set the tracking URI
-    mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
-    
-    # Get or create the experiment
-    try:
-        # First try to get existing experiment
-        experiment = mlflow.get_experiment_by_name(EXPERIMENT_NAME)
-        if experiment is None:
-            # Create new experiment if it doesn't exist
-            experiment_id = mlflow.create_experiment(
-                EXPERIMENT_NAME,
-                tags={"version": "1.0", "env": os.getenv("ENVIRONMENT", "development")}
-            )
-        else:
-            experiment_id = experiment.experiment_id
-    except Exception as e:
-        print(f"Error setting up MLflow: {str(e)}")
-        experiment_id = 0  # Use default experiment if there's an error
-    
-    mlflow.set_experiment(EXPERIMENT_NAME)
-    return experiment_id
+    def setup_mlflow(self):
+        """Initialize MLflow configuration"""
+        mlflow.set_tracking_uri(self.MLFLOW_TRACKING_URI)
+        
+        try:
+            experiment = mlflow.get_experiment_by_name(self.EXPERIMENT_NAME)
+            if experiment is None:
+                self.experiment_id = mlflow.create_experiment(
+                    self.EXPERIMENT_NAME,
+                    tags={"version": "1.0", "env": os.getenv("ENVIRONMENT", "development")}
+                )
+            else:
+                self.experiment_id = experiment.experiment_id
+            
+            mlflow.set_experiment(self.EXPERIMENT_NAME)
+        except Exception as e:
+            print(f"Error setting up MLflow: {str(e)}")
+            self.experiment_id = 0
 
-def log_query_generation(
-    user_query: str,
-    generated_sql: str,
-    execution_time: float,
-    feedback: str = None,
-    error: str = None,
-    similar_query_found: bool = False,
-    metadata: dict = None
-):
-    """Log query generation details to MLflow"""
-    try:
-        with mlflow.start_run(run_name=f"query_gen_{datetime.now().strftime('%Y%m%d_%H%M%S')}"):
-            # Log parameters
-            params = {
-                "model": "gpt-4",
-                "temperature": 0.3,
-                "similar_query_found": similar_query_found
-            }
-            if metadata:
-                params.update(metadata)
-            mlflow.log_params(params)
+    def log_query_execution(
+        self,
+        user_query: str,
+        generated_sql: str,
+        execution_time: float,
+        total_time: float,
+        query_result: Optional[Any] = None,
+        error: Optional[str] = None,
+        feedback: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None
+    ) -> None:
+        """Log comprehensive query execution details"""
+        try:
+            formatted_sql = sqlparse.format(
+                generated_sql,
+                reindent=True,
+                keyword_case='upper'
+            ) if generated_sql else ""
             
-            # Log metrics
-            metrics = {
-                "execution_time": execution_time,
-                "query_length": len(user_query),
-                "sql_length": len(generated_sql)
-            }
+            run_name = f"query_exec_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
             
-            # Add feedback score if provided
-            if feedback is not None:
-                metrics["feedback_score"] = 1.0 if feedback == "👍 Yes" else 0.0 if feedback == "👎 No" else -1.0
-            
-            mlflow.log_metrics(metrics)
-            
-            # Log query details as text artifact
-            artifact_path = os.path.join(os.getcwd(), "query_details.txt")
+            with mlflow.start_run(run_name=run_name):
+                # Log parameters
+                params = {
+                    "model": "gpt-4",
+                    "temperature": 0.3,
+                }
+                if metadata:
+                    params.update(metadata)
+                mlflow.log_params(params)
+                
+                # Calculate metrics
+                metrics = {
+                    "bigquery_execution_time": execution_time,  # Actual BigQuery execution time
+                    "total_processing_time": total_time,        # Total time including LLM
+                    "query_length": len(user_query),
+                    "sql_length": len(formatted_sql),
+                }
+                
+                if formatted_sql:
+                    metrics.update({
+                        "table_count": self._count_tables(formatted_sql),
+                        "join_count": self._count_joins(formatted_sql),
+                        "where_conditions": self._count_where_conditions(formatted_sql),
+                    })
+                
+                if query_result is not None:
+                    if hasattr(query_result, '__len__'):
+                        metrics["result_row_count"] = len(query_result)
+                    if hasattr(query_result, 'columns'):
+                        metrics["result_column_count"] = len(query_result.columns)
+                
+                mlflow.log_metrics(metrics)
+                
+                # Log tags
+                tags = {
+                    "status": "error" if error else "success",
+                    "performance": self._categorize_performance(execution_time)  # Use BigQuery execution time
+                }
+                
+                if feedback:
+                    tags["feedback"] = feedback
+                
+                if formatted_sql:
+                    tags.update({
+                        "complexity": self._categorize_complexity(metrics),
+                        "query_type": self._determine_query_type(formatted_sql)
+                    })
+                
+                mlflow.set_tags(tags)
+                
+                # Log query details
+                self._log_query_details(user_query, formatted_sql, error)
+                
+        except Exception as e:
+            print(f"Error logging to MLflow: {str(e)}")
+
+    def _count_tables(self, sql: str) -> int:
+        return sql.upper().count("FROM ") + sql.upper().count("JOIN ")
+
+    def _count_joins(self, sql: str) -> int:
+        return sql.upper().count("JOIN ")
+
+    def _count_where_conditions(self, sql: str) -> int:
+        return (sql.upper().count("WHERE ") + 
+                sql.upper().count(" AND ") + 
+                sql.upper().count(" OR "))
+
+    def _categorize_performance(self, execution_time: float) -> str:
+        """Categorize performance based on BigQuery execution time"""
+        if execution_time < 0.5:  # Less than 500ms
+            return "fast"
+        elif execution_time < 2.0:  # Less than 2 seconds
+            return "medium"
+        return "slow"
+
+    def _categorize_complexity(self, metrics: Dict[str, float]) -> str:
+        complexity_score = (
+            metrics.get("table_count", 0) * 2 +
+            metrics.get("join_count", 0) * 3 +
+            metrics.get("where_conditions", 0)
+        )
+        
+        if complexity_score < 5:
+            return "simple"
+        elif complexity_score < 10:
+            return "moderate"
+        return "complex"
+
+    def _determine_query_type(self, sql: str) -> str:
+        sql_upper = sql.upper()
+        if "SELECT" in sql_upper:
+            if "GROUP BY" in sql_upper:
+                return "aggregate"
+            elif "JOIN" in sql_upper:
+                return "join"
+            return "select"
+        elif "INSERT" in sql_upper:
+            return "insert"
+        elif "UPDATE" in sql_upper:
+            return "update"
+        elif "DELETE" in sql_upper:
+            return "delete"
+        return "other"
+
+    def _log_query_details(self, user_query: str, sql: str, error: Optional[str]) -> None:
+        artifact_path = os.path.join(os.getcwd(), "query_details.txt")
+        try:
             with open(artifact_path, "w") as f:
-                f.write(f"User Query: {user_query}\n")
-                f.write(f"Generated SQL: {generated_sql}\n")
+                f.write(f"User Query: {user_query}\n\n")
+                f.write(f"Generated SQL:\n{sql}\n")
                 if error:
-                    f.write(f"Error: {error}\n")
+                    f.write(f"\nError: {error}\n")
             
             mlflow.log_artifact(artifact_path)
+        finally:
             if os.path.exists(artifact_path):
                 os.remove(artifact_path)
-            
-            # Log tags
-            mlflow.set_tags({
-                "query_type": "similar" if similar_query_found else "new",
-                "status": "error" if error else "success"
-            })
-    except Exception as e:
-        print(f"Error logging to MLflow: {str(e)}")
+
+
+
+

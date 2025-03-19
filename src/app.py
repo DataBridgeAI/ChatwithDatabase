@@ -12,7 +12,7 @@ from ai.query_validator import validate_query
 from feedback.feedback_manager import store_feedback
 from feedback.vector_search import retrieve_similar_query
 from feedback.chroma_setup import download_and_extract_chromadb
-from monitoring.mlflow_config import setup_mlflow, log_query_generation
+from monitoring.mlflow_config import QueryTracker
 
 # Setup ChromaDB at startup
 try:
@@ -20,12 +20,8 @@ try:
 except Exception as e:
     st.error(f"Failed to setup ChromaDB: {str(e)}")
 
-# Initialize MLflow at startup - wrap in try-except to handle potential errors
-try:
-    experiment_id = setup_mlflow()
-    print(f"MLflow initialized with experiment ID: {experiment_id}")
-except Exception as e:
-    print(f"Error initializing MLflow: {str(e)}")
+# Initialize the query tracker
+query_tracker = QueryTracker()
 
 st.set_page_config(
     page_title="BigQuery Analytics",
@@ -96,8 +92,11 @@ def reset_states():
         del st.session_state.viz_option
 
 def execute_new_query(start_time):
-    """Execute new query generation with MLflow tracking"""
+    """Execute new query generation with enhanced tracking"""
     error = None
+    result = None
+    query_execution_time = 0
+    
     try:
         with st.spinner("Generating SQL query..."):
             st.session_state.generated_sql = generate_sql(
@@ -108,7 +107,10 @@ def execute_new_query(start_time):
             )
         
         with st.spinner("Executing SQL query..."):
-            result = execute_bigquery_query(st.session_state.generated_sql)
+            result, query_execution_time = execute_bigquery_query(st.session_state.generated_sql)
+            # Store execution time in session state for later use
+            st.session_state.query_execution_time = query_execution_time
+            
             if result.empty or "Error" in result.columns:
                 st.session_state.result = None
                 error = "No data returned or an error occurred."
@@ -122,21 +124,21 @@ def execute_new_query(start_time):
         error = str(e)
         st.error(f"Error: {error}")
     finally:
-        try:
-            # Log to MLflow
-            log_query_generation(
-                user_query=st.session_state.user_query,
-                generated_sql=st.session_state.generated_sql,
-                execution_time=time.time() - start_time,
-                error=error,
-                similar_query_found=False,
-                metadata={
-                    "dataset": dataset_id,
-                    "project": project_id
-                }
-            )
-        except Exception as e:
-            print(f"Error logging to MLflow: {str(e)}")
+        total_time = time.time() - start_time
+        
+        # Log query execution details
+        query_tracker.log_query_execution(
+            user_query=st.session_state.user_query,
+            generated_sql=st.session_state.generated_sql,
+            execution_time=query_execution_time,
+            total_time=total_time,
+            query_result=result,
+            error=error,
+            metadata={
+                "dataset": dataset_id,
+                "project": project_id
+            }
+        )
 
 if st.button("Generate & Execute Query"):
     reset_states()
@@ -149,11 +151,17 @@ if st.button("Generate & Execute Query"):
         validation_error = validate_query(user_query)
         if validation_error:
             st.error(validation_error)
-            log_query_generation(
+            total_time = time.time() - st.session_state.start_time
+            query_tracker.log_query_execution(
                 user_query=user_query,
                 generated_sql="",
-                execution_time=time.time() - st.session_state.start_time,
-                error=validation_error
+                execution_time=0,  # No execution happened
+                total_time=total_time,  # Total time until validation error
+                error=validation_error,
+                metadata={
+                    "dataset": dataset_id,
+                    "project": project_id
+                }
             )
             st.stop()
         
@@ -187,7 +195,7 @@ if st.session_state.get('waiting_for_choice', False):
             # Execute the suggested query
             try:
                 with st.spinner("Executing suggested SQL query..."):
-                    result = execute_bigquery_query(st.session_state.generated_sql)
+                    result, query_execution_time = execute_bigquery_query(st.session_state.generated_sql)
                     if result.empty or "Error" in result.columns:
                         st.session_state.result = None
                         error = "No data returned or an error occurred."
@@ -201,22 +209,19 @@ if st.session_state.get('waiting_for_choice', False):
                 error = str(e)
                 st.error(f"Error: {error}")
             finally:
-                try:
-                    # Log to MLflow for suggested query
-                    log_query_generation(
-                        user_query=st.session_state.user_query,
-                        generated_sql=st.session_state.generated_sql,
-                        execution_time=time.time() - st.session_state.start_time,
-                        error=error,
-                        similar_query_found=True,  # This indicates we used a suggested query
-                        metadata={
-                            "dataset": dataset_id,
-                            "project": project_id,
-                            "query_source": "suggestion"
-                        }
-                    )
-                except Exception as e:
-                    print(f"Error logging to MLflow: {str(e)}")
+                total_time = time.time() - st.session_state.start_time
+                query_tracker.log_query_execution(
+                    user_query=st.session_state.user_query,
+                    generated_sql=st.session_state.generated_sql,
+                    execution_time=query_execution_time,  # Use actual BigQuery execution time
+                    total_time=total_time,  # Total time including user decision
+                    error=error,
+                    metadata={
+                        "dataset": dataset_id,
+                        "project": project_id,
+                        "query_source": "suggestion"
+                    }
+                )
         else:  # No
             execute_new_query(st.session_state.start_time)
 
@@ -237,12 +242,17 @@ if st.session_state.result is not None:
         with col1:
             if st.button("👍 Yes"):
                 store_feedback(user_query, st.session_state.generated_sql, "👍 Yes")
-                log_query_generation(
+                total_time = time.time() - st.session_state.get('start_time', time.time())
+                query_tracker.log_query_execution(
                     user_query=user_query,
                     generated_sql=st.session_state.generated_sql,
-                    execution_time=time.time() - st.session_state.get('start_time', time.time()),
+                    execution_time=st.session_state.get('query_execution_time', 0),  # Use stored execution time
+                    total_time=total_time,
                     feedback="👍 Yes",
-                    similar_query_found=bool(st.session_state.get('similar_query'))
+                    metadata={
+                        "dataset": dataset_id,
+                        "project": project_id
+                    }
                 )
                 st.session_state.feedback_submitted = True
                 st.success("Thank you for your feedback!")
@@ -250,12 +260,17 @@ if st.session_state.result is not None:
         with col2:
             if st.button("👎 No"):
                 store_feedback(user_query, st.session_state.generated_sql, "👎 No")
-                log_query_generation(
+                total_time = time.time() - st.session_state.get('start_time', time.time())
+                query_tracker.log_query_execution(
                     user_query=user_query,
                     generated_sql=st.session_state.generated_sql,
-                    execution_time=time.time() - st.session_state.get('start_time', time.time()),
+                    execution_time=st.session_state.get('query_execution_time', 0),  # Use stored execution time
+                    total_time=total_time,
                     feedback="👎 No",
-                    similar_query_found=bool(st.session_state.get('similar_query'))
+                    metadata={
+                        "dataset": dataset_id,
+                        "project": project_id
+                    }
                 )
                 st.session_state.feedback_submitted = True
                 st.success("Thank you for your feedback!")
