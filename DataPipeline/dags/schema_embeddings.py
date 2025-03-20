@@ -30,7 +30,7 @@ embedding_model = VertexAIEmbeddings(model=VERTEX_MODEL)
 with DAG(
     dag_id="schema_embeddings_dag",
     schedule_interval=None,  # Set as needed
-    start_date=datetime(2024, 3, 1),
+    start_date=datetime(2025, 3, 1),
     catchup=False,
 ) as dag:
     

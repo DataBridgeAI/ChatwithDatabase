@@ -6,7 +6,8 @@ from database.schema import get_bigquery_schema
 from ai.llm import generate_sql
 from ui.layout import render_sidebar
 from ui.visualization import visualize_data
-from ai.query_validator import validate_query  # Assuming query_validator is defined in a separate file
+from ai.query_validator import validate_query
+from promptfilter.semantic_search import check_query_relevance
 
 
 st.set_page_config(
@@ -44,12 +45,14 @@ if st.button("Generate & Execute Query"):
     if not st.session_state.schema:
         st.error("Please load the BigQuery schema first!")
     else:
-        # Validate the user query before generating SQL
+        # Step 1: Check for toxic content
         validation_error = validate_query(user_query)
-        
         if validation_error:
-            # If the query is invalid, show the error and don't proceed further
             st.error(validation_error)
+        # Step 2: Check relevance
+        elif not check_query_relevance(user_query):
+            st.error("❌ Query appears unrelated to the database schema")
+        # Step 3: If both checks pass, generate and execute SQL
         else:
             with st.spinner("Generating SQL query..."):
                 generated_sql = generate_sql(
