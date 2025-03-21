@@ -22,4 +22,5 @@ DataPipeline/docker-compose.yaml
 DataPipeline/Dockerfile
 DataPipeline/logs/
 myenv
-DataPipeline/schema_embeddings_test.oy
+DataPipeline/schema_embeddings_test.py
+src/promptfilter/mytest.py
