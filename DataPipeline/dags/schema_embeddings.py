@@ -1,57 +1,54 @@
-# # Task dependencies
-# extract_schema_task >> generate_embeddings_task
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-from datetime import datetime
-import json
-import chromadb
-from langchain_google_vertexai import VertexAIEmbeddings
-from google.cloud import bigquery, storage
-import shutil
-import os
 from airflow.providers.slack.operators.slack_webhook import SlackWebhookOperator
 from airflow.models import Variable
-from schema_embeddings_processor import create_embeddings, save_chromadb_to_gcs
+from datetime import timedelta, datetime
 
-# Configuration
+# Import the processing functions
+from schema_embeddings_processor import (
+    generate_schema_embeddings,
+    upload_embeddings_to_gcs,
+    generate_and_store_embeddings
+)
+
+# Configuration (matching processor.py)
 PROJECT_ID = "chatwithdata-451800"
 DATASET_ID = "RetailDataset"
 BUCKET_NAME = "bigquery-embeddings-store"
-CHROMA_PATH = "/tmp/chromadb_store"
-GCS_CHROMA_PATH = f"{DATASET_ID}/chromadb_store.zip"
 VERTEX_MODEL = "textembedding-gecko@003"
 
-
-# Initialize Vertex AI Embeddings
-embedding_model = VertexAIEmbeddings(model=VERTEX_MODEL)
-
-
-# Defining DAG
+# Define the DAG
 with DAG(
     dag_id="schema_embeddings_dag",
-    schedule_interval=None,  # Set as needed
-    start_date=datetime(2024, 3, 1),
+    schedule_interval=timedelta(days=1),  # Set as needed
+    start_date=datetime(2025, 3, 1),
     catchup=False,
+    tags=['schema', 'embeddings']
 ) as dag:
     
-    create_embeddings_task = PythonOperator(
-        task_id="create_embeddings",
-        python_callable=create_embeddings
+    # Task 1: Generate embeddings and store locally
+    generate_embeddings_task = PythonOperator(
+        task_id="generate_embeddings",
+        python_callable=generate_schema_embeddings,
+        dag=dag
     )
     
-    save_chromadb_task = PythonOperator(
-        task_id="save_chromadb_to_gcs",
-        python_callable=save_chromadb_to_gcs
+    # Task 2: Upload embeddings to GCS
+    upload_to_gcs_task = PythonOperator(
+        task_id="upload_to_gcs",
+        python_callable=upload_embeddings_to_gcs,
+        dag=dag
     )
 
+    # Task 3: Send Slack notification
     send_slack_notification = SlackWebhookOperator(
-    task_id='send_slack_notification',
-    slack_webhook_conn_id='slack_webhook',  # Use this instead of http_conn_id
-    message="✅ Airflow DAG `schema_embeddings_dag` completed successfully!",
-    channel="#airflow-notifications",
-    username="airflow-bot",
-    dag=dag
+        task_id='send_slack_notification',
+        slack_webhook_conn_id='slack_webhook',
+        message="✅ Schema embeddings generation and upload completed successfully!",
+        channel="#airflow-notifications",
+        username="airflow-bot",
+        dag=dag
     )
 
-    
-    create_embeddings_task >> save_chromadb_task >> send_slack_notification
+    # Define task dependencies
+    generate_embeddings_task >> upload_to_gcs_task >> send_slack_notification
