@@ -40,15 +40,18 @@ def mock_bigquery_client():
     with patch("google.cloud.bigquery.Client", return_value=mock_client):
         yield mock_client
 
-def test_extract_schema(mock_bigquery_client):
-    """Test extracting schema from BigQuery."""
-    schema_data = extract_schema()
+@pytest.fixture
+def mock_storage_client():
+    """Mock GCS storage client."""
+    mock_client = MagicMock()
+    mock_bucket = MagicMock()
+    mock_blob = MagicMock()
 
-    # Adjust assertions to reflect updated mock data
-    assert len(schema_data) == 2
-    assert schema_data[0]["table"] == "test_table"
-    assert schema_data[0]["column"] == "column1"
-    assert "STRING" in schema_data[0]["semantic_text"]
+    mock_client.bucket.return_value = mock_bucket
+    mock_bucket.blob.return_value = mock_blob
+
+    with patch("google.cloud.storage.Client", return_value=mock_client):
+        yield mock_client, mock_blob
 
 @pytest.fixture
 def mock_vertex_embeddings():
@@ -62,6 +65,16 @@ def mock_vertex_embeddings():
     with patch("schema_embeddings_processor.embedding_model", mock_model):
         yield mock_model
 
+def test_extract_schema(mock_bigquery_client):
+    """Test extracting schema from BigQuery."""
+    schema_data = extract_schema()
+
+    # Adjust assertions to reflect updated mock data
+    assert len(schema_data) == 2
+    assert schema_data[0]["table"] == "test_table"
+    assert schema_data[0]["column"] == "column1"
+    assert "STRING" in schema_data[0]["semantic_text"]
+
 def test_create_embeddings(mock_vertex_embeddings, mock_bigquery_client):
     """Test generating embeddings and storing in JSON."""
     generate_schema_embeddings()
@@ -72,3 +85,26 @@ def test_create_embeddings(mock_vertex_embeddings, mock_bigquery_client):
     # Validate schema embeddings creation
     args, _ = mock_vertex_embeddings.embed_documents.call_args
     assert len(args[0]) == 2  # Two semantic texts
+
+def test_upload_embeddings(mock_storage_client):
+    """Test uploading embeddings to GCS."""
+    mock_client, mock_blob = mock_storage_client
+
+    # Create a fake embeddings file
+    local_path = os.path.join(TEMP_DIR, "test_embeddings.json")
+    with open(local_path, "w") as f:
+        json.dump({"dummy_key": "dummy_value"}, f)
+
+    # Patch the local path and bucket name used in the function
+    with patch("schema_embeddings_processor.LOCAL_EMBEDDINGS_PATH", local_path), \
+         patch("schema_embeddings_processor.BUCKET_NAME", "test-bucket"), \
+         patch("schema_embeddings_processor.gcs_client", mock_client):  # Mock the global GCS client
+
+        # Call the function under test
+        upload_embeddings_to_gcs()
+
+        # Ensure the mocked bucket was accessed
+        mock_client.bucket.assert_called_once_with("test-bucket")
+        
+        # Ensure the blob and upload_from_filename methods were called
+        mock_blob.upload_from_filename.assert_called_once_with(local_path)
