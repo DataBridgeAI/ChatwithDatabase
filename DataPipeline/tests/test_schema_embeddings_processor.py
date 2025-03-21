@@ -9,7 +9,11 @@ import sys
 sys.modules["langchain_google_vertexai"] = MagicMock()
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../scripts')))
 
-from schema_embeddings_processor import extract_schema, generate_schema_embeddings, upload_embeddings_to_gcs
+
+# Mocking `gcs_client` globally before importing the module
+mock_storage_client = MagicMock()
+with patch("google.cloud.storage.Client", return_value=mock_storage_client):
+    from schema_embeddings_processor import extract_schema, generate_schema_embeddings, upload_embeddings_to_gcs
 
 # Cross-platform temp directory
 TEMP_DIR = tempfile.gettempdir()

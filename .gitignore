@@ -25,3 +25,4 @@ retrieved_chroma.zip
 mlruns/
 query_details.txt
 mlflow.db
+.coverage
