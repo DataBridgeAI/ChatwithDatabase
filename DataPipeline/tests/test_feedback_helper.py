@@ -2,14 +2,16 @@ import os
 import shutil
 import pytest
 from unittest import mock
-from unittest.mock import MagicMock
+from unittest.mock import patch, MagicMock
 import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../scripts')))
 
-from feedback_helper import (
-    zip_directory, upload_zip_to_gcs, generate_query_embeddings,
-    fetch_user_queries, store_embeddings_gcs
-)
+mock_storage_client = MagicMock()
+with patch("google.cloud.storage.Client", return_value=mock_storage_client):
+    from feedback_helper import (
+        zip_directory, upload_zip_to_gcs, generate_query_embeddings,
+        fetch_user_queries, store_embeddings_gcs
+    )
 
 @pytest.fixture
 def mock_gcs_client():
