@@ -12,7 +12,7 @@ import sys
 sys.modules["langchain_google_vertexai"] = MagicMock()
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../scripts')))
 
-from schema_embeddings_processor import extract_schema, create_embeddings, save_chromadb_to_gcs
+from scripts.schema_embeddings_processor import extract_schema, generate_schema_embeddings, upload_embeddings_to_gcs
 
 # Use a cross-platform temp directory
 TEMP_DIR = tempfile.gettempdir()
@@ -77,7 +77,7 @@ def test_create_embeddings(mock_chroma_client, mock_vertex_embeddings, mock_bigq
     """Test generating embeddings and storing in ChromaDB."""
     _, mock_collection = mock_chroma_client
     
-    create_embeddings()
+    generate_schema_embeddings()
     
     mock_collection.add.assert_called_once()
     args, kwargs = mock_collection.add.call_args
