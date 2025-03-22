@@ -26,3 +26,4 @@ mlruns/
 query_details.txt
 mlflow.db
 .coverage
+model tuning/config
