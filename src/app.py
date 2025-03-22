@@ -8,17 +8,24 @@ from database.schema import get_bigquery_schema
 from ai.llm import generate_sql
 from ui.layout import render_sidebar
 from ui.visualization import visualize_data
-from ai.query_validator import validate_query
 from feedback.feedback_manager import store_feedback
 from feedback.vector_search import retrieve_similar_query
 from feedback.chroma_setup import download_and_extract_chromadb
 from monitoring.mlflow_config import QueryTracker
+
+from query_checks.content_checker import validate_query
+from promptfilter.semantic_search import download_embeddings, check_query_relevance
 
 # Setup ChromaDB at startup
 try:
     download_and_extract_chromadb()
 except Exception as e:
     st.error(f"Failed to setup ChromaDB: {str(e)}")
+
+try:
+    download_embeddings()
+except Exception as e:
+    st.error(f"Failed to download schema embeddings: {str(e)}")
 
 # Initialize the query tracker
 query_tracker = QueryTracker()
@@ -67,18 +74,21 @@ if st.session_state.schema:
 
 user_query = st.text_area(
     "Enter your question:",
-    st.session_state.user_query,
+    value=st.session_state.user_query,
     height=100,
-    key="query_input"
+    key="query_input",
+    on_change=lambda: setattr(st.session_state, 'user_query', st.session_state.query_input)
 )
 
+# Update session state with the new query
+st.session_state.user_query = user_query
 
 def reset_states():
     """Reset all relevant session states when generating new query"""
     st.session_state.result = None
     st.session_state.generated_sql = ""
     st.session_state.feedback_submitted = False
-    st.session_state.user_query = user_query
+    # st.session_state.user_query = user_query
     st.session_state.use_suggested = "Select an option"
     st.session_state.viz_option = "Select an option"
     st.session_state.showing_suggestion = False
@@ -151,20 +161,12 @@ if st.button("Generate & Execute Query"):
         validation_error = validate_query(user_query)
         if validation_error:
             st.error(validation_error)
-            total_time = time.time() - st.session_state.start_time
-            query_tracker.log_query_execution(
-                user_query=user_query,
-                generated_sql="",
-                execution_time=0,  # No execution happened
-                total_time=total_time,  # Total time until validation error
-                error=validation_error,
-                metadata={
-                    "dataset": dataset_id,
-                    "project": project_id
-                }
-            )
             st.stop()
-        
+        query_releavance_flag = check_query_relevance(user_query)
+        if not query_releavance_flag:
+            st.error("❌ Query appears unrelated to the database schema")
+            st.stop()
+
         # Try to find similar query
         similar_query, past_sql = retrieve_similar_query(user_query)
         
@@ -241,12 +243,14 @@ if st.session_state.result is not None:
         
         with col1:
             if st.button("👍 Yes"):
-                store_feedback(user_query, st.session_state.generated_sql, "👍 Yes")
+                # Pass execution_success=True when there's no error
+                execution_success = "Error" not in st.session_state.result.columns if st.session_state.result is not None else False
+                store_feedback(user_query, st.session_state.generated_sql, "👍 Yes", execution_success=execution_success)
                 total_time = time.time() - st.session_state.get('start_time', time.time())
                 query_tracker.log_query_execution(
                     user_query=user_query,
                     generated_sql=st.session_state.generated_sql,
-                    execution_time=st.session_state.get('query_execution_time', 0),  # Use stored execution time
+                    execution_time=st.session_state.get('query_execution_time', 0),
                     total_time=total_time,
                     feedback="👍 Yes",
                     metadata={
@@ -259,12 +263,14 @@ if st.session_state.result is not None:
                 
         with col2:
             if st.button("👎 No"):
-                store_feedback(user_query, st.session_state.generated_sql, "👎 No")
+                # Pass execution_success=True when there's no error
+                execution_success = "Error" not in st.session_state.result.columns if st.session_state.result is not None else False
+                store_feedback(user_query, st.session_state.generated_sql, "👎 No", execution_success=execution_success)
                 total_time = time.time() - st.session_state.get('start_time', time.time())
                 query_tracker.log_query_execution(
                     user_query=user_query,
                     generated_sql=st.session_state.generated_sql,
-                    execution_time=st.session_state.get('query_execution_time', 0),  # Use stored execution time
+                    execution_time=st.session_state.get('query_execution_time', 0),
                     total_time=total_time,
                     feedback="👎 No",
                     metadata={
