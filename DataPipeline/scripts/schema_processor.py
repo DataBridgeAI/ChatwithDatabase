@@ -17,29 +17,10 @@ def get_table_schema(client, project_id, dataset_id, table_id):
         table_ref = f"{project_id}.{dataset_id}.{table_id}"
         table = client.get_table(table_ref)
         
-        # Extract schema information
-        schema_fields = []
-        for field in table.schema:
-            schema_fields.append({
-                'name': field.name,
-                'type': field.field_type,
-                'mode': field.mode,
-                'description': field.description or ''
-            })
+        # Extract schema information in simplified format for drift detection
+        schema_fields = {field.name: field.field_type for field in table.schema}
         
-        # Get additional table metadata
-        metadata = {
-            'table_id': table_id,
-            'dataset_id': dataset_id,
-            'project_id': project_id,
-            'description': table.description or '',
-            'num_rows': table.num_rows,
-            'created': table.created.isoformat() if table.created else None,
-            'modified': table.modified.isoformat() if table.modified else None,
-            'schema': schema_fields
-        }
-        
-        return metadata
+        return schema_fields
     except Exception as e:
         logger.error(f"Error retrieving schema for {table_id}: {str(e)}")
         raise
@@ -110,16 +91,8 @@ def main(project_id, dataset_id, bucket_name, output_path):
             table_id = table.table_id
             schema = get_table_schema(bq_client, project_id, dataset_id, table_id)
             schemas[table_id] = schema
-            
-            # Save individual table schema
-            table_schema_json = json.dumps(schema, indent=2)
-            upload_to_gcs(bucket_name, f"{output_path}/tables/{table_id}_schema.json", table_schema_json)
         
-        # Format schemas for prompt
-        prompt_format = format_schema_for_prompt(schemas)
-        upload_to_gcs(bucket_name, f"{output_path}/prompt_schema.md", prompt_format)
-        
-        # Save raw schema data
+        # Save raw schema data in simplified format
         all_schemas_json = json.dumps(schemas, indent=2)
         upload_to_gcs(bucket_name, f"{output_path}/all_schemas.json", all_schemas_json)
         
