@@ -1,21 +1,3 @@
-# import os
-# from dotenv import load_dotenv
-
-# BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-# load_dotenv(os.path.join(BASE_DIR, "config", ".env"))  # Adjust the path to the .env file
-
-# def load_api_key():
-#     """Load API key from environment variables."""
-#     api_key = os.getenv("OPENAI_API_KEY")
-    
-#     if not api_key:
-#         raise ValueError(
-#             "OPEN API Key is missing. Please configure it in your .env file."
-#         )
-    
-#     return api_key
-
-
 import os
 from dotenv import load_dotenv
 

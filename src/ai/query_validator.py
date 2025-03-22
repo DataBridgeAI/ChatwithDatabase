@@ -79,7 +79,7 @@ def check_sql_safety(user_query: str) -> Optional[str]:
     if is_sql_command(user_query):
         return "Restricted SQL operation detected."
     return None
-
+  
 def validate_query(user_query: str) -> Optional[str]:
     """
     Validate query by checking sensitivity, intent, and SQL safety.
