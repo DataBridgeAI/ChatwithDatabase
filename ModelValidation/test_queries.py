@@ -13,7 +13,6 @@ TEST_QUERIES = [
     # "Calculate total revenue by product category"
 ]
 
-# Expected SQL results for validation
 EXPECTED_SQL_RESULTS = {
     "Show me total sales by product category": """
     SELECT 
