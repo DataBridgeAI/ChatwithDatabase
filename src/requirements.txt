@@ -1,4 +1,6 @@
 streamlit==1.42.2
+pandas
+numpy
 google-cloud-bigquery
 langchain
 langchain-community
@@ -13,3 +15,5 @@ chromadb
 detoxify
 thefuzz
 fuzzywuzzy
+pytest
+coverage

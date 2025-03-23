@@ -24,3 +24,5 @@ DataPipeline/logs/
 myenv
 DataPipeline/schema_embeddings_test.py
 src/promptfilter/mytest.py
+src/promptfilter/chroma_setup.py
+
