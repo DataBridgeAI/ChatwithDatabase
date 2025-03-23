@@ -6,3 +6,4 @@ numpy
 chromadb
 tf-keras
 langchain-google-vertexai
+streamlit

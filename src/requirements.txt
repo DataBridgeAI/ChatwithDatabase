@@ -6,3 +6,10 @@ python-dotenv
 plotly
 db-dtypes
 pydantic-ai
+langchain_google_vertexai
+scikit-learn
+sentence-transformers
+chromadb
+detoxify
+thefuzz
+fuzzywuzzy

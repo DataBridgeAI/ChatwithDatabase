@@ -4,7 +4,6 @@ import numpy as np
 import shutil
 from google.cloud import bigquery, storage
 from langchain_google_vertexai import VertexAIEmbeddings
-from sklearn.metrics.pairwise import cosine_similarity
 
 # Configuration Parameters
 PROJECT_ID = "chatwithdata-451800"
@@ -69,10 +68,10 @@ def generate_schema_embeddings():
     
     #return schema_dict
     # Store embeddings in a JSON file
-    with open(LOCAL_EMBEDDINGS_PATH, "w") as f:
-        json.dump(schema_dict, f)
+    # with open(LOCAL_EMBEDDINGS_PATH, "w") as f:
+    #     json.dump(schema_dict, f)
 
-    print(f"✅ Schema embeddings stored locally at {LOCAL_EMBEDDINGS_PATH}")
+    # print(f"✅ Schema embeddings stored locally at {LOCAL_EMBEDDINGS_PATH}")
 
 
 def upload_embeddings_to_gcs():
