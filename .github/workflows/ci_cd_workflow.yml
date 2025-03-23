@@ -1,10 +1,19 @@
 name: Prompt Validation Pipeline
 
 on:
+  workflow_dispatch:  # Manual trigger
+    inputs:
+      environment:
+        description: 'Environment to run tests against'
+        type: choice
+        options: 
+        - development
+        - production
+        required: true
+        default: 'development'
   push:
     branches:
       - main
-      - model-devlopment-pipeline
     paths:
       - 'ModelValidation/**'
   pull_request:
@@ -68,5 +77,6 @@ jobs:
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_MESSAGE: "Prompt validation pipeline completed"
+
 
 
