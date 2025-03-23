@@ -7,7 +7,7 @@ def validator():
     return PromptValidator(PROJECT_ID, "sql-prompts-store")
 
 def test_sql_validation(validator):
-    # Valid SQL using actual schema
+
     valid_sql = """
     SELECT p.ProductName, SUM(oi.Quantity) as total_sold
     FROM `chatwithdata-451800.RetailDataset.Products` p
