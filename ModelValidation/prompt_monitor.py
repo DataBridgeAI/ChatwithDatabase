@@ -32,7 +32,6 @@ class PromptMonitor:
             for bias_type, detected in bias_results.items():
                 mlflow.log_metric(f"bias_{bias_type}", int(detected))
             
-            # Log validation results
             mlflow.log_dict(validation_results, "validation_results.json")
 
     def should_update_prompt(self, 
