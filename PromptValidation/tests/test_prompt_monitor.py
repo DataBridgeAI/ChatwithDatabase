@@ -1,6 +1,6 @@
 import pytest
-from ModelValidation.prompt_monitor import PromptMonitor
-from ModelValidation.prompt_validator import PromptValidator
+from PromptValidation.prompt_monitor import PromptMonitor
+from PromptValidation.prompt_validator import PromptValidator
 
 @pytest.fixture
 def monitor():

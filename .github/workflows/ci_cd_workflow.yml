@@ -4,15 +4,14 @@ on:
   push:
     branches:
       - main
-      - model-devlopment-pipeline
     paths:
-      - 'ModelValidation/**'
+      - 'PromptValidation/**'
   pull_request:
     branches:
       - main
     paths:
-      - 'ModelValidation/**'
-  workflow_dispatch: # Run manually
+      - 'PromptValidation/**'
+  
 
 jobs:
   validate-prompt:
@@ -67,13 +66,13 @@ jobs:
           # Add PYTHONPATH to include src directory
           PYTHONPATH: ${{ github.workspace }}
         run: |
-          pytest ModelValidation/tests/ --cov=ModelValidation
+          pytest PromptValidation/tests/ --cov=PromptValidation
           
       - name: Check for bias in test queries
-        run: python ModelValidation/bias_check.py
+        run: python PromptValidation/bias_check.py
         
       - name: Validate prompt templates
-        run: python ModelValidation/validate_prompts.py
+        run: python PromptValidation/validate_prompts.py
         
       - name: Send notification
         if: always()

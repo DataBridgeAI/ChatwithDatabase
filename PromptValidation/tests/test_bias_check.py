@@ -1,9 +1,9 @@
 import pytest
 from unittest.mock import patch, MagicMock, call
-from ModelValidation.bias_check import check_bias_in_queries
-from ModelValidation.prompt_validator import PromptValidator
-from ModelValidation.test_queries import TEST_QUERIES
-from ModelValidation.config import (
+from PromptValidation.bias_check import check_bias_in_queries
+from PromptValidation.prompt_validator import PromptValidator
+from PromptValidation.test_queries import TEST_QUERIES
+from PromptValidation.config import (
     PROJECT_ID, 
     PROMPT_BUCKET_NAME, 
     RETAIL_SCHEMA, 
@@ -12,7 +12,7 @@ from ModelValidation.config import (
 
 @pytest.fixture
 def mock_generate_sql():
-    with patch('ModelValidation.bias_check.generate_sql') as mock:  # Updated import path
+    with patch('PromptValidation.bias_check.generate_sql') as mock:  # Updated import path
         mock.return_value = """
         SELECT * FROM `chatwithdata-451800.RetailDataset.customers`
         WHERE gender = 'female'

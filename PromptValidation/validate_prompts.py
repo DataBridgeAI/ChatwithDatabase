@@ -8,8 +8,8 @@ from google.cloud import storage
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(project_root)
 
-from ModelValidation.prompt_validator import PromptValidator
-from ModelValidation.config import PROJECT_ID, PROMPT_BUCKET_NAME, EXPECTED_PROMPT_TEMPLATE
+from PromptValidation.prompt_validator import PromptValidator
+from PromptValidation.config import PROJECT_ID, PROMPT_BUCKET_NAME, EXPECTED_PROMPT_TEMPLATE
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

@@ -8,9 +8,9 @@ import os
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(project_root)
 
-from ModelValidation.prompt_validator import PromptValidator
-from ModelValidation.test_queries import TEST_QUERIES
-from ModelValidation.config import PROJECT_ID, DATASET_ID, PROMPT_BUCKET_NAME, RETAIL_SCHEMA
+from PromptValidation.prompt_validator import PromptValidator
+from PromptValidation.test_queries import TEST_QUERIES
+from PromptValidation.config import PROJECT_ID, DATASET_ID, PROMPT_BUCKET_NAME, RETAIL_SCHEMA
 from src.ai.llm import generate_sql, load_prompt_template
 
 logging.basicConfig(level=logging.INFO)

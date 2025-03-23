@@ -1,9 +1,9 @@
 import pytest
 import json
 from unittest.mock import Mock, patch
-from ModelValidation.validate_prompts import validate_stored_prompts
-from ModelValidation.prompt_validator import PromptValidator
-from ModelValidation.config import EXPECTED_PROMPT_TEMPLATE
+from PromptValidation.validate_prompts import validate_stored_prompts
+from PromptValidation.prompt_validator import PromptValidator
+from PromptValidation.config import EXPECTED_PROMPT_TEMPLATE
 
 @patch('google.cloud.storage.Client')
 def test_validate_stored_prompts(mock_storage):

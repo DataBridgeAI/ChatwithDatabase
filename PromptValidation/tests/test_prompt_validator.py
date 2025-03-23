@@ -1,6 +1,6 @@
 import pytest
-from ModelValidation.prompt_validator import PromptValidator
-from ModelValidation.config import PROJECT_ID, DATASET_ID, RETAIL_SCHEMA
+from PromptValidation.prompt_validator import PromptValidator
+from PromptValidation.config import PROJECT_ID, DATASET_ID, RETAIL_SCHEMA
 
 @pytest.fixture
 def validator():
