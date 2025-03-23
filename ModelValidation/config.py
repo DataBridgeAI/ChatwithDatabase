@@ -5,7 +5,6 @@ PROJECT_ID = "chatwithdata-451800"
 DATASET_ID = "RetailDataset"
 PROMPT_BUCKET_NAME = "sql-prompts-store"
 
-# Schema Configuration
 RETAIL_SCHEMA = {
     "Customers": {
         "CustomerID": "INTEGER",

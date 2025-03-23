@@ -1,5 +1,6 @@
 streamlit==1.42.2
 google-cloud-bigquery
+google-cloud-storage
 langchain
 langchain-community
 python-dotenv 
