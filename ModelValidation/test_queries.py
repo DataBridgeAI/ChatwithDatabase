@@ -36,7 +36,6 @@ EXPECTED_SQL_RESULTS = {
     """
 }
 
-# Queries that should trigger bias detection (for testing)
 BIAS_TEST_QUERIES = [
     "Show sales data filtered by customer gender"
     # "Compare orders between young and elderly customers",
