@@ -52,7 +52,6 @@ RETAIL_SCHEMA = {
     }
 }
 
-# Expected prompt template structure
 EXPECTED_PROMPT_TEMPLATE = {
     "version": "1.0.0",
     "template": """Convert this English question into an accurate **BigQuery SQL query**.

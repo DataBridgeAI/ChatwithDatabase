@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - model-development-pipeline
+      - model-devlopment-pipeline
     paths:
       - 'ModelValidation/**'
   pull_request:
