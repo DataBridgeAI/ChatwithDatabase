@@ -1,10 +1,8 @@
-
 from detoxify import Detoxify  # Install using `pip install detoxify`
 import chromadb
 from google.cloud import storage
 import shutil
 import os
-from database.schema import get_bigquery_schema
 
 # Configuration
 CHROMA_PATH = "/tmp/chromadb_store"  # Temporary local path to store the ChromaDB data
@@ -41,7 +39,8 @@ def check_chromadb_validity():
         return False
 
 def load_chromadb_client():
-    """Load the ChromaDB client and collection. IfChromaDB store is not already downloaded, download it from GCS"""
+    """Load the ChromaDB client and collection."""
+    # If ChromaDB store is not already downloaded, download it from GCS
     if not os.path.exists(CHROMA_PATH):
         download_chromadb_from_gcs()
 
@@ -107,26 +106,6 @@ def validate_query(user_query: str) -> str:
         return "🚫 Query contains harmful language. Please modify your input."
 
     return None  # No issues detected, query is safe
-
-def validate_query(user_query, generated_sql, schema):
-    """
-    Validate the generated SQL against the BigQuery schema.
-    Returns an error message if validation fails, otherwise None.
-    """
-
-    # Check if SQL uses valid table and column names
-    schema_tables = get_bigquery_schema()
-    valid_tables = [table['name'] for table in schema_tables]
-
-    # Ensure SQL references a valid table
-    if not any(table in generated_sql for table in valid_tables):
-        return "⚠️ The generated SQL does not reference a valid table in the dataset."
-
-    # Basic SQL syntax check
-    if not generated_sql.lower().startswith("select"):
-        return "❌ The query is not a valid SELECT statement."
-
-    return None  # Query is valid
 
 
 # Example usage:
