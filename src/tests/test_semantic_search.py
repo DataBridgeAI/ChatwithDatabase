@@ -8,9 +8,7 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from promptfilter.semantic_search import (
-    check_query_relevance,
-    generate_user_input_embedding,
-    download_and_prepare_embeddings
+    check_query_relevance
 )
 
 class TestQueryRelevance(unittest.TestCase):
