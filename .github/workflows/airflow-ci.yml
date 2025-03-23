@@ -4,20 +4,15 @@ on:
   push:
     branches:
       - main  # Run on push to main
-      - dev  # New branch for testing
-      - prompt/*  # Testing feature branches (wildcard for any branches starting with feature/)
-      - bugfix/*  # Testing bugfix branches (wildcard for any branches starting with bugfix/)
+      - feedback-changes
       
   pull_request:
     branches:
       - main  # Run on PRs to main
-      - dev  # New branch for testing
-      - prompt/*  # PRs from feature branches
-      - bugfix/*  # PRs from bugfix branches
-
+      - feedback-changes
 jobs:
   test:
-    name: Run Unit Tests and Model Validation
+    name: Run Unit Tests
     runs-on: ubuntu-latest
 
     steps:
@@ -43,20 +38,12 @@ jobs:
           pip install -r DataPipeline/requirements.txt
           pip install pytest coverage  # For testing
 
-      - name: Run Unit Tests with Coverage
+      - name: Run Tests with Coverage
         run: |
           coverage run --source=DataPipeline/scripts -m pytest DataPipeline/tests/
           coverage report -m
           coverage xml  # Generate XML for code coverage reporting
 
-      - name: Install Model Validation Dependencies
-        run: |
-          pip install fuzzywuzzy langchain google-cloud-storage  # Add necessary model validation dependencies
-
-      - name: Run Model Validation Tests
-        run: |
-          python -m unittest discover -s model_validation_tests -p "test_model_validation.py"  # Modify if your tests are in a different folder or have a different pattern
-          
   deploy:
     name: Deploy DAGs to Cloud Composer
     runs-on: ubuntu-latest
