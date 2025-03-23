@@ -1,0 +1,87 @@
+name: 🤖 Prompt Engineering - Validation Pipeline
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'PromptValidation/**'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'PromptValidation/**'
+  
+
+jobs:
+  validate-prompt:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.9'
+
+      - name: Cache pip packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('src/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      # Add GCP Authentication
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+      
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r src/requirements.txt
+          pip install pytest pytest-cov coverage
+          
+      - name: Configure OpenAI API Key
+        run: |
+          echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> $GITHUB_ENV
+          # Verify the key is set
+          if [ -z "${{ secrets.OPENAI_API_KEY }}" ]; then
+            echo "Error: OPENAI_API_KEY is not set in repository secrets"
+            exit 1
+          fi
+          
+      - name: Run prompt validation tests
+        env:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          GCP_BUCKET_NAME: ${{ secrets.PROMPT_BUCKET_NAME }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          # Add PYTHONPATH to include src directory
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          pytest PromptValidation/tests/ --cov=PromptValidation
+          
+      - name: Check for bias in test queries
+        run: python PromptValidation/bias_check.py
+        
+      - name: Validate prompt templates
+        run: python PromptValidation/validate_prompts.py
+        
+      - name: Send notification
+        if: always()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_MESSAGE: "Prompt validation pipeline completed"
+
+
+
+
+

@@ -5,7 +5,7 @@ import time
 
 from database.query_executor import execute_bigquery_query
 from database.schema import get_bigquery_schema
-from ai.llm import generate_sql
+from ai.llm import generate_sql, load_prompt_template
 from ui.layout import render_sidebar
 from ui.visualization import visualize_data
 from feedback.feedback_manager import store_feedback
@@ -26,6 +26,12 @@ try:
     download_embeddings()
 except Exception as e:
     st.error(f"Failed to download schema embeddings: {str(e)}")
+
+# Load prompt template at startup
+try:
+    load_prompt_template()
+except Exception as e:
+    st.error(f"Failed to load prompt template: {str(e)}")
 
 # Initialize the query tracker
 query_tracker = QueryTracker()
