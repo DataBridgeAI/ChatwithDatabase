@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - prompt/*
+      - prompt-filter
   pull_request:
     branches:
       - main
