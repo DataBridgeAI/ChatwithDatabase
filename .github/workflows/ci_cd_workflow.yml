@@ -1,0 +1,71 @@
+name: Prompt Validation Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - model-development-pipeline
+    paths:
+      - 'ModelValidation/**'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'ModelValidation/**'
+
+jobs:
+  validate-prompt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+
+      - name: Cache pip packages
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('src/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      # Add GCP Authentication
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+      
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r src/requirements.txt
+          
+      - name: Run prompt validation tests
+        env:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          GCP_BUCKET_NAME: ${{ secrets.PROMPT_BUCKET_NAME }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python -m pytest ModelValidation/tests/ --cov=ModelValidation
+          
+      - name: Check for bias in test queries
+        run: python ModelValidation/bias_check.py
+        
+      - name: Validate prompt templates
+        run: python ModelValidation/validate_prompts.py
+        
+      - name: Send notification
+        if: always()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_MESSAGE: "Prompt validation pipeline completed"
+
+
