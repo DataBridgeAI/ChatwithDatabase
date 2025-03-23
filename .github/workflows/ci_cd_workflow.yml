@@ -48,13 +48,24 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r src/requirements.txt
-          pip install pytest pytest-cov coverage  # Install testing dependencies
+          pip install pytest pytest-cov coverage
+          
+      - name: Configure OpenAI API Key
+        run: |
+          echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> $GITHUB_ENV
+          # Verify the key is set
+          if [ -z "${{ secrets.OPENAI_API_KEY }}" ]; then
+            echo "Error: OPENAI_API_KEY is not set in repository secrets"
+            exit 1
+          fi
           
       - name: Run prompt validation tests
         env:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
           GCP_BUCKET_NAME: ${{ secrets.PROMPT_BUCKET_NAME }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          # Add PYTHONPATH to include src directory
+          PYTHONPATH: ${{ github.workspace }}
         run: |
           pytest ModelValidation/tests/ --cov=ModelValidation
           
@@ -70,6 +81,7 @@ jobs:
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_MESSAGE: "Prompt validation pipeline completed"
+
 
 
 

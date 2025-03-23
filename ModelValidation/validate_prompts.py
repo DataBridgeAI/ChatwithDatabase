@@ -5,7 +5,6 @@ import os
 from typing import Dict, List
 from google.cloud import storage
 
-# Add project root to Python path
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(project_root)
 
