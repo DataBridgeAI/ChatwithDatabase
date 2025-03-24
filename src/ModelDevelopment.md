@@ -1,4 +1,4 @@
-# README: Machine Learning Model Development and CI/CD Pipeline
+# Machine Learning Model Development and CI/CD Pipeline
 
 ## Overview
 This project focuses on integrating Machine Learning (ML) model development within a Continuous Integration/Continuous Deployment (CI/CD) pipeline. It incorporates best practices in model validation, bias detection, sensitivity analysis, and experiment tracking to ensure robustness, fairness, and reproducibility.
@@ -170,6 +170,32 @@ Our experiment tracking system leverages MLflow to comprehensively monitor and a
   - Query type (select, aggregate, join, etc.)
   - Complexity levels (simple, moderate, complex)
   - Performance categories (fast, medium, slow)
+
+### MLflow Experiment Visualization
+
+#### Experiment Overview
+![MLflow Overview](/src/assets/Overview.png)
+The overview dashboard shows the experiment summary, including total runs, active runs, and experiment metadata. This provides a high-level view of our model's testing and validation progress.
+
+#### Run Details and Metrics
+![MLflow Runs UI](/src/assets/mlrunsUI.png)
+The runs interface displays individual query executions with their corresponding metrics, parameters, and tags. Each run represents a single query processing instance, allowing us to track performance over time.
+
+#### Model Performance Metrics
+![Model Metrics](/src/assets/model_metrics.png)
+Detailed performance metrics visualization showing:
+- Query execution times
+- Success rates across different query types
+- Complexity distribution
+- Performance trends
+
+#### Artifact Tracking
+![Artifact Details](/src/assets/artifact.png)
+The artifact view shows detailed logs and query information stored for each run, including:
+- Generated SQL queries
+- Execution logs
+- Error messages (if any)
+- Query validation results
 
 #### 3. Experiment Organization
 - **Structure**:
