@@ -106,15 +106,44 @@ Our implementation focuses on developing a natural language to SQL generation sy
   - Automated error handling and logging
 
 #### 4. Bias Detection Through Data Slicing
-- **Query Analysis**:
-  - Performance evaluation across:
-    - Query complexity categories
-    - Schema coverage and table relationships
-    - User interaction patterns
-- **Monitoring Tools**:
-  - Bias detection implementation in `PromptValidation/prompt_monitor.py`
-  - Query relevance checking through semantic search
-  - Performance analysis across different query types
+- **Content Analysis**:
+  - Implemented in `query_checks/content_checker.py`:
+    - Sensitivity detection for topics like religion, gender, race
+    - Harmful content detection (terrorism, violence)
+    - Modular detection system with fallback patterns
+    - Integration with Detoxify model when available
+
+- **Bias Detection Pipeline**:
+  - Implemented in `PromptValidation/bias_check.py`:
+    - Automated checking of generated SQL queries for potential bias
+    - Integration with CI/CD pipeline through GitHub Actions
+    - Bias categories monitored:
+      - Gender bias
+      - Racial bias
+      - Age bias
+
+- **Detection Methods**:
+  - Primary detection through `PromptValidator` class:
+    - Pattern-based detection using regex patterns
+    - Bias patterns for gender: `\b(male|female|men|women|gender)\b`
+    - Bias patterns for race: `\b(race|ethnic|white|black|asian)\b`
+    - Bias patterns for age: `\b(young|old|age|elderly)\b`
+  - Secondary detection through Detoxify:
+    - Toxicity threshold: > 0.7
+    - Identity attack threshold: > 0.5
+    - Insult threshold: > 0.5
+
+- **Monitoring and Validation**:
+  - Continuous monitoring through `prompt_monitor.py`
+  - Automated bias checks in CI/CD pipeline
+  - Threshold-based prompt updates when bias detected
+  - Integration with GitHub Actions workflow for automated testing
+
+- **Testing Framework**:
+  - Comprehensive test suite in `PromptValidation/tests/test_bias_check.py`
+  - Mock-based testing for SQL generation
+  - Validation against predefined test queries
+  - Integration with CI/CD pipeline for automated testing
 
 #### 5. Prompt Version Control and Storage
 - **Version Management**:
