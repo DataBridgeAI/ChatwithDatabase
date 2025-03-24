@@ -114,11 +114,35 @@ Instead of using Artifact Registry, our implementation focuses on:
 - Using Cloud Composer for orchestration and deployment
 
 ---
-
 ## 2. Hyperparameter Tuning
-### Not Applicable:
-- Since we use a **pre-trained model**, we do not perform hyperparameter tuning using techniques like **random search or grid search**.
-- However, we ensure that **prompt engineering and feature selection** are optimized for best results.
+# Hyperparameter Tuning for SQL Query Generation
+
+To optimize the quality and reliability of SQL query generation using the GPT-4 model via LangChain, we performed **hyperparameter tuning** on key model parameters. The tuning process helps identify the best configuration that balances **accuracy**, **performance**, and **consistency**.
+
+## Parameters Tuned:
+- **temperature**: Controls the randomness of the output.
+- **top_p**: Limits token selection to a subset with the highest cumulative probability.
+- **frequency_penalty**: Penalizes repeated terms to reduce redundancy.
+- **presence_penalty**: Encourages the inclusion of new or diverse content.
+
+## How It Works:
+A grid search is performed across combinations of the above parameters. For each combination:
+1. A natural language query is converted into SQL using the model.
+2. The generated SQL is executed on BigQuery.
+3. Success/failure and execution time are recorded.
+4. Results are saved in a CSV (`tuning_results.csv`) for analysis.
+
+## Analysis:
+A companion script generates visualizations including:
+- Success vs. failure rates by configuration
+- Execution time distribution
+- Pairwise parameter plots
+- Correlation matrix
+- Top-performing configurations
+
+These insights help select the most effective model settings for consistent and correct SQL generation.
+
+---
 
 ---
 
@@ -145,19 +169,36 @@ Instead of using Artifact Registry, our implementation focuses on:
 ---
 
 ## 6. CI/CD Pipeline Automation
-### Implemented:
-- **Automated Model Training & Validation**:
-  - Our **GitHub Actions workflow** triggers model validation on new code commits.
-  - Runs **unit tests** to ensure functionality.
-- **Automated Bias Detection**:
-  - Model fairness checks are included in the pipeline.
-  - Alerts are sent if bias exceeds a threshold.
-- **Artifact Storage & Deployment**:
-  - Validated models are **automatically pushed to Google Cloud Artifact Registry**.
-  - Deployed to **Cloud Composer (Airflow DAGs)** for orchestration.
-- **Notifications & Rollbacks**:
-  - Alerts notify developers of failures.
-  - If a model performs worse than a previous version, it is **automatically rolled back**.
+
+To ensure the reliability, accuracy, and fairness of SQL query generation, we have implemented a CI/CD pipeline using GitHub Actions. This pipeline automates various tasks related to semantic search validation, prompt validation, and database connectivity checks before deploying any changes.
+
+### 1. CI/CD for Semantic Search and Model Validation
+Semantic search is used to determine if a user's input query is relevant to the dataset stored in Google BigQuery. This is crucial for filtering out irrelevant or harmful queries before passing them to the SQL query generator. Additionally, model validation is performed to ensure the accuracy and relevance of model-generated queries.
+
+- **Semantic Search Tests**: The CI/CD pipeline runs tests to validate whether a user’s input query is relevant to the dataset. This prevents incorrect, misleading, or irrelevant queries from being processed.
+- **Model Validation Tests**: The model's performance is evaluated based on specific metrics, including precision, recall, and F1-score, which are essential for assessing the accuracy and effectiveness of the generated SQL queries.
+  - **Evaluation Metrics**: The pipeline fetches data on generated SQL, correct SQL, and feedback from BigQuery.
+  - **Precision, Recall, and F1-Score Calculation**: The model's predictions are compared against the ground truth (correct SQL queries), and metrics are computed using `sklearn`'s `precision_score`, `recall_score`, and `f1_score`.
+  - **Metrics Storage**: After evaluation, the computed metrics are stored in a BigQuery table, allowing for easy tracking and analysis over time.
+  - **Continuous Monitoring**: The metrics are updated regularly to evaluate the model's performance and ensure that it is improving or at least maintaining a consistent level of quality.
+
+### 2. Automated Prompt Validation and Bias Detection
+- **Prompt Validation**: The CI/CD pipeline runs unit tests to ensure the natural language prompts are correctly structured and converted into syntactically correct SQL queries. This ensures query correctness before execution and improves user experience.
+- **Bias Detection**: The pipeline checks the model's output for potential bias by testing against various data slices.
+- **Notification**: After the prompt validation and bias detection tests, the pipeline sends notifications to inform the team about test results.
+
+### 3. Google Cloud BigQuery Connectivity Checks
+- The pipeline checks for connectivity to BigQuery and verifies that authentication credentials are properly set up.
+- It ensures the required dataset and tables are available for querying.
+- Prevents failures related to misconfigured credentials, missing datasets, or API access issues.
+- Ensures seamless interaction between the application and BigQuery, reducing downtime.
+
+### 4. Model and User Query Relevance Validation
+This CI/CD pipeline validates the relevance of user queries and checks for semantic accuracy using a model. The pipeline tests whether the generated SQL queries make sense within the context of the dataset.
+- The pipeline performs **semantic search validation** to ensure that the user's query matches the dataset.
+- **Model validation tests** are performed to confirm that the system correctly interprets user input and generates accurate SQL queries.
+- Ensures the SQL generation is based on valid, relevant queries.
+- Helps maintain consistent query quality and accuracy by ensuring model performance is up to standards.
 
 ---
 
