@@ -453,5 +453,5 @@ This CI/CD pipeline validates the relevance of user queries and checks for seman
 ---
 
 ## Conclusion
-This project ensures **efficient model fine-tuning**, **bias detection**, and **CI/CD automation** while leveraging **pre-trained embeddings**. While certain assignment elements (e.g., custom model training and hyperparameter tuning) are not applicable, our implementation focuses on **robust validation, fairness, and deployment automation** in a real-world setting.
+This project successfully implements a natural language to SQL query generation system by combining GPT-4's capabilities with robust engineering practices. The solution features real-time schema validation, automated prompt testing, and comprehensive safety checks, all integrated within a production-ready CI/CD pipeline. Through MLflow monitoring, hyperparameter optimization, and similarity-based feedback retrieval using ChromaDB, the system maintains high accuracy while ensuring reliable and safe query generation. This practical approach demonstrates effective integration of ML capabilities with software engineering best practices.
 
