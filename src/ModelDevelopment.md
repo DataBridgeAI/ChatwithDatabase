@@ -114,8 +114,6 @@ Instead of using Artifact Registry, our implementation focuses on:
 
 ---
 ## 2. Hyperparameter Tuning
-# Hyperparameter Tuning for SQL Query Generation
-
 To optimize the quality and reliability of SQL query generation using the GPT-4 model via LangChain, we performed **hyperparameter tuning** on key model parameters. The tuning process helps identify the best configuration that balances **accuracy**, **performance**, and **consistency**.
 
 ## Parameters Tuned:
