@@ -10,67 +10,66 @@ Our project does **not** include training a completely new ML model from scratch
 
 ## 1. Model Development and ML Code
 
+Our implementation focuses on developing a natural language to SQL generation system using GPT-4 through LangChain, with emphasis on prompt engineering, validation, and version control. Key aspects include:
+
 ### Implemented Components:
 
 #### 1. Loading Data from Data Pipeline
-- **BigQuery Integration**: 
-  - Structured data retrieval through `database/query_executor.py`
-  - Dynamic schema fetching and formatting via `database/schema.py`
-  - Versioned data access ensuring consistency across model iterations
-- **Schema Processing**:
-  - Schema embeddings generation using Vertex AI's `textembedding-gecko@003`
-  - Storage and retrieval through ChromaDB for efficient access
-  - Schema-aware context management for query generation
+- **BigQuery Schema Management**: 
+  - Schema extraction and versioning via `database/schema.py`
+  - Dynamic table metadata retrieval through BigQuery API
+  - Automated schema updates using Cloud Composer DAGs
+- **Schema Processing Pipeline**:
+  - Vector embeddings generation using Vertex AI's `textembedding-gecko@003`
+  - Efficient storage and retrieval through ChromaDB collections
+  - Schema-aware context management for enhanced query accuracy
 
 #### 2. Model Selection and Fine-tuning
-- **Base Model**: 
-  - GPT-4 integration through LangChain framework
-  - Configured for SQL generation with schema awareness
-- **Fine-tuning Implementation**:
-  - Custom prompt templates for SQL generation
-  - Schema-aware query generation with context
-  - Feedback incorporation through vector similarity search
-- **Selection Process**:
-  - Performance tracking via MLflow (`monitoring/mlflow_config.py`)
+- **LLM Integration**: 
+  - GPT-4 implementation through LangChain framework in `ai/llm.py`
+  - Configurable model parameters (temperature, top_p) for SQL generation
+  - Context-aware query generation with schema understanding
+- **Prompt Engineering**:
+  - Versioned prompt templates stored in GCS bucket (`sql-prompts-store`)
+  - Template validation through `PromptValidation/prompt_validator.py`
+  - Dynamic prompt enhancement based on feedback
+- **Performance Optimization**:
+  - Query success tracking via MLflow in `monitoring/mlflow_config.py`
   - Automated validation through Cloud Composer DAGs
-  - Continuous performance monitoring and logging
+  - Real-time performance monitoring and logging
 
 #### 3. Model Validation Process
-- **Performance Metrics**:
-  - Implementation in `Model_validation/model_validation.py`
-  - Metrics include:
-    - Query execution success rate
-    - Precision, recall, and F1-score
-    - Execution time and efficiency metrics
 - **Validation Pipeline**:
-  - Weekly automated validation through Cloud Composer DAG
-  - Results storage in BigQuery for trend analysis
-  - Automated notifications through Slack integration
+  - Implementation in `Model_validation/model_validation.py`
+  - Metrics tracking:
+    - SQL query execution success rate
+    - Semantic accuracy and relevance scores
+    - Response time and efficiency metrics
+- **Continuous Validation**:
+  - Automated testing through GitHub Actions
+  - Integration with BigQuery for result verification
+  - Slack notifications for validation status
 
 #### 4. Bias Detection Through Data Slicing
-- **Data Slicing Implementation**:
-  - Query performance analysis across:
-    - Query complexity levels
-    - Different data domains
-    - Usage patterns and contexts
-- **Tools Used**:
-  - Custom bias detection in `PromptValidation/prompt_monitor.py`
-  - Integration with semantic search for relevance checking
-  - Performance variation analysis across data segments
+- **Query Analysis**:
+  - Performance evaluation across:
+    - Query complexity categories
+    - Schema coverage and table relationships
+    - User interaction patterns
+- **Monitoring Tools**:
+  - Bias detection implementation in `PromptValidation/prompt_monitor.py`
+  - Query relevance checking through semantic search
+  - Performance analysis across different query types
 
-#### 5. Bias Checking and Reporting
-- **Automated Checks**:
-  - Continuous monitoring through CI/CD pipeline
-  - Integration with GitHub Actions for validation
-  - Real-time bias detection and alerting
-- **Reporting System**:
-  - MLflow tracking for bias metrics
-  - BigQuery storage for historical analysis
-  - Slack notifications for threshold violations
-- **Mitigation Approach**:
-  - Prompt template refinement
-  - Context enhancement for biased scenarios
-  - Continuous feedback incorporation
+#### 5. Prompt Version Control and Storage
+- **Version Management**:
+  - Prompt templates stored in GCS bucket instead of Artifact Registry
+  - Version tracking through timestamp-based IDs
+  - Metadata storage for each prompt version
+- **Storage Implementation**:
+  - GCS bucket management in `PromptValidation/prompt_validator.py`
+  - Version history maintenance
+  - Automated backup and recovery mechanisms
 
 ### Implementation Details:
 - **Core Technologies**:
