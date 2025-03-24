@@ -175,18 +175,27 @@ project/
 │   ├── database/
 │   │   ├── query_executor.py         # BigQuery interaction
 │   │   └── schema.py                 # Schema management
-│   ├── monitoring/
-│   │   └── mlflow_config.py          # Experiment tracking
-│   └── feedback/
-│       └── vector_search.py          # Feedback processing
+│   ├── promptfilter/
+│   │   └── semantic_search.py        # Query relevance checking
+│   ├── query_checks/
+│   │   └── content_checker.py        # Content analysis and filtering
+│   └── monitoring/
+│       └── mlflow_config.py          # Experiment tracking
+├── Model_validation/
+│   ├── model_validation.py           # Core validation logic
+│   └── tests/
+│       └── test_model_validation.py  # Validation tests
+├── PromptValidation/
+│   ├── prompt_validator.py           # Template validation
+│   ├── bias_check.py                # Bias detection
+│   ├── prompt_monitor.py            # Continuous monitoring
+│   └── tests/
+│       └── test_bias_check.py       # Bias detection tests
 ├── DataPipeline/
-│   ├── dags/
-│   │   ├── model_validation_dag.py   # Validation workflow
-│   │   └── schema_embeddings.py      # Schema processing
-│   └── scripts/
-│       └── schema_embeddings_processor.py
-└── Model_validation/
-    └── model_validation.py           # Validation logic
+│   └── dags/
+│       └── model_validation_dag.py   # Validation workflow
+└── hyperparameterTuning/
+    └── hyperparametertuner.py       # Parameter optimization
 ```
 
 ### Note on Model Storage:
