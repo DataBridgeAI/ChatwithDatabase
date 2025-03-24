@@ -9,19 +9,109 @@ Our project does **not** include training a completely new ML model from scratch
 ---
 
 ## 1. Model Development and ML Code
-### Implemented:
-- **Loading Data from Data Pipeline**: We retrieve structured data from our pre-built data pipeline which connects to BigQuery,  ensuring consistency and proper version control. This pipeline dynamically fetches and formats BigQuery schema information and provides table structure for prompt engineering and validation
-- **Fine-tuning a Pre-trained Model**: GPT-4 was used through Langchain integration to fine-tune GPT-4 LLM for better efficiency and performance. We have fine-tuned the pre-trained model by:- <br>
-- Custom prompt templates for SQL generation
-  - Schema-aware query generation with context
-  -
-- **Model Validation**: We implement **performance metrics** (e.g., accuracy, precision, recall) using test datasets to evaluate the model.
-- **Model Bias Detection**: Our pipeline includes **data slicing** techniques to detect performance variations across different subgroups.
-- **Artifact Storage**: We store the validated model in **Google Cloud Artifact Registry**, ensuring versioning and future retraining capabilities.
 
-### Not Applicable:
-- **Training a New Model from Scratch**: Since we use **GPT-4 embeddings**, full-fledged model training is unnecessary.
-- **Extensive Hyperparameter Tuning**: Our approach does not require grid search or Bayesian optimization since we rely on a pre-trained model.
+### Implemented Components:
+
+#### 1. Loading Data from Data Pipeline
+- **BigQuery Integration**: 
+  - Structured data retrieval through `database/query_executor.py`
+  - Dynamic schema fetching and formatting via `database/schema.py`
+  - Versioned data access ensuring consistency across model iterations
+- **Schema Processing**:
+  - Schema embeddings generation using Vertex AI's `textembedding-gecko@003`
+  - Storage and retrieval through ChromaDB for efficient access
+  - Schema-aware context management for query generation
+
+#### 2. Model Selection and Fine-tuning
+- **Base Model**: 
+  - GPT-4 integration through LangChain framework
+  - Configured for SQL generation with schema awareness
+- **Fine-tuning Implementation**:
+  - Custom prompt templates for SQL generation
+  - Schema-aware query generation with context
+  - Feedback incorporation through vector similarity search
+- **Selection Process**:
+  - Performance tracking via MLflow (`monitoring/mlflow_config.py`)
+  - Automated validation through Cloud Composer DAGs
+  - Continuous performance monitoring and logging
+
+#### 3. Model Validation Process
+- **Performance Metrics**:
+  - Implementation in `Model_validation/model_validation.py`
+  - Metrics include:
+    - Query execution success rate
+    - Precision, recall, and F1-score
+    - Execution time and efficiency metrics
+- **Validation Pipeline**:
+  - Weekly automated validation through Cloud Composer DAG
+  - Results storage in BigQuery for trend analysis
+  - Automated notifications through Slack integration
+
+#### 4. Bias Detection Through Data Slicing
+- **Data Slicing Implementation**:
+  - Query performance analysis across:
+    - Query complexity levels
+    - Different data domains
+    - Usage patterns and contexts
+- **Tools Used**:
+  - Custom bias detection in `PromptValidation/prompt_monitor.py`
+  - Integration with semantic search for relevance checking
+  - Performance variation analysis across data segments
+
+#### 5. Bias Checking and Reporting
+- **Automated Checks**:
+  - Continuous monitoring through CI/CD pipeline
+  - Integration with GitHub Actions for validation
+  - Real-time bias detection and alerting
+- **Reporting System**:
+  - MLflow tracking for bias metrics
+  - BigQuery storage for historical analysis
+  - Slack notifications for threshold violations
+- **Mitigation Approach**:
+  - Prompt template refinement
+  - Context enhancement for biased scenarios
+  - Continuous feedback incorporation
+
+### Implementation Details:
+- **Core Technologies**:
+  - LangChain for GPT-4 integration
+  - MLflow for experiment tracking
+  - ChromaDB for embedding storage
+  - Cloud Composer for orchestration
+- **Monitoring Setup**:
+  - Query performance tracking
+  - User feedback collection
+  - Automated validation workflows
+
+### Code Structure:
+```
+project/
+├── src/
+│   ├── ai/
+│   │   └── llm.py                    # LLM integration
+│   ├── database/
+│   │   ├── query_executor.py         # BigQuery interaction
+│   │   └── schema.py                 # Schema management
+│   ├── monitoring/
+│   │   └── mlflow_config.py          # Experiment tracking
+│   └── feedback/
+│       └── vector_search.py          # Feedback processing
+├── DataPipeline/
+│   ├── dags/
+│   │   ├── model_validation_dag.py   # Validation workflow
+│   │   └── schema_embeddings.py      # Schema processing
+│   └── scripts/
+│       └── schema_embeddings_processor.py
+└── Model_validation/
+    └── model_validation.py           # Validation logic
+```
+
+### Note on Model Storage:
+Instead of using Artifact Registry, our implementation focuses on:
+- Storing model configurations and prompt templates in version control
+- Tracking experiments and versions through MLflow
+- Maintaining model performance metrics in BigQuery
+- Using Cloud Composer for orchestration and deployment
 
 ---
 
