@@ -54,16 +54,22 @@ Our implementation focuses on developing a natural language to SQL generation sy
 #### 2. Model Selection and Fine-tuning
 - **LLM Integration**: 
   - GPT-4 implementation through LangChain framework in `ai/llm.py`
-  - Configurable model parameters (temperature, top_p) for SQL generation
-  - Context-aware query generation with schema understanding
+  - Model configuration:
+    - Base model: "gpt-4"
+    - Default temperature: 0.3
+  - Integration via ChatOpenAI from LangChain
 - **Prompt Engineering**:
   - Versioned prompt templates stored in GCS bucket (`sql-prompts-store`)
   - Template validation through `PromptValidation/prompt_validator.py`
   - Dynamic prompt enhancement based on feedback
-- **Performance Optimization**:
-  - Query success tracking via MLflow in `monitoring/mlflow_config.py`
-  - Automated validation through Cloud Composer DAGs
-  - Real-time performance monitoring and logging
+- **Hyperparameter Configuration**:
+  - Tunable parameters:
+    - temperature
+    - top_p
+    - frequency_penalty
+    - presence_penalty
+  - Parameter testing through grid search in `hyperparameterTuning/hyperparametertuner.py`
+  - Performance evaluation based on BigQuery execution success
 
 #### 3. Model Validation Process
 - **Validation Pipeline**:
