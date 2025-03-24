@@ -17,12 +17,39 @@ Our implementation focuses on developing a natural language to SQL generation sy
 #### 1. Loading Data from Data Pipeline
 - **BigQuery Schema Management**: 
   - Schema extraction and versioning via `database/schema.py`
-  - Dynamic table metadata retrieval through BigQuery API
-  - Automated schema updates using Cloud Composer DAGs
+  - Automated daily schema updates using Cloud Composer DAG (`extract_bigquery_schema`)
+  - Schema metadata extraction from RetailDataset tables:
+    - Customers
+    - OrderItems
+    - Orders
+    - ProductReviews
+    - Products
+  - Dynamic table metadata retrieval through BigQuery API for real-time schema updates
+
 - **Schema Processing Pipeline**:
-  - Vector embeddings generation using Vertex AI's `textembedding-gecko@003`
-  - Efficient storage and retrieval through ChromaDB collections
-  - Schema-aware context management for enhanced query accuracy
+  - Vector embeddings generation using two distinct approaches:
+    1. Schema embeddings via Vertex AI's `textembedding-gecko@003` model
+       - Processes table and column metadata
+       - Generates semantic descriptions for database structure
+       - Stores embeddings in GCS bucket (`bigquery-embeddings-store`)
+    2. Feedback embeddings via `sentence-transformers` (`all-MiniLM-L6-v2`)
+       - Processes user queries and feedback
+       - Stores in ChromaDB for efficient retrieval
+       - Archives to GCS bucket (`feedback-questions-embeddings-store`)
+
+- **Data Pipeline Orchestration**:
+  - Three primary Airflow DAGs:
+    1. `extract_bigquery_schema`: Daily schema extraction and processing
+    2. `schema_embeddings_dag`: Schema embedding generation
+    3. `feedback_embeddings_dag`: User feedback processing (6-hour intervals)
+  - Automated notifications via Slack for pipeline status updates
+  - Error handling and retry mechanisms for pipeline reliability
+
+- **Schema-Aware Context Management**:
+  - Real-time schema context integration through `check_query_relevance` function in `promptfilter/semantic_search.py`
+  - Semantic search capabilities using cosine similarity to validate query relevance against schema embeddings
+  - Threshold-based relevance checking (default similarity threshold: 0.75)
+  - Schema embeddings stored and retrieved from GCS bucket (`bigquery-embeddings-store`)
 
 #### 2. Model Selection and Fine-tuning
 - **LLM Integration**: 
