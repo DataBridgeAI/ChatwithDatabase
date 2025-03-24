@@ -74,13 +74,36 @@ Our implementation focuses on developing a natural language to SQL generation sy
 - **Validation Pipeline**:
   - Implementation in `Model_validation/model_validation.py`
   - Metrics tracking:
-    - SQL query execution success rate
-    - Semantic accuracy and relevance scores
-    - Response time and efficiency metrics
+    - Precision, recall, and F1 scores for SQL generation
+    - Total samples processed
+    - Correct vs. incorrect predictions count
+  - Data collection through BigQuery tables:
+    - Generated SQL storage
+    - Correct SQL reference
+    - User feedback tracking
+
 - **Continuous Validation**:
-  - Automated testing through GitHub Actions
-  - Integration with BigQuery for result verification
-  - Slack notifications for validation status
+  - Automated testing through GitHub Actions:
+    - Semantic search tests
+    - Model validation tests
+    - Coverage reporting
+
+- **Automated Scheduling**:
+  - Weekly validation runs via Airflow DAG (`model_validation_weekly`)
+  - Scheduled for midnight every Sunday
+  - Components:
+    - Model validation execution
+    - Results storage in BigQuery
+    - Slack notifications for completion status
+
+- **Performance Monitoring**:
+  - Metrics stored in BigQuery table (`Model_Performance_Metrics`):
+    - Timestamp tracking
+    - Precision metrics
+    - Recall metrics
+    - F1 scores
+    - Sample counts
+  - Automated error handling and logging
 
 #### 4. Bias Detection Through Data Slicing
 - **Query Analysis**:
