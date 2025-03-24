@@ -1,0 +1,535 @@
+temperature,top_p,frequency_penalty,presence_penalty,sql,success,execution_time
+0.2,0.8,0.0,0.0,"SELECT
+Customers.CustomerID,
+Customers.FirstName,
+Customers.LastName,
+SUM(Orders.TotalAmount) AS TotalPurchaseAmount
+FROM
+`chatwithdata-451800.RetailDataset.Customers` AS Customers
+JOIN
+`chatwithdata-451800.RetailDataset.Orders` AS Orders
+ON
+Customers.CustomerID = Orders.CustomerID
+GROUP BY
+Customers.CustomerID,
+Customers.FirstName,
+Customers.LastName
+ORDER BY
+TotalPurchaseAmount DESC
+LIMIT 5",1,0.9753777980804443
+0.2,0.8,0.0,0.5,"SELECT Customers.CustomerID, Customers.FirstName, Customers.LastName, SUM(Orders.TotalAmount) as TotalPurchaseAmount
+FROM `chatwithdata-451800.RetailDataset.Customers` AS Customers
+JOIN `chatwithdata-451800.RetailDataset.Orders` AS Orders
+ON Customers.CustomerID = Orders.CustomerID
+GROUP BY Customers.CustomerID, Customers.FirstName, Customers.LastName
+ORDER BY TotalPurchaseAmount DESC
+LIMIT 5",1,0.9864342212677002
+0.2,0.8,0.5,0.0,"SELECT
+Customers.CustomerID,
+Customers.FirstName,
+Customers.LastName,
+SUM(Orders.TotalAmount) as TotalPurchaseAmount
+FROM
+`chatwithdata-451800.RetailDataset.Customers` AS Customers
+JOIN
+`chatwithdata-451800.RetailDataset.Orders` AS Orders
+ON
+Customers.CustomerID = Orders.CustomerID
+GROUP BY
+Customers.CustomerID,
+Customers.FirstName,
+Customers.LastName
+ORDER BY
+TotalPurchaseAmount DESC
+LIMIT 5",1,0.8855681419372559
+0.2,0.8,0.5,0.5,"SELECT
+Customers.CustomerID,
+Customers.FirstName,
+Customers.LastName,
+SUM(Orders.TotalAmount) as TotalPurchaseAmount
+FROM
+`chatwithdata-451800.RetailDataset.Customers` AS Customers
+JOIN
+`chatwithdata-451800.RetailDataset.Orders` AS Orders
+ON
+Customers.CustomerID = Orders.CustomerID
+GROUP BY
+Customers.CustomerID,
+Customers.FirstName,
+Customers.LastName
+ORDER BY
+TotalPurchaseAmount DESC
+LIMIT 5",1,0.7494709491729736
+0.2,0.9,0.0,0.0,"SELECT
+Customers.CustomerID,
+Customers.FirstName,
+Customers.LastName,
+SUM(Orders.TotalAmount) as TotalPurchaseAmount
+FROM
+`chatwithdata-451800.RetailDataset.Customers` as Customers
+JOIN
+`chatwithdata-451800.RetailDataset.Orders` as Orders
+ON
+Customers.CustomerID = Orders.CustomerID
+GROUP BY
+Customers.CustomerID,
+Customers.FirstName,
+Customers.LastName
+ORDER BY
+TotalPurchaseAmount DESC
+LIMIT 5",1,0.8070268630981445
+0.2,0.9,0.0,0.5,"SELECT
+Customers.CustomerID,
+Customers.FirstName,
+Customers.LastName,
+SUM(Orders.TotalAmount) as TotalPurchaseAmount
+FROM
+`chatwithdata-451800.RetailDataset.Customers` AS Customers
+JOIN
+`chatwithdata-451800.RetailDataset.Orders` AS Orders
+ON
+Customers.CustomerID = Orders.CustomerID
+GROUP BY
+Customers.CustomerID,
+Customers.FirstName,
+Customers.LastName
+ORDER BY
+TotalPurchaseAmount DESC
+LIMIT 5",1,0.6350562572479248
+0.2,0.9,0.5,0.0,"SELECT
+Customers.CustomerID,
+Customers.FirstName,
+Customers.LastName,
+SUM(Orders.TotalAmount) as TotalPurchaseAmount
+FROM
+`chatwithdata-451800.RetailDataset.Customers` AS Customers
+JOIN
+`chatwithdata-451800.RetailDataset.Orders` AS Orders
+ON
+Customers.CustomerID = Orders.CustomerID
+GROUP BY
+Customers.CustomerID,
+Customers.FirstName,
+Customers.LastName
+ORDER BY
+TotalPurchaseAmount DESC
+LIMIT 5",1,0.670147180557251
+0.2,0.9,0.5,0.5,"SELECT
+Customers.CustomerID,
+Customers.FirstName,
+Customers.LastName,
+SUM(Orders.TotalAmount) as TotalPurchaseAmount
+FROM
+`chatwithdata-451800.RetailDataset.Customers` AS Customers
+JOIN
+`chatwithdata-451800.RetailDataset.Orders` AS Orders
+ON
+Customers.CustomerID = Orders.CustomerID
+GROUP BY
+Customers.CustomerID,
+Customers.FirstName,
+Customers.LastName
+ORDER BY
+TotalPurchaseAmount DESC
+LIMIT 5",1,0.619361162185669
+0.2,1.0,0.0,0.0,"SELECT Customers.CustomerID, Customers.FirstName, Customers.LastName, SUM(Orders.TotalAmount) as TotalPurchaseAmount
+FROM `chatwithdata-451800.RetailDataset.Customers` AS Customers
+JOIN `chatwithdata-451800.RetailDataset.Orders` AS Orders
+ON Customers.CustomerID = Orders.CustomerID
+GROUP BY Customers.CustomerID, Customers.FirstName, Customers.LastName
+ORDER BY TotalPurchaseAmount DESC
+LIMIT 5",1,0.6143078804016113
+0.2,1.0,0.0,0.5,"SELECT
+Customers.CustomerID,
+Customers.FirstName,
+Customers.LastName,
+SUM(Orders.TotalAmount) as TotalPurchaseAmount
+FROM
+`chatwithdata-451800.RetailDataset.Customers` AS Customers
+JOIN
+`chatwithdata-451800.RetailDataset.Orders` AS Orders
+ON
+Customers.CustomerID = Orders.CustomerID
+GROUP BY
+Customers.CustomerID,
+Customers.FirstName,
+Customers.LastName
+ORDER BY
+TotalPurchaseAmount DESC
+LIMIT 5",1,0.5286781787872314
+0.2,1.0,0.5,0.0,"SELECT
+Customers.CustomerID,
+Customers.FirstName,
+Customers.LastName,
+SUM(Orders.TotalAmount) as TotalPurchaseAmount
+FROM
+`chatwithdata-451800.RetailDataset.Customers` AS Customers
+JOIN
+`chatwithdata-451800.RetailDataset.Orders` AS Orders
+ON
+Customers.CustomerID = Orders.CustomerID
+GROUP BY
+Customers.CustomerID, Customers.FirstName, Customers.LastName
+ORDER BY
+TotalPurchaseAmount DESC
+LIMIT 5",1,0.8068780899047852
+0.2,1.0,0.5,0.5,"SELECT
+Customers.CustomerID,
+Customers.FirstName,
+Customers.LastName,
+SUM(Orders.TotalAmount) as TotalPurchaseAmount
+FROM
+`chatwithdata-451800.RetailDataset.Customers` AS Customers
+JOIN
+`chatwithdata-451800.RetailDataset.Orders` AS Orders
+ON
+Customers.CustomerID = Orders.CustomerID
+GROUP BY
+Customers.CustomerID,
+Customers.FirstName,
+Customers.LastName
+ORDER BY
+TotalPurchaseAmount DESC
+LIMIT 5",1,0.5575120449066162
+0.5,0.8,0.0,0.0,"SELECT
+Customers.CustomerID,
+Customers.FirstName,
+Customers.LastName,
+SUM(Orders.TotalAmount) as TotalPurchaseAmount
+FROM
+`chatwithdata-451800.RetailDataset.Customers` as Customers
+JOIN
+`chatwithdata-451800.RetailDataset.Orders` as Orders
+ON
+Customers.CustomerID = Orders.CustomerID
+GROUP BY
+Customers.CustomerID,
+Customers.FirstName,
+Customers.LastName
+ORDER BY
+TotalPurchaseAmount DESC
+LIMIT
+5",1,0.8244400024414062
+0.5,0.8,0.0,0.5,"SELECT c.CustomerID, c.FirstName, c.LastName, SUM(o.TotalAmount) as TotalPurchaseAmount
+FROM `chatwithdata-451800.RetailDataset.Customers` as c
+JOIN `chatwithdata-451800.RetailDataset.Orders` as o
+ON c.CustomerID = o.CustomerID
+GROUP BY c.CustomerID, c.FirstName, c.LastName
+ORDER BY TotalPurchaseAmount DESC
+LIMIT 5",1,1.2131779193878174
+0.5,0.8,0.5,0.0,"SELECT
+Customers.CustomerID,
+Customers.FirstName,
+Customers.LastName,
+SUM(Orders.TotalAmount) as TotalPurchaseAmount
+FROM
+`chatwithdata-451800.RetailDataset.Customers` as Customers
+JOIN
+`chatwithdata-451800.RetailDataset.Orders` as Orders
+ON
+Customers.CustomerID = Orders.CustomerID
+GROUP BY
+Customers.CustomerID, Customers.FirstName, Customers.LastName
+ORDER BY
+TotalPurchaseAmount DESC
+LIMIT 5",1,0.8305020332336426
+0.5,0.8,0.5,0.5,"SELECT
+Customers.CustomerID,
+Customers.FirstName,
+Customers.LastName,
+SUM(Orders.TotalAmount) as TotalPurchaseAmount
+FROM
+`chatwithdata-451800.RetailDataset.Customers` as Customers
+JOIN
+`chatwithdata-451800.RetailDataset.Orders` as Orders
+ON
+Customers.CustomerID = Orders.CustomerID
+GROUP BY
+Customers.CustomerID,
+Customers.FirstName,
+Customers.LastName
+ORDER BY
+TotalPurchaseAmount DESC
+LIMIT 5",1,0.5550951957702637
+0.5,0.9,0.0,0.0,"SELECT
+c.CustomerID,
+c.FirstName,
+c.LastName,
+SUM(o.TotalAmount) as TotalPurchaseAmount
+FROM
+`chatwithdata-451800.RetailDataset.Customers` c
+JOIN
+`chatwithdata-451800.RetailDataset.Orders` o
+ON
+c.CustomerID = o.CustomerID
+GROUP BY
+c.CustomerID,
+c.FirstName,
+c.LastName
+ORDER BY
+TotalPurchaseAmount DESC
+LIMIT 5",1,0.8747148513793945
+0.5,0.9,0.0,0.5,"SELECT Customers.CustomerID, Customers.FirstName, Customers.LastName, SUM(Orders.TotalAmount) as TotalPurchaseAmount
+FROM `chatwithdata-451800.RetailDataset.Customers` AS Customers
+JOIN `chatwithdata-451800.RetailDataset.Orders` AS Orders
+ON Customers.CustomerID = Orders.CustomerID
+GROUP BY Customers.CustomerID, Customers.FirstName, Customers.LastName
+ORDER BY TotalPurchaseAmount DESC
+LIMIT 5",1,0.5603609085083008
+0.5,0.9,0.5,0.0,"SELECT
+Customers.CustomerID,
+Customers.FirstName,
+Customers.LastName,
+SUM(Orders.TotalAmount) as TotalPurchaseAmount
+FROM
+`chatwithdata-451800.RetailDataset.Customers` AS Customers
+JOIN
+`chatwithdata-451800.RetailDataset.Orders` AS Orders
+ON
+Customers.CustomerID = Orders.CustomerID
+GROUP BY
+Customers.CustomerID,
+Customers.FirstName,
+Customers.LastName
+ORDER BY
+TotalPurchaseAmount DESC
+LIMIT 5",1,0.55379319190979
+0.5,0.9,0.5,0.5,"SELECT
+Customers.CustomerID,
+Customers.FirstName,
+Customers.LastName,
+SUM(Orders.TotalAmount) as TotalPurchaseAmount
+FROM
+`chatwithdata-451800.RetailDataset.Customers` AS Customers
+JOIN
+`chatwithdata-451800.RetailDataset.Orders` AS Orders
+ON
+Customers.CustomerID = Orders.CustomerID
+GROUP BY
+Customers.CustomerID,
+Customers.FirstName,
+Customers.LastName
+ORDER BY TotalPurchaseAmount DESC
+LIMIT 5",1,0.8967597484588623
+0.5,1.0,0.0,0.0,"SELECT Customers.CustomerID, Customers.FirstName, Customers.LastName, SUM(Orders.TotalAmount) as TotalPurchaseAmount
+FROM `chatwithdata-451800.RetailDataset.Customers` AS Customers
+JOIN `chatwithdata-451800.RetailDataset.Orders` AS Orders
+ON Customers.CustomerID = Orders.CustomerID
+GROUP BY Customers.CustomerID, Customers.FirstName, Customers.LastName
+ORDER BY TotalPurchaseAmount DESC
+LIMIT 5",1,0.583045244216919
+0.5,1.0,0.0,0.5,"SELECT Customers.CustomerID, Customers.FirstName, Customers.LastName, SUM(Orders.TotalAmount) as TotalPurchaseAmount
+FROM `chatwithdata-451800.RetailDataset.Customers` AS Customers
+JOIN `chatwithdata-451800.RetailDataset.Orders` AS Orders
+ON Customers.CustomerID = Orders.CustomerID
+GROUP BY Customers.CustomerID, Customers.FirstName, Customers.LastName
+ORDER BY TotalPurchaseAmount DESC
+LIMIT 5",1,0.5399749279022217
+0.5,1.0,0.5,0.0,"SELECT c.CustomerID, c.FirstName, c.LastName, SUM(o.TotalAmount) as TotalPurchaseAmount
+FROM `chatwithdata-451800.RetailDataset.Customers` as c
+JOIN `chatwithdata-451800.RetailDataset.Orders` as o
+ON c.CustomerID = o.CustomerID
+GROUP BY c.CustomerID, c.FirstName, c.LastName
+ORDER BY TotalPurchaseAmount DESC
+LIMIT 5",1,0.6679120063781738
+0.5,1.0,0.5,0.5,"SELECT
+Customers.CustomerID,
+Customers.FirstName,
+Customers.LastName,
+SUM(Orders.TotalAmount) as TotalPurchaseAmount
+FROM
+`chatwithdata-451800.RetailDataset.Customers` AS Customers
+JOIN
+`chatwithdata-451800.RetailDataset.Orders` AS Orders
+ON
+Customers.CustomerID = Orders.CustomerID
+GROUP BY
+Customers.CustomerID, Customers.FirstName, Customers.LastName
+ORDER BY
+TotalPurchaseAmount DESC
+LIMIT 5",1,0.5346412658691406
+0.7,0.8,0.0,0.0,"SELECT
+Customers.CustomerID,
+Customers.FirstName,
+Customers.LastName,
+SUM(Orders.TotalAmount) as TotalPurchaseAmount
+FROM
+`chatwithdata-451800.RetailDataset.Customers` AS Customers
+JOIN
+`chatwithdata-451800.RetailDataset.Orders` AS Orders
+ON
+Customers.CustomerID = Orders.CustomerID
+GROUP BY
+Customers.CustomerID, Customers.FirstName, Customers.LastName
+ORDER BY
+TotalPurchaseAmount DESC
+LIMIT 5",1,0.5925471782684326
+0.7,0.8,0.0,0.5,"SELECT
+Customers.CustomerID,
+Customers.FirstName,
+Customers.LastName,
+SUM(Orders.TotalAmount) AS TotalPurchaseAmount
+FROM
+`chatwithdata-451800.RetailDataset.Customers` AS Customers
+JOIN
+`chatwithdata-451800.RetailDataset.Orders` AS Orders
+ON
+Customers.CustomerID = Orders.CustomerID
+GROUP BY
+Customers.CustomerID,
+Customers.FirstName,
+Customers.LastName
+ORDER BY
+TotalPurchaseAmount DESC
+LIMIT 5",1,0.6036050319671631
+0.7,0.8,0.5,0.0,"SELECT c.CustomerID, c.FirstName, c.LastName, SUM(o.TotalAmount) as TotalPurchaseAmount
+FROM `chatwithdata-451800.RetailDataset.Customers` c
+JOIN `chatwithdata-451800.RetailDataset.Orders` o ON c.CustomerID = o.CustomerID
+GROUP BY c.CustomerID, c.FirstName, c.LastName
+ORDER BY TotalPurchaseAmount DESC
+LIMIT 5",1,0.7885968685150146
+0.7,0.8,0.5,0.5,"SELECT
+Customers.CustomerID,
+Customers.FirstName,
+Customers.LastName,
+SUM(Orders.TotalAmount) as TotalPurchaseAmount
+FROM
+`chatwithdata-451800.RetailDataset.Customers` AS Customers
+JOIN
+`chatwithdata-451800.RetailDataset.Orders` AS Orders
+ON
+Customers.CustomerID = Orders.CustomerID
+GROUP BY
+Customers.CustomerID,
+Customers.FirstName,
+Customers.LastName
+ORDER BY
+TotalPurchaseAmount DESC
+LIMIT 5",1,0.5344300270080566
+0.7,0.9,0.0,0.0,"SELECT
+c.CustomerID,
+c.FirstName,
+c.LastName,
+SUM(o.TotalAmount) as TotalPurchaseAmount
+FROM
+`chatwithdata-451800.RetailDataset.Customers` c
+JOIN
+`chatwithdata-451800.RetailDataset.Orders` o
+ON
+c.CustomerID = o.CustomerID
+GROUP BY
+c.CustomerID, c.FirstName, c.LastName
+ORDER BY
+TotalPurchaseAmount DESC
+LIMIT 5",1,0.8030147552490234
+0.7,0.9,0.0,0.5,"SELECT
+Customers.CustomerID,
+Customers.FirstName,
+Customers.LastName,
+SUM(Orders.TotalAmount) AS TotalPurchaseAmount
+FROM
+`chatwithdata-451800.RetailDataset.Customers` AS Customers
+JOIN
+`chatwithdata-451800.RetailDataset.Orders` AS Orders
+ON
+Customers.CustomerID = Orders.CustomerID
+GROUP BY
+Customers.CustomerID,
+Customers.FirstName,
+Customers.LastName
+ORDER BY
+TotalPurchaseAmount DESC
+LIMIT 5",1,0.5227499008178711
+0.7,0.9,0.5,0.0,"SELECT
+Customers.CustomerID,
+Customers.FirstName,
+Customers.LastName,
+SUM(Orders.TotalAmount) as TotalPurchaseAmount
+FROM
+`chatwithdata-451800.RetailDataset.Customers` AS Customers
+JOIN
+`chatwithdata-451800.RetailDataset.Orders` AS Orders
+ON
+Customers.CustomerID = Orders.CustomerID
+GROUP BY
+Customers.CustomerID, Customers.FirstName, Customers.LastName
+ORDER BY
+TotalPurchaseAmount DESC
+LIMIT 5",1,0.5782210826873779
+0.7,0.9,0.5,0.5,"SELECT
+Customers.CustomerID,
+Customers.FirstName,
+Customers.LastName,
+SUM(Orders.TotalAmount) as TotalPurchaseAmount
+FROM
+`chatwithdata-451800.RetailDataset.Customers` AS Customers
+JOIN
+`chatwithdata-451800.RetailDataset.Orders` AS Orders
+ON
+Customers.CustomerID = Orders.CustomerID
+GROUP BY
+Customers.CustomerID, Customers.FirstName, Customers.LastName
+ORDER BY
+TotalPurchaseAmount DESC
+LIMIT 5",1,0.5466680526733398
+0.7,1.0,0.0,0.0,"SELECT Customers.CustomerID, Customers.FirstName, Customers.LastName, SUM(Orders.TotalAmount) as TotalPurchaseAmount
+FROM `chatwithdata-451800.RetailDataset.Customers` AS Customers
+JOIN `chatwithdata-451800.RetailDataset.Orders` AS Orders
+ON Customers.CustomerID = Orders.CustomerID
+GROUP BY Customers.CustomerID, Customers.FirstName, Customers.LastName
+ORDER BY TotalPurchaseAmount DESC
+LIMIT 5",1,0.5251579284667969
+0.7,1.0,0.0,0.5,"SELECT
+Customers.CustomerID,
+Customers.FirstName,
+Customers.LastName,
+SUM(Orders.TotalAmount) AS TotalPurchaseAmount
+FROM
+`chatwithdata-451800.RetailDataset.Customers` AS Customers
+JOIN
+`chatwithdata-451800.RetailDataset.Orders` AS Orders
+ON
+Customers.CustomerID = Orders.CustomerID
+GROUP BY
+Customers.CustomerID,
+Customers.FirstName,
+Customers.LastName
+ORDER BY
+TotalPurchaseAmount DESC
+LIMIT 5",1,0.5000748634338379
+0.7,1.0,0.5,0.0,"SELECT
+c.CustomerID,
+c.FirstName,
+c.LastName,
+SUM(o.TotalAmount) as TotalPurchaseAmount
+FROM
+`chatwithdata-451800.RetailDataset.Customers` c
+JOIN
+`chatwithdata-451800.RetailDataset.Orders` o
+ON
+c.CustomerID = o.CustomerID
+GROUP BY
+c.CustomerID,
+c.FirstName,
+c.LastName
+ORDER BY
+TotalPurchaseAmount DESC
+LIMIT 5",1,0.556312084197998
+0.7,1.0,0.5,0.5,"SELECT
+c.CustomerID,
+c.FirstName,
+c.LastName,
+SUM(o.TotalAmount) as TotalPurchaseAmount
+FROM
+`chatwithdata-451800.RetailDataset.Orders` o
+JOIN
+`chatwithdata-451800.RetailDataset.Customers` c
+ON
+o.CustomerID = c.CustomerID
+GROUP BY
+c.CustomerID,
+c.FirstName,
+c.LastName
+ORDER BY
+TotalPurchaseAmount DESC
+LIMIT 5",1,0.8500170707702637
