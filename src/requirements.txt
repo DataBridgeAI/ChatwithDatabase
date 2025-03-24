@@ -19,3 +19,4 @@ fuzzywuzzy
 pytest
 coverage
 langchain_google_vertexai
+scikit-learn
