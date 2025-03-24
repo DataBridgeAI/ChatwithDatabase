@@ -327,17 +327,6 @@ This CI/CD pipeline validates the relevance of user queries and checks for seman
 
 ---
 
-## Summary of Key Deviations
-| Assignment Requirement | Implemented? | Reason |
-|------------------------|-------------|--------|
-| Training a New Model from Scratch | ❌ | We fine-tune a pre-trained GPT-4 model instead. |
-| Hyperparameter Tuning | ❌ | Not needed due to pre-trained embeddings. |
-| CI/CD Pipeline for Model Training | ✅ | Automatically validates, detects bias, and pushes models. |
-| Bias Detection & Mitigation | ✅ | Data slicing, metric tracking, and fairness reports are implemented. |
-| Model Artifact Registry | ✅ | Google Cloud Artifact Registry used for version control. |
-
----
-
 ## Conclusion
 This project ensures **efficient model fine-tuning**, **bias detection**, and **CI/CD automation** while leveraging **pre-trained embeddings**. While certain assignment elements (e.g., custom model training and hyperparameter tuning) are not applicable, our implementation focuses on **robust validation, fairness, and deployment automation** in a real-world setting.
 
