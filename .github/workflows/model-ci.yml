@@ -52,9 +52,9 @@ jobs:
         run: |
           pip install fuzzywuzzy langchain google-cloud-storage chromadb detoxify
 
-      - name: Run Prompt Filter Tests
+      - name: Run Semantic Search Tests
         run: |
-          python -m pytest src/tests/test_query_validator.py
+          python -m pytest src/tests/test_semantic_search.py
 
       - name: Run Model Validation Tests
         run: |
