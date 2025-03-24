@@ -61,7 +61,6 @@ Our implementation focuses on developing a natural language to SQL generation sy
 - **Prompt Engineering**:
   - Versioned prompt templates stored in GCS bucket (`sql-prompts-store`)
   - Template validation through `PromptValidation/prompt_validator.py`
-  - Dynamic prompt enhancement based on feedback
 - **Hyperparameter Configuration**:
   - Tunable parameters:
     - temperature
