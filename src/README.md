@@ -333,10 +333,74 @@ The artifact view shows detailed logs and query information stored for each run,
 ---
 
 ## 5. Model Bias Detection
-### Implemented:
-- **Slicing Data for Fairness Analysis**: We evaluate model performance across different subgroups (e.g., gender, region, age groups).
-- **Bias Mitigation Strategies**: If bias is detected, we adjust the dataset distribution or tweak model decision thresholds.
-- **Bias Documentation**: We maintain reports to track fairness improvements over time.
+
+Our model bias detection framework implements a multi-layered approach to identify and mitigate potential biases in SQL query generation. The system combines pattern-based detection with advanced content analysis to ensure fair and unbiased query processing.
+
+### Primary Detection System
+The core bias detection is implemented through the `PromptValidator` class in `PromptValidation/prompt_validator.py`. This system employs regex-based pattern matching to identify potential biases in three key categories:
+
+1. **Gender Bias Detection**
+   - Monitors SQL queries for gender-specific terms and conditions
+   - Uses pattern matching for terms like "male", "female", "men", "women"
+   - Flags queries that might lead to gender-based discrimination in data analysis
+
+2. **Racial Bias Detection**
+   - Identifies potentially discriminatory conditions based on race or ethnicity
+   - Monitors for terms related to racial or ethnic categorization
+   - Ensures fair representation across different demographic groups
+
+3. **Age-Based Bias Detection**
+   - Checks for age-related discrimination in queries
+   - Monitors terms like "young", "old", "elderly"
+   - Prevents unfair filtering or segregation based on age groups
+
+### Secondary Content Analysis
+The secondary layer of bias detection is implemented in `query_checks/content_checker.py`, which provides:
+
+1. **Sensitivity Analysis**
+   - Detects sensitive topics including religion, gender, and race
+   - Implements modular detection patterns for different sensitivity categories
+   - Provides fallback patterns for comprehensive coverage
+
+2. **Toxicity Detection**
+   - Integration with the Detoxify model for advanced content analysis
+   - Threshold-based detection:
+     - Toxicity: > 0.7
+     - Identity attacks: > 0.5
+     - Insults: > 0.5
+
+### Continuous Monitoring and Validation
+The bias detection pipeline is integrated into our CI/CD workflow through:
+
+1. **Automated Testing**
+   - Continuous monitoring via `prompt_monitor.py`
+   - Integration with GitHub Actions for automated checks
+   - Comprehensive test suite in `test_bias_check.py`
+
+2. **Validation Process**
+   - Each generated SQL query undergoes bias checking
+   - Results are logged and tracked for analysis
+   - Threshold-based alerts trigger review processes
+
+3. **Reporting and Documentation**
+   - Automated generation of bias detection reports
+   - Tracking of bias patterns over time
+   - Documentation of mitigation strategies and their effectiveness
+
+### Integration Points
+The bias detection system is integrated at multiple points in the query generation pipeline:
+
+1. **Pre-Generation Checks**
+   - User input validation
+   - Context sensitivity analysis
+   - Pattern-based screening
+
+2. **Post-Generation Validation**
+   - Generated SQL analysis
+   - Comprehensive bias detection
+   - Performance impact assessment
+
+This multi-layered approach ensures that our SQL generation system maintains high standards of fairness and neutrality while delivering accurate and efficient query results.
 
 ---
 
