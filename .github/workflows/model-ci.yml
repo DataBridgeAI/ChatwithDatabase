@@ -1,0 +1,67 @@
+name: Model and User Query Relevance CI
+
+on:
+  push:
+    branches:
+      - main
+      - prompt-filter
+  pull_request:
+    branches:
+      - main
+      - prompt/*
+
+jobs:
+  test:
+    name: Run Model and Prompt Validation Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.9'
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('src/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      
+           # Add GCP Authentication
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+      
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Install Dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r src/requirements.txt
+          pip install pytest coverage
+
+      - name: Install Model Validation Dependencies
+        run: |
+          pip install fuzzywuzzy langchain google-cloud-storage chromadb detoxify
+
+      - name: Run Prompt Filter Tests
+        run: |
+          python -m pytest src/tests/test_query_validator.py
+
+      - name: Run Model Validation Tests
+        run: |
+          python -m pytest Model_validation/tests/test_model_validation.py
+
+      - name: Generate Coverage Report
+        run: |
+          coverage run -m pytest src/tests/
+          coverage report -m
+          coverage xml

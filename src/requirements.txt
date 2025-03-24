@@ -1,4 +1,6 @@
 streamlit==1.42.2
+pandas
+numpy
 google-cloud-bigquery
 langchain
 langchain-community
@@ -6,3 +8,12 @@ python-dotenv
 plotly
 db-dtypes
 pydantic-ai
+langchain_google_vertexai
+scikit-learn
+sentence-transformers
+chromadb
+detoxify
+thefuzz
+fuzzywuzzy
+pytest
+coverage
