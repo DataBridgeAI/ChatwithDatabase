@@ -14,18 +14,23 @@ from feedback.chroma_setup import download_and_extract_chromadb
 from monitoring.mlflow_config import QueryTracker
 
 from query_checks.content_checker import validate_query
-from promptfilter.semantic_search import download_embeddings, check_query_relevance
+from promptfilter.semantic_search import download_and_prepare_embeddings, check_query_relevance
+
+# Initialize schema embeddings at startup
+try:
+    # Store embeddings in session state to avoid reloading
+    if 'schema_embeddings' not in st.session_state:
+        st.session_state.schema_embeddings = download_and_prepare_embeddings()
+        if not st.session_state.schema_embeddings:
+            st.error("Failed to load schema embeddings")
+except Exception as e:
+    st.error(f"Failed to initialize schema embeddings: {str(e)}")
 
 # Setup ChromaDB at startup
 try:
     download_and_extract_chromadb()
 except Exception as e:
     st.error(f"Failed to setup ChromaDB: {str(e)}")
-
-try:
-    download_embeddings()
-except Exception as e:
-    st.error(f"Failed to download schema embeddings: {str(e)}")
 
 # Load prompt template at startup
 try:
@@ -168,8 +173,13 @@ if st.button("Generate & Execute Query"):
         if validation_error:
             st.error(validation_error)
             st.stop()
-        query_releavance_flag = check_query_relevance(user_query)
-        if not query_releavance_flag:
+        
+        # Use the stored embeddings from session state for relevance check
+        query_relevance_flag = check_query_relevance(
+            user_query, 
+            schema_embeddings=st.session_state.schema_embeddings
+        )
+        if not query_relevance_flag:
             st.error("❌ Query appears unrelated to the database schema")
             st.stop()
 

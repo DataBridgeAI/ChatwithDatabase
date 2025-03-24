@@ -4,6 +4,7 @@ import numpy as np
 from google.cloud import bigquery, storage
 from langchain_google_vertexai import VertexAIEmbeddings
 from sklearn.metrics.pairwise import cosine_similarity
+from functools import lru_cache
 
 # Configuration Parameters
 PROJECT_ID = "chatwithdata-451800"
@@ -17,28 +18,22 @@ LOCAL_EMBEDDINGS_PATH = f"/tmp/{EMBEDDINGS_FILE}"
 embedding_model = VertexAIEmbeddings(model=VERTEX_MODEL)
 gcs_client = storage.Client()
 
-def download_embeddings():
-    # Step 1: Download from GCS if not exists locally
+@lru_cache(maxsize=1)
+def download_and_prepare_embeddings():
+    """
+    Downloads schema embeddings from GCS and prepares them for search.
+    Returns a dictionary of prepared embeddings.
+    Cached to prevent multiple downloads.
+    """
     try:
+        # Step 1: Download from GCS if not exists locally
         if not os.path.exists(LOCAL_EMBEDDINGS_PATH):
             print("📥 Downloading schema embeddings from GCS...")
             bucket = gcs_client.bucket(BUCKET_NAME)
             blob = bucket.blob(EMBEDDINGS_FILE)
             blob.download_to_filename(LOCAL_EMBEDDINGS_PATH)
-            print("✅ Download complete")
-    except Exception as e:
-        print(f"Error downloading schema embeddings: {str(e)}")
-
-def prepare_embeddings():
-    """
-    Downloads schema embeddings from GCS and prepares them for search.
-    Returns a dictionary of prepared embeddings.
-    """
-    try:
-        
         
         # Step 2: Load and prepare embeddings
-        print("🔄 Loading schema embeddings...")
         with open(LOCAL_EMBEDDINGS_PATH, 'r') as f:
             schema_data = json.load(f)
         
@@ -50,7 +45,6 @@ def prepare_embeddings():
                 'semantic_text': value['semantic_text']
             }
         
-        print(f"✅ Successfully prepared {len(prepared_embeddings)} embeddings for search")
         return prepared_embeddings
         
     except Exception as e:
@@ -62,43 +56,47 @@ def generate_user_input_embedding(user_input):
     user_input_embedding = embedding_model.embed_documents([user_input])
     return np.array(user_input_embedding[0])
 
-def check_query_relevance(user_input: str, threshold: float = 0.75) -> bool:
+def check_query_relevance(user_input: str, schema_embeddings=None, threshold: float = 0.75) -> bool:
     """
     Check if the user query is relevant to the schema.
-    Returns True if relevant, False if not.
+    Args:
+        user_input: The user's query string
+        schema_embeddings: Pre-loaded schema embeddings (optional)
+        threshold: Similarity threshold for relevance
+    Returns:
+        bool: True if relevant, False if not
     """
     try:
+        # Normalize input
+        user_input = user_input.lower().strip()
+        
         # Generate embedding for user input
         query_embedding = generate_user_input_embedding(user_input)
         
-        # Load prepared embeddings
-        schema_embeddings = prepare_embeddings()
+        # Use provided embeddings or load them if not provided
+        if schema_embeddings is None:
+            schema_embeddings = download_and_prepare_embeddings()
+            
         if not schema_embeddings:
             print("❌ Failed to load schema embeddings")
             return False
             
         # Check similarity with schema embeddings
-        similarities = {}
-    
-        for schema_key, schema_data in schema_embeddings.items():
-            schema_embedding = np.array(schema_data['embedding']).reshape(1, -1)
-            user_embedding = np.array(query_embedding).reshape(1, -1)
+        max_similarity = 0.0
         
+        for schema_key, schema_data in schema_embeddings.items():
+            schema_embedding = schema_data['embedding'].reshape(1, -1)
+            user_embedding = np.array(query_embedding).reshape(1, -1)
+            
             # Calculate cosine similarity
             similarity = cosine_similarity(user_embedding, schema_embedding)[0][0]
-            similarities[schema_key] = {
-                'score': similarity,
-                'semantic_text': schema_data['semantic_text']
-            }
-    
-        # Check if any similarity scores meet the threshold
-        relevant_matches = [v['score'] for v in similarities.values() if v['score'] >= threshold]
-        
-        if not relevant_matches:
-            print("❌ Query appears unrelated to the database schema")
-            return False
+            max_similarity = max(max_similarity, similarity)
             
-        return True
+            if max_similarity >= threshold:
+                return True
+        
+        print("❌ Query appears unrelated to the database schema")
+        return False
         
     except Exception as e:
         print(f"❌ Error checking query relevance: {str(e)}")

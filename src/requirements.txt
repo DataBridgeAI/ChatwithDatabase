@@ -12,3 +12,9 @@ sentence-transformers
 mlflow>=2.3.0
 sqlparse>=0.4.3
 chromadb
+pandas
+numpy
+thefuzz
+fuzzywuzzy
+pytest
+coverage
