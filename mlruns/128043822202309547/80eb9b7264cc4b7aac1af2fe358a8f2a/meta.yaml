@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/divya/Repos/ProjectRepo/ChatwithDatabase/mlruns/128043822202309547/80eb9b7264cc4b7aac1af2fe358a8f2a/artifacts
+end_time: 1742702679595
+entry_point_name: ''
+experiment_id: '128043822202309547'
+lifecycle_stage: active
+run_id: 80eb9b7264cc4b7aac1af2fe358a8f2a
+run_name: query_exec_20250323_000439
+run_uuid: 80eb9b7264cc4b7aac1af2fe358a8f2a
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1742702679309
+status: 3
+tags: []
+user_id: divya

@@ -1,5 +1,6 @@
 streamlit==1.42.2
 google-cloud-bigquery
+google-cloud-storage
 langchain
 langchain-community
 python-dotenv 
@@ -11,6 +12,13 @@ sentence-transformers
 mlflow>=2.3.0
 sqlparse>=0.4.3
 chromadb
+pandas
+numpy
+thefuzz
+fuzzywuzzy
+pytest
+coverage
+langchain_google_vertexai
+scikit-learn
 matplotlib
 seaborn
-mlflow
