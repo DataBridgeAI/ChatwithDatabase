@@ -144,9 +144,67 @@ These insights help select the most effective model settings for consistent and 
 ---
 
 ## 3. Experiment Tracking and Results
-### Implemented:
-- **Tracking with MLflow**: We log **model versions, parameters, and results** for reproducibility.
-- **Visualization of Results**: We generate confusion matrices and performance metric plots for comparison.
+
+Our experiment tracking system leverages MLflow to comprehensively monitor and analyze the SQL generation model's performance. The implementation spans across multiple components:
+
+### MLflow Implementation Details:
+
+#### 1. Query Execution Tracking
+- **Core Implementation**: `monitoring/mlflow_config.py`
+  - Tracks execution metrics through `QueryTracker` class
+  - Logs comprehensive query execution details including:
+    - Execution times (BigQuery and total processing)
+    - Query complexity metrics
+    - Success/failure status
+    - User feedback
+
+#### 2. Tracked Metrics
+- **Performance Metrics**:
+  - BigQuery execution time
+  - Total processing time (including LLM)
+  - Query and SQL lengths
+  - Result row and column counts
+- **Complexity Analysis**:
+  - Table count in queries
+  - Join operations count
+  - WHERE conditions count
+- **Query Categorization**:
+  - Query type (select, aggregate, join, etc.)
+  - Complexity levels (simple, moderate, complex)
+  - Performance categories (fast, medium, slow)
+
+#### 3. Experiment Organization
+- **Structure**:
+  - Experiment Name: "sql_execution_tracking"
+  - Run Names: Timestamped query executions (`query_exec_YYYYMMDD_HHMMSS`)
+  - Environment tags for development/production tracking
+- **Parameter Tracking**:
+  - Model: gpt-4
+  - Temperature: 0.3
+  - Additional metadata from query execution
+
+#### 4. Detailed Logging
+- **Query Details**:
+  - Original user query
+  - Generated SQL (formatted)
+  - Error messages (if any)
+- **Performance Tags**:
+  - Query status (success/error)
+  - Performance category
+  - Query complexity
+  - Query type
+
+### Integration Points
+- **Application Integration**: 
+  - `src/app.py` initializes tracking for each user interaction
+  - Real-time logging of query execution metrics
+  - Automatic tracking of query success/failure
+
+### Key Insights from MLflow Tracking
+- Performance patterns across different query complexities
+- Correlation between query types and execution times
+- Success rate analysis for various query categories
+- Impact of query complexity on overall performance
 
 ---
 
