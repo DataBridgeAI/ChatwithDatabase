@@ -9,3 +9,5 @@ def load_api_key():
     if not api_key:
         raise ValueError("OPEN AI API Key is missing. Please configure it in your .env file.")
     return api_key
+
+

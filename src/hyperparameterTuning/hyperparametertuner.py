@@ -1,16 +1,21 @@
-
+# src/hyperparameterTuning/hyperparametertuner.py
 import time
 import sys, os
 import pandas as pd
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+# Ensure the project root is in the Python path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
-from langchain.chat_models import ChatOpenAI
+from langchain_community.chat_models import ChatOpenAI  # Updated import
 from ai.llm import clean_sql
 from database.query_executor import execute_bigquery_query
 from database.schema import get_bigquery_schema
+from src.monitoring.mlflow_config import QueryTracker  # Corrected import
+
+# Initialize MLflow tracker
+tracker = QueryTracker()
 
 # Define test parameters
 project_id = "chatwithdata-451800"
@@ -18,7 +23,7 @@ dataset_id = "RetailDataset"
 user_query = "List the top 5 customers by total purchase amount."
 schema = get_bigquery_schema(project_id, dataset_id)
 
-# Prompt template from llm.py
+# Prompt template
 prompt_template = PromptTemplate(
     template="""Convert this English question into an accurate **BigQuery SQL query**.
 
@@ -61,204 +66,7 @@ param_configs = [
         "frequency_penalty": 0.5,
         "presence_penalty": 0.0
     },
-    {
-        "temperature": 0.2,
-        "top_p": 0.8,
-        "frequency_penalty": 0.5,
-        "presence_penalty": 0.5
-    },
-    {
-        "temperature": 0.2,
-        "top_p": 0.9,
-        "frequency_penalty": 0.0,
-        "presence_penalty": 0.0
-    },
-    {
-        "temperature": 0.2,
-        "top_p": 0.9,
-        "frequency_penalty": 0.0,
-        "presence_penalty": 0.5
-    },
-    {
-        "temperature": 0.2,
-        "top_p": 0.9,
-        "frequency_penalty": 0.5,
-        "presence_penalty": 0.0
-    },
-    {
-        "temperature": 0.2,
-        "top_p": 0.9,
-        "frequency_penalty": 0.5,
-        "presence_penalty": 0.5
-    },
-    {
-        "temperature": 0.2,
-        "top_p": 1.0,
-        "frequency_penalty": 0.0,
-        "presence_penalty": 0.0
-    },
-    {
-        "temperature": 0.2,
-        "top_p": 1.0,
-        "frequency_penalty": 0.0,
-        "presence_penalty": 0.5
-    },
-    {
-        "temperature": 0.2,
-        "top_p": 1.0,
-        "frequency_penalty": 0.5,
-        "presence_penalty": 0.0
-    },
-    {
-        "temperature": 0.2,
-        "top_p": 1.0,
-        "frequency_penalty": 0.5,
-        "presence_penalty": 0.5
-    },
-    {
-        "temperature": 0.5,
-        "top_p": 0.8,
-        "frequency_penalty": 0.0,
-        "presence_penalty": 0.0
-    },
-    {
-        "temperature": 0.5,
-        "top_p": 0.8,
-        "frequency_penalty": 0.0,
-        "presence_penalty": 0.5
-    },
-    {
-        "temperature": 0.5,
-        "top_p": 0.8,
-        "frequency_penalty": 0.5,
-        "presence_penalty": 0.0
-    },
-    {
-        "temperature": 0.5,
-        "top_p": 0.8,
-        "frequency_penalty": 0.5,
-        "presence_penalty": 0.5
-    },
-    {
-        "temperature": 0.5,
-        "top_p": 0.9,
-        "frequency_penalty": 0.0,
-        "presence_penalty": 0.0
-    },
-    {
-        "temperature": 0.5,
-        "top_p": 0.9,
-        "frequency_penalty": 0.0,
-        "presence_penalty": 0.5
-    },
-    {
-        "temperature": 0.5,
-        "top_p": 0.9,
-        "frequency_penalty": 0.5,
-        "presence_penalty": 0.0
-    },
-    {
-        "temperature": 0.5,
-        "top_p": 0.9,
-        "frequency_penalty": 0.5,
-        "presence_penalty": 0.5
-    },
-    {
-        "temperature": 0.5,
-        "top_p": 1.0,
-        "frequency_penalty": 0.0,
-        "presence_penalty": 0.0
-    },
-    {
-        "temperature": 0.5,
-        "top_p": 1.0,
-        "frequency_penalty": 0.0,
-        "presence_penalty": 0.5
-    },
-    {
-        "temperature": 0.5,
-        "top_p": 1.0,
-        "frequency_penalty": 0.5,
-        "presence_penalty": 0.0
-    },
-    {
-        "temperature": 0.5,
-        "top_p": 1.0,
-        "frequency_penalty": 0.5,
-        "presence_penalty": 0.5
-    },
-    {
-        "temperature": 0.7,
-        "top_p": 0.8,
-        "frequency_penalty": 0.0,
-        "presence_penalty": 0.0
-    },
-    {
-        "temperature": 0.7,
-        "top_p": 0.8,
-        "frequency_penalty": 0.0,
-        "presence_penalty": 0.5
-    },
-    {
-        "temperature": 0.7,
-        "top_p": 0.8,
-        "frequency_penalty": 0.5,
-        "presence_penalty": 0.0
-    },
-    {
-        "temperature": 0.7,
-        "top_p": 0.8,
-        "frequency_penalty": 0.5,
-        "presence_penalty": 0.5
-    },
-    {
-        "temperature": 0.7,
-        "top_p": 0.9,
-        "frequency_penalty": 0.0,
-        "presence_penalty": 0.0
-    },
-    {
-        "temperature": 0.7,
-        "top_p": 0.9,
-        "frequency_penalty": 0.0,
-        "presence_penalty": 0.5
-    },
-    {
-        "temperature": 0.7,
-        "top_p": 0.9,
-        "frequency_penalty": 0.5,
-        "presence_penalty": 0.0
-    },
-    {
-        "temperature": 0.7,
-        "top_p": 0.9,
-        "frequency_penalty": 0.5,
-        "presence_penalty": 0.5
-    },
-    {
-        "temperature": 0.7,
-        "top_p": 1.0,
-        "frequency_penalty": 0.0,
-        "presence_penalty": 0.0
-    },
-    {
-        "temperature": 0.7,
-        "top_p": 1.0,
-        "frequency_penalty": 0.0,
-        "presence_penalty": 0.5
-    },
-    {
-        "temperature": 0.7,
-        "top_p": 1.0,
-        "frequency_penalty": 0.5,
-        "presence_penalty": 0.0
-    },
-    {
-        "temperature": 0.7,
-        "top_p": 1.0,
-        "frequency_penalty": 0.5,
-        "presence_penalty": 0.5
-    }
+    # Add the rest of your param_configs here...
 ]
 
 for config in param_configs:
@@ -272,6 +80,7 @@ for config in param_configs:
     )
 
     chain = LLMChain(llm=llm, prompt=prompt_template)
+    start_time = time.time()
     try:
         sql = chain.run({
             "schema": schema,
@@ -281,7 +90,18 @@ for config in param_configs:
         })
         sql = clean_sql(sql)
         df, exec_time = execute_bigquery_query(sql)
+        total_time = time.time() - start_time
         score = 1 if "Error" not in df.columns else 0
+
+        # Log to MLflow
+        tracker.log_query_execution(
+            user_query=user_query,
+            generated_sql=sql,
+            execution_time=exec_time,
+            total_time=total_time,
+            query_result=df,
+            metadata=config
+        )
 
         results.append({
             **config,
@@ -291,6 +111,15 @@ for config in param_configs:
         })
 
     except Exception as e:
+        total_time = time.time() - start_time
+        tracker.log_query_execution(
+            user_query=user_query,
+            generated_sql="Generation failed",
+            execution_time=0,
+            total_time=total_time,
+            error=str(e),
+            metadata=config
+        )
         results.append({
             **config,
             "sql": "Generation failed",

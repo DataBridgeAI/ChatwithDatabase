@@ -1,0 +1,47 @@
+{
+    "gender": {
+        "threshold": 0.5,
+        "detoxify_key": "identity_attack",
+        "response": "🤝 This query involves gender topics, which can be sensitive. I’ll provide a neutral, factual response where possible."
+    },
+    "race_ethnicity": {
+        "threshold": 0.5,
+        "detoxify_key": "identity_attack",
+        "response": "🤝 This query touches on race or ethnicity, a sensitive area. I’ll respond objectively without bias."
+    },
+    "religion": {
+        "threshold": 0.5,
+        "detoxify_key": "identity_attack",
+        "response": "🤝 This query involves religion, which can be sensitive. I’ll keep my response respectful and factual."
+    },
+    "politics": {
+        "threshold": 0.7,
+        "detoxify_key": "toxicity",
+        "response": "🤝 This query relates to politics, a divisive topic. I’ll aim for a balanced, neutral response."
+    },
+    "nationality": {
+        "threshold": 0.5,
+        "detoxify_key": "identity_attack",
+        "response": "🤝 This query involves nationality, which can be sensitive. I’ll provide an impartial response."
+    },
+    "age": {
+        "threshold": 0.5,
+        "detoxify_key": "identity_attack",
+        "response": "🤝 This query touches on age groups, a potentially sensitive topic. I’ll keep it neutral and informative."
+    },
+    "misc_social_bias": {
+        "threshold": 0.5,
+        "detoxify_key": "identity_attack",
+        "response": "🤝 This query involves social traits, which can be sensitive. I’ll respond objectively."
+    },
+    "harmful": {
+        "threshold": 0.5,
+        "detoxify_key": "threat",
+        "response": "🚫 This query suggests harmful intent (e.g., violence, terrorism). I can’t assist with that."
+    },
+    "sql": {
+        "threshold": null,
+        "detoxify_key": null,
+        "response": "🚫 Restricted SQL operation detected. I can’t process this."
+    }
+}

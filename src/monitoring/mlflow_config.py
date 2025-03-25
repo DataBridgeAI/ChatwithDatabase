@@ -4,6 +4,7 @@ from datetime import datetime
 import sqlparse
 from typing import Dict, Any, Optional
 import time
+import matplotlib.pyplot as plt  # Added for plot handling
 
 class QueryTracker:
     def __init__(self):
@@ -63,8 +64,8 @@ class QueryTracker:
                 
                 # Calculate metrics
                 metrics = {
-                    "bigquery_execution_time": execution_time,  # Actual BigQuery execution time
-                    "total_processing_time": total_time,        # Total time including LLM
+                    "bigquery_execution_time": execution_time,
+                    "total_processing_time": total_time,
                     "query_length": len(user_query),
                     "sql_length": len(formatted_sql),
                 }
@@ -87,7 +88,7 @@ class QueryTracker:
                 # Log tags
                 tags = {
                     "status": "error" if error else "success",
-                    "performance": self._categorize_performance(execution_time)  # Use BigQuery execution time
+                    "performance": self._categorize_performance(execution_time)
                 }
                 
                 if feedback:
@@ -106,6 +107,18 @@ class QueryTracker:
                 
         except Exception as e:
             print(f"Error logging to MLflow: {str(e)}")
+
+    def log_visualization(self, plot_name: str) -> None:
+        """Log a matplotlib/seaborn plot as an MLflow artifact"""
+        try:
+            artifact_path = f"{plot_name}.png"
+            plt.savefig(artifact_path)
+            with mlflow.start_run(run_name=f"visualization_{plot_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"):
+                mlflow.log_artifact(artifact_path)
+            os.remove(artifact_path)  # Clean up temporary file
+            print(f"Logged visualization: {plot_name}")
+        except Exception as e:
+            print(f"Error logging visualization {plot_name}: {str(e)}")
 
     def _count_tables(self, sql: str) -> int:
         return sql.upper().count("FROM ") + sql.upper().count("JOIN ")
@@ -168,7 +181,3 @@ class QueryTracker:
         finally:
             if os.path.exists(artifact_path):
                 os.remove(artifact_path)
-
-
-
-

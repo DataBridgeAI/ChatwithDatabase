@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/ADITYA BATTA/Desktop/Repos/ChatwithDatabase/mlruns/542108068899259777/d401fd24dc0e4383be89606cd2de0198/artifacts
+end_time: 1742916952668
+entry_point_name: ''
+experiment_id: '542108068899259777'
+lifecycle_stage: active
+run_id: d401fd24dc0e4383be89606cd2de0198
+run_name: query_exec_20250325_113552
+run_uuid: d401fd24dc0e4383be89606cd2de0198
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1742916952549
+status: 3
+tags: []
+user_id: ADITYA BATTA

@@ -13,7 +13,7 @@ from feedback.vector_search import retrieve_similar_query
 from feedback.chroma_setup import download_and_extract_chromadb
 from monitoring.mlflow_config import QueryTracker
 
-from query_checks.content_checker import validate_query
+from query_checks.content_checker import check_query
 from promptfilter.semantic_search import download_and_prepare_embeddings, check_query_relevance
 
 # Initialize schema embeddings at startup
@@ -169,7 +169,7 @@ if st.button("Generate & Execute Query"):
         st.error("Please load the BigQuery schema first!")
     else:
         # Validate query
-        validation_error = validate_query(user_query)
+        validation_error = check_query(user_query)
         if validation_error:
             st.error(validation_error)
             st.stop()

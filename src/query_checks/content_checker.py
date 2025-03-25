@@ -80,7 +80,7 @@ def check_sql_safety(user_query: str) -> Optional[str]:
         return "Restricted SQL operation detected."
     return None
   
-def validate_query(user_query: str) -> Optional[str]:
+def check_query(user_query: str) -> Optional[str]:
     """
     Validate query by checking sensitivity, intent, and SQL safety.
     Modular structure.

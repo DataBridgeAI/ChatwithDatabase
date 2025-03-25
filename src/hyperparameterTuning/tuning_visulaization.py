@@ -1,15 +1,15 @@
-
+# src/hyperparameterTuning/tuning_visualization.py
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os
+from src.monitoring.mlflow_config import QueryTracker  # Corrected import
+
+# Initialize QueryTracker
+tracker = QueryTracker()
 
 # Load the results
 df = pd.read_csv("tuning_results.csv")
-
-# Ensure output directory exists
-output_dir = "."
-os.makedirs(output_dir, exist_ok=True)
 
 print("\n=== Summary of Hyperparameter Tuning ===\n")
 print(df.describe(include='all'))
@@ -27,13 +27,14 @@ if not success_df.empty:
         alpha=0.6
     )
     for i, row in success_df.iterrows():
-        plt.text(row["temperature"], row["execution_time"], f"{row['top_p']},{row['frequency_penalty']},{row['presence_penalty']}", fontsize=8)
+        plt.text(row["temperature"], row["execution_time"], 
+                 f"{row['top_p']},{row['frequency_penalty']},{row['presence_penalty']}", fontsize=8)
     plt.title("Execution Time vs Temperature (Successful Runs)")
     plt.xlabel("Temperature")
     plt.ylabel("Execution Time (s)")
     plt.grid(True)
     plt.tight_layout()
-    plt.savefig(os.path.join(output_dir, "execution_time_vs_temperature.png"))
+    tracker.log_visualization("execution_time_vs_temperature")
     plt.show()
 else:
     print("No successful runs to visualize.")
@@ -47,7 +48,7 @@ sns.countplot(data=df, x='success_label', palette='Set2')
 plt.title("Success vs Failure Counts")
 plt.xlabel("Outcome")
 plt.ylabel("Count")
-plt.savefig(os.path.join(output_dir, "success_vs_failure.png"))
+tracker.log_visualization("success_vs_failure")
 plt.show()
 
 # 3. Plot: Execution Time Distribution (Successes Only)
@@ -56,31 +57,31 @@ sns.histplot(data=success_df, x='execution_time', bins=10, kde=True)
 plt.title("Execution Time Distribution (Successful Runs)")
 plt.xlabel("Execution Time (s)")
 plt.ylabel("Frequency")
-plt.savefig(os.path.join(output_dir, "execution_time_distribution_success.png"))
+tracker.log_visualization("execution_time_distribution_success")
 plt.show()
 
 # 4. Pairplot for Hyperparameters colored by Success
-sns.pairplot(df, vars=["temperature", "top_p", "frequency_penalty", "presence_penalty"], hue="success_label", palette="husl")
-plt.savefig(os.path.join(output_dir, "hyperparameter_pairplot.png"))
+sns.pairplot(df, vars=["temperature", "top_p", "frequency_penalty", "presence_penalty"], 
+             hue="success_label", palette="husl")
+tracker.log_visualization("hyperparameter_pairplot")
 plt.show()
 
 # 5. Heatmap of Parameter Correlations
 correlation_data = df[["temperature", "top_p", "frequency_penalty", "presence_penalty", "success"]]
 correlation_matrix = correlation_data.corr()
-
 plt.figure(figsize=(8, 8))
 sns.heatmap(correlation_matrix, annot=True, cmap="coolwarm", fmt=".2f")
 plt.title("Correlation Matrix")
-plt.savefig(os.path.join(output_dir, "correlation_matrix.png"))
+tracker.log_visualization("correlation_matrix")
 plt.show()
 
-# 6. Bar Plot: Success/Failure by Temperature
+# 6. Bar Plot: Successasc
 temp_success = pd.crosstab(df["temperature"], df["success_label"])
 temp_success.plot(kind="bar", stacked=True, colormap="Set3", figsize=(8, 5))
 plt.title("Success/Failure by Temperature")
 plt.xlabel("Temperature")
 plt.ylabel("Count")
-plt.savefig(os.path.join(output_dir, "success_by_temperature.png"))
+tracker.log_visualization("success_by_temperature")
 plt.show()
 
 # 7. Top Performing Configurations by Execution Time
