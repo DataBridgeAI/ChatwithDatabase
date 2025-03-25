@@ -424,6 +424,11 @@ This CI/CD pipeline validates the relevance of user queries and checks for seman
 - Ensures the SQL generation is based on valid, relevant queries.
 - Helps maintain consistent query quality and accuracy by ensuring model performance is up to standards.
 - **CI Pipeline**: `.github/workflows/model-ci.yml`
+
+### Model Deployment and Registry Push:
+![gcr Overview](/src/assets/gcr.png)
+Once the model passes validation and bias checks, it is containerized using Docker and pushed to Google Container Registry (GCR). This ensures version control and seamless deployment. The CI/CD pipeline automates this process, preparing the model for future deployment on Cloud Run.
+
 ---
 
 ## 7. Code Implementation
