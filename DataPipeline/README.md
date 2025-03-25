@@ -91,9 +91,6 @@ The `monitor_drift` DAG consists of three main tasks:
 ### DAG Visualization
 ![Monitor Drift DAG](assets/monitor_drift_graph.png)
 
-### Task Timeline
-![Monitor Drift Gantt](assets/monitor_drift_gantt.png)
-
 ## Alert Mechanisms
 - **Slack Integration**: Real-time notifications for:
   - Schema changes
