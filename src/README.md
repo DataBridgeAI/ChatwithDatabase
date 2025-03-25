@@ -268,27 +268,18 @@ Our experiment tracking system leverages MLflow to comprehensively monitor and a
 
 #### Experiment Overview
 ![MLflow Overview](/src/assets/Overview.png)
-The overview dashboard shows the experiment summary, including total runs, active runs, and experiment metadata. This provides a high-level view of our model's testing and validation progress.
+The above image displays a dashboard tracking SQL query execution. It includes details like parameters (dataset, model, project, query source, temperature), system metrics, artifacts, and execution metrics such as BigQuery execution time, query length, SQL length, and processing time.
 
 #### Run Details and Metrics
 ![MLflow Runs UI](/src/assets/mlrunsUI.png)
 The runs interface displays individual query executions with their corresponding metrics, parameters, and tags. Each run represents a single query processing instance, allowing us to track performance over time.
 
 #### Model Performance Metrics
-![Model Metrics](/src/assets/model_metrics.png)
+![Query Performance Metrics](/src/assets/model_metrics.png)
 Detailed performance metrics visualization showing:
 - Query execution times
-- Success rates across different query types
-- Complexity distribution
-- Performance trends
-
-#### Artifact Tracking
-![Artifact Details](/src/assets/artifact.png)
-The artifact view shows detailed logs and query information stored for each run, including:
-- Generated SQL queries
-- Execution logs
-- Error messages (if any)
-- Query validation results
+- Query length
+- Query complexity
 
 #### 3. Experiment Organization
 - **Structure**:
@@ -436,16 +427,74 @@ This CI/CD pipeline validates the relevance of user queries and checks for seman
 ---
 
 ## 7. Code Implementation
-### Implemented:
-- **Containerized Model Code (Docker-based Deployment)**: Ensures **reproducibility and scalability**.
-- **Data Retrieval from Pre-processed Pipeline**: Ensures consistency across training runs.
-- **Model Fine-tuning & Selection Logic**: Compares model variants and selects the best-performing one.
-- **Bias Checking Code**: Generates **bias reports** for transparent evaluation.
-- **Automated Model Registry Updates**: Version control is handled via **Google Cloud Registry**.
 
-### Not Applicable:
-- **Custom Model Training Implementation**: We do not train a model from scratch; instead, we fine-tune an existing one.
-- **Hyperparameter Tuning Optimization**: Since we use pre-trained embeddings, extensive tuning is unnecessary.
+### 1. Core Application Components
+- **Main Application**
+  - `src/app.py`: Main Streamlit application entry point
+  - `src/ai/llm.py`: GPT-4 integration via LangChain
+  - `src/database/query_executor.py`: BigQuery interaction logic
+  - `src/database/schema.py`: Schema management and processing
+
+### 2. Model and Prompt Management
+- **LLM Integration**
+  - `src/ai/llm.py`: GPT-4 configuration and prompt handling
+  - `PromptValidation/prompt_validator.py`: Template validation logic
+  - `PromptValidation/prompt_monitor.py`: Continuous prompt monitoring
+
+### 3. Data Pipeline Components
+- **Schema Processing**
+  - `DataPipeline/dags/extract_bigquery_schema.py`: Schema extraction DAG
+  - `DataPipeline/dags/schema_embeddings_dag.py`: Schema embedding generation
+  - `DataPipeline/dags/feedback_embeddings_dag.py`: Feedback processing
+
+### 4. Monitoring and Validation
+- **Performance Tracking**
+  - `src/monitoring/mlflow_config.py`: MLflow configuration and metrics logging
+  - `Model_validation/model_validation.py`: Core validation logic
+  - `Model_validation/tests/test_model_validation.py`: Validation test suite
+
+### 5. Bias Detection System
+- **Primary Detection**
+  - `PromptValidation/bias_check.py`: Main bias detection logic
+  - `query_checks/content_checker.py`: Content analysis and filtering
+  - `PromptValidation/tests/test_bias_check.py`: Bias detection tests
+
+### 6. CI/CD Pipeline
+- **GitHub Actions Workflows**
+  - `.github/workflows/ci_cd_workflow.yml`: Main CI/CD pipeline
+  - `.github/workflows/model-ci.yml`: Model validation pipeline
+  - `.github/workflows/airflow-ci.yml`: Data pipeline validation
+
+### 7. Query Processing and Filtering
+- **Query Management**
+  - `src/promptfilter/semantic_search.py`: Query relevance checking
+  - `feedback/feedback_manager.py`: User feedback collection
+  - `feedback/vector_search.py`: Similar query retrieval
+  - `feedback/chroma_setup.py`: ChromaDB configuration
+
+### 8. Visualization and UI
+- **User Interface**
+  - `src/ui/layout.py`: Streamlit layout components
+  - `src/ui/visualization.py`: Data visualization utilities
+
+### 9. Docker Configuration
+- **Containerization**
+  - `Dockerfile`: Application containerization
+  - `docker-compose.yml`: Multi-container orchestration
+  - `.dockerignore`: Docker build exclusions
+
+### 10. Configuration and Environment
+- **Project Setup**
+  - `requirements.txt`: Python dependencies
+  - `.env.example`: Environment variable template
+  - `setup.py`: Package installation configuration
+
+This implementation structure ensures:
+- Clear separation of concerns
+- Modular and maintainable codebase
+- Easy testing and deployment
+- Scalable architecture
+- Comprehensive monitoring and validation
 
 ---
 
