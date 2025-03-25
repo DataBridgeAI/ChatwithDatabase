@@ -411,31 +411,28 @@ To ensure the reliability, accuracy, and fairness of SQL query generation, we ha
 ### 1. CI/CD for Semantic Search and Model Validation
 Semantic search is used to determine if a user's input query is relevant to the dataset stored in Google BigQuery. This is crucial for filtering out irrelevant or harmful queries before passing them to the SQL query generator. Additionally, model validation is performed to ensure the accuracy and relevance of model-generated queries.
 
-- **Semantic Search Tests**: The CI/CD pipeline runs tests to validate whether a user’s input query is relevant to the dataset. This prevents incorrect, misleading, or irrelevant queries from being processed.
-- **Model Validation Tests**: The model's performance is evaluated based on specific metrics, including precision, recall, and F1-score, which are essential for assessing the accuracy and effectiveness of the generated SQL queries.
+- **Semantic Search Tests** (`src/tests/test_semantic_search.py`, `src/promptfilter/semantic_search.py`): The CI/CD pipeline runs tests to validate whether a user's input query is relevant to the dataset. This prevents incorrect, misleading, or irrelevant queries from being processed.
+- **Model Validation Tests** (`Model_validation/tests/test_model_validation.py`, `Model_validation/model_validation.py`): The model's performance is evaluated based on specific metrics, including precision, recall, and F1-score, which are essential for assessing the accuracy and effectiveness of the generated SQL queries.
   - **Evaluation Metrics**: The pipeline fetches data on generated SQL, correct SQL, and feedback from BigQuery.
   - **Precision, Recall, and F1-Score Calculation**: The model's predictions are compared against the ground truth (correct SQL queries), and metrics are computed using `sklearn`'s `precision_score`, `recall_score`, and `f1_score`.
   - **Metrics Storage**: After evaluation, the computed metrics are stored in a BigQuery table, allowing for easy tracking and analysis over time.
-  - **Continuous Monitoring**: The metrics are updated regularly to evaluate the model's performance and ensure that it is improving or at least maintaining a consistent level of quality.
+  - **Continuous Monitoring** (`DataPipeline/dags/model_validation_dag.py`): The metrics are updated regularly to evaluate the model's performance and ensure that it is improving or at least maintaining a consistent level of quality.
+  - **CI Pipeline**: `.github/workflows/model-ci.yml`
 
 ### 2. Automated Prompt Validation and Bias Detection
-- **Prompt Validation**: The CI/CD pipeline runs unit tests to ensure the natural language prompts are correctly structured and converted into syntactically correct SQL queries. This ensures query correctness before execution and improves user experience.
-- **Bias Detection**: The pipeline checks the model's output for potential bias by testing against various data slices.
-- **Notification**: After the prompt validation and bias detection tests, the pipeline sends notifications to inform the team about test results.
+- **Prompt Validation** (`PromptValidation/prompt_validator.py`): The CI/CD pipeline runs unit tests to ensure the natural language prompts are correctly structured and converted into syntactically correct SQL queries. This ensures query correctness before execution and improves user experience.
+- **Bias Detection** (`PromptValidation/bias_check.py`): The pipeline checks the model's output for potential bias by testing against various data slices.
+- **Notification** : After the prompt validation and bias detection tests, the pipeline sends notifications to inform the team about test results.
+- **CI Pipeline**: `.github/workflows/ci_cd_workflow.yml`
 
-### 3. Google Cloud BigQuery Connectivity Checks
-- The pipeline checks for connectivity to BigQuery and verifies that authentication credentials are properly set up.
-- It ensures the required dataset and tables are available for querying.
-- Prevents failures related to misconfigured credentials, missing datasets, or API access issues.
-- Ensures seamless interaction between the application and BigQuery, reducing downtime.
 
-### 4. Model and User Query Relevance Validation
+### 3. Model and User Query Relevance Validation
 This CI/CD pipeline validates the relevance of user queries and checks for semantic accuracy using a model. The pipeline tests whether the generated SQL queries make sense within the context of the dataset.
-- The pipeline performs **semantic search validation** to ensure that the user's query matches the dataset.
-- **Model validation tests** are performed to confirm that the system correctly interprets user input and generates accurate SQL queries.
+- The pipeline performs **semantic search validation** (`src/promptfilter/semantic_search.py`) to ensure that the user's query matches the dataset.
+- **Model validation tests** (`Model_validation/tests/test_model_validation.py`) are performed to confirm that the system correctly interprets user input and generates accurate SQL queries.
 - Ensures the SQL generation is based on valid, relevant queries.
 - Helps maintain consistent query quality and accuracy by ensuring model performance is up to standards.
-
+- **CI Pipeline**: `.github/workflows/model-ci.yml`
 ---
 
 ## 7. Code Implementation
