@@ -1,7 +1,7 @@
 import os
 import json
 import numpy as np
-from google.cloud import bigquery, storage
+from google.cloud import storage
 from langchain_google_vertexai import VertexAIEmbeddings
 from sklearn.metrics.pairwise import cosine_similarity
 from functools import lru_cache
@@ -12,7 +12,11 @@ DATASET_ID = "RetailDataset"
 VERTEX_MODEL = "textembedding-gecko@003"
 BUCKET_NAME = "bigquery-embeddings-store"
 EMBEDDINGS_FILE = "schema_embeddings.json"
-LOCAL_EMBEDDINGS_PATH = f"/tmp/{EMBEDDINGS_FILE}"
+
+# Create embeddings directory if it doesn't exist
+EMBEDDINGS_DIR = os.path.join(os.path.dirname(__file__), '..', 'embeddings')
+os.makedirs(EMBEDDINGS_DIR, exist_ok=True)
+LOCAL_EMBEDDINGS_PATH = os.path.join(EMBEDDINGS_DIR, EMBEDDINGS_FILE)
 
 # Initialize Vertex AI Embeddings
 embedding_model = VertexAIEmbeddings(model=VERTEX_MODEL)
