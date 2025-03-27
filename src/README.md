@@ -427,7 +427,7 @@ This CI/CD pipeline validates the relevance of user queries and checks for seman
 
 ### Model Deployment and Registry Push:
 ![gcr Overview](/src/assets/gcr.png)
-Once the model passes validation and bias checks, it is containerized using Docker and pushed to Google Container Registry (GCR). This ensures version control and seamless deployment. The CI/CD pipeline automates this process, preparing the model for future deployment on Cloud Run.
+Once the system passes validation and bias checks, the entire application—including the model, query processing, and monitoring components—is containerized using Docker and pushed to Google Container Registry (GCR). This ensures portability and scalability. The containerized application can be pulled from GCR. This would allow seamless deployment to Google Cloud Run or other cloud environments for production use.
 
 ---
 
