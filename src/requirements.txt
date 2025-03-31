@@ -22,3 +22,5 @@ langchain_google_vertexai
 scikit-learn
 matplotlib
 seaborn
+shap
+xgboost
