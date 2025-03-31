@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./src:/app/src
+      - feedback_data:/app/src/feedback_db
+      - chroma_data:/app/retrieved_chroma
+    env_file:
+      - ./src/.env
+    environment:
+      - PYTHONPATH=/app
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/src/config/gcpconnectkey.json
+      - PROJECT_ID=chatwithdata-451800
+      - DATASET_ID=RetailDataset
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    restart: unless-stopped
+
+volumes:
+  feedback_data:
+  chroma_data:
+

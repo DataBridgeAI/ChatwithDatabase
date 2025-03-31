@@ -1,0 +1,17 @@
+venv/
+.env
+__pycache__/
+*.pyc
+.git
+.gitignore
+.pytest_cache
+.coverage
+mlflow.db
+*.json
+!config/gcpconnectkey.json
+DataPipeline/
+.github/
+feedback_db/
+retrieved_chroma/
+retrieved_chroma.zip
+*.md

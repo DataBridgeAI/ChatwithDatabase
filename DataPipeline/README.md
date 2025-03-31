@@ -58,7 +58,70 @@ Since the pipeline does not involve direct data acquisition from APIs or externa
 
 This modular approach ensures a scalable and efficient pipeline, supporting AI-driven SQL generation and query interpretation.
 
+# Data and Schema Drift Monitoring
 
+The data pipeline includes automated monitoring for schema drift and data drift through the `monitor_drift` DAG. This DAG runs daily checks to ensure data quality and detect anomalies in the retail dataset.
+
+## Monitoring Components
+
+### 1. Schema Drift Detection
+- Continuously monitors changes in BigQuery table schemas
+- Compares current schema with previously stored schema in GCS
+- Detects changes in:
+  - Column additions or removals
+  - Data type modifications
+  - Column name changes
+- Alerts via Slack when schema changes are detected
+
+### 2. Data Drift Detection
+- Monitors statistical properties of the data:
+  - Mean and standard deviation of numeric columns
+  - Null value percentages
+  - Distribution shifts
+- Samples 1000 records for statistical analysis
+- Compares current statistics with historical baseline
+- Triggers alerts when significant deviations (>10%) are detected
+
+## DAG Structure and Workflow
+The `monitor_drift` DAG consists of three main tasks:
+1. `check_schema_drift`: Validates schema consistency
+2. `check_data_drift`: Analyzes statistical properties
+3. `send_slack_alert`: Notifies team of detected issues
+
+### DAG Visualization
+![Monitor Drift DAG](assets/monitor_drift_graph.png)
+
+## Alert Mechanisms
+- **Slack Integration**: Real-time notifications for:
+  - Schema changes
+  - Statistical anomalies
+- **Alert Levels**:
+  - Warning: Minor deviations detected
+  - Critical: Significant changes requiring immediate attention
+
+## Implementation Details
+The monitoring system is implemented in `DataPipeline/dags/schema_data_drift.py` with the following key features:
+
+1. **Schema Validation**
+   - Automated schema extraction from BigQuery
+   - Schema comparison with baseline
+   - Version control for schema changes
+
+2. **Statistical Monitoring**
+   - Automated statistics generation using sampling (1000 records)
+   - Distribution analysis through mean and standard deviation
+   - Missing value tracking through null percentage analysis
+   - Drift detection with 10% threshold for statistical changes
+
+## Benefits
+- Early detection of data quality issues
+- Automated monitoring reduces manual oversight
+- Comprehensive documentation of data changes
+- Improved data reliability through continuous monitoring
+
+This monitoring system ensures the reliability of our retail dataset by detecting schema and statistical drift, supporting accurate SQL query generation and maintaining high data quality standards.
+
+Note: For bias detection capabilities, please refer to the `PromptValidation/bias_check.py` implementation, which handles bias detection in query generation.
 
 # Instructions to Reproduce
 
