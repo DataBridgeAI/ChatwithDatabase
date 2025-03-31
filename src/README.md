@@ -319,12 +319,12 @@ Detailed performance metrics visualization showing:
 ## 4. Model Sensitivity Analysis
 ### Implemented:
 - **Feature Importance Analysis**: Using **SHAP (SHapley Additive Explanations)** to understand which features impact predictions the most.
-  To further interpret the model's decision-making, we used SHAP to quantify the impact of each hyperparameter on individual predictions. SHAP plots provided both global and local explanations:
+    - To further interpret the model's decision-making, we used SHAP to quantify the impact of each hyperparameter on individual predictions. SHAP plots provided both global and local explanations:
   Summary Plot: Shows the overall importance of each feature.
-- **Hyperparameter Sensitivity (Limited)**: 
-  We trained a simple classifier (Random Forest) to predict the success of a generated SQL query based on key generation parameters:
-  temperature, top_p, frequency_penalty, presence_penalty
-  The model’s feature importances revealed which hyperparameters had the greatest influence on success. This analysis helps prioritize tuning efforts by highlighting the most sensitive parameters.
+- **Hyperparameter Sensitivity**: 
+    - We trained a simple classifier (Random Forest) to predict the success of a generated SQL query based on key generation parameters:
+      temperature, top_p, frequency_penalty, presence_penalty
+    - The model’s feature importances revealed which hyperparameters had the greatest influence on success. This analysis helps prioritize tuning efforts by highlighting the most sensitive parameters.
 
 ---
 
