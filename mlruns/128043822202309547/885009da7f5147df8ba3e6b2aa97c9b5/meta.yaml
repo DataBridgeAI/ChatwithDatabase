@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/divya/Repos/ProjectRepo/ChatwithDatabase/mlruns/128043822202309547/885009da7f5147df8ba3e6b2aa97c9b5/artifacts
+end_time: 1742848243466
+entry_point_name: ''
+experiment_id: '128043822202309547'
+lifecycle_stage: active
+run_id: 885009da7f5147df8ba3e6b2aa97c9b5
+run_name: query_exec_20250324_163042
+run_uuid: 885009da7f5147df8ba3e6b2aa97c9b5
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1742848243149
+status: 4
+tags: []
+user_id: mansi

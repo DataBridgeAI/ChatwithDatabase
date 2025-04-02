@@ -1,5 +1,6 @@
 from typing import Optional
 import re
+from detoxify import Detoxify
 
 # Check if Detoxify is available
 try:
@@ -7,6 +8,35 @@ try:
     DETOXIFY_AVAILABLE = True
 except ImportError:
     DETOXIFY_AVAILABLE = False
+
+def check_sql_safety(user_query):
+    """Commands that try to modify the structure or data in the shema"""
+    sql_blacklist = ["DROP", "DELETE", "ALTER", "INSERT", "TRUNCATE", "UPDATE"]  # Add more keywords if necessary
+    
+    # Case-insensitive check for blacklisted SQL commands
+    if any(word in user_query.upper() for word in sql_blacklist):
+        return "🚫 Restricted SQL operation detected."
+    return None
+
+def is_toxic(query: str) -> bool:
+    """Check if the query contains toxic language."""
+    toxicity_score = Detoxify('original').predict(query)["toxicity"]
+    return toxicity_score > 0.7  # Threshold (can be adjusted)
+
+def validate_query(user_query: str) -> str:
+    """Validate query for toxicity and SQL safety."""
+    # check for SQL safety issues
+    sql_error = check_sql_safety(user_query)
+    if sql_error:
+        return sql_error
+
+    # check if the query is toxic
+    if is_toxic(user_query):
+        return "🚫 Query contains harmful language. Please modify your input."
+
+    return None  # No issues detected, query is safe
+
+
 
 # Centralized sensitivity detector
 def analyze_with_detoxify(text: str) -> dict:
@@ -52,13 +82,13 @@ def is_harmful(text: str, detoxify_results: dict = None) -> bool:
         harm_pattern = r'\b(war|kill|attack)\b'
         return (re.search(action_pattern, text) and re.search(harm_pattern, text))
 
-def is_sql_command(text: str) -> bool:
-    """
-    Check if text resembles an SQL command.
-    Modular and minimal hardcoding.
-    """
-    sql_pattern = r'\b[A-Z]{2,}\b'
-    return re.search(sql_pattern, text) and (' ' in text or ';' in text)
+# def is_sql_command(text: str) -> bool:
+#     """
+#     Check if text resembles an SQL command.
+#     Modular and minimal hardcoding.
+#     """
+#     sql_pattern = r'\b[A-Z]{2,}\b'
+#     return re.search(sql_pattern, text) and (' ' in text or ';' in text)
 
 def detect_sensitive_content(text: str) -> Optional[str]:
     """Detect and respond to sensitive content (religion, gender, etc.)."""
@@ -74,13 +104,13 @@ def block_inappropriate_query(user_query: str) -> Optional[str]:
         return "This query suggests harmful intent (e.g., terrorism, violence). I can’t assist with that."
     return None
 
-def check_sql_safety(user_query: str) -> Optional[str]:
-    """Ensure SQL safety."""
-    if is_sql_command(user_query):
-        return "Restricted SQL operation detected."
-    return None
+# def check_sql_safety(user_query: str) -> Optional[str]:
+#     """Ensure SQL safety."""
+#     if is_sql_command(user_query):
+#         return "Restricted SQL operation detected."
+#     return None
   
-def validate_query(user_query: str) -> Optional[str]:
+def sensitivity_filter(user_query: str) -> Optional[str]:
     """
     Validate query by checking sensitivity, intent, and SQL safety.
     Modular structure.
