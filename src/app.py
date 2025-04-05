@@ -183,10 +183,15 @@ if st.button("Generate & Execute Query"):
             st.error("❌ Query appears unrelated to the database schema")
             st.stop()
 
-        # Try to find similar query
-        similar_query, past_sql = retrieve_similar_query(user_query)
+        # Try to find similar query with stricter threshold
+        similar_query, past_sql = retrieve_similar_query(
+            user_query, 
+            similarity_threshold=0.88  # Adjust this threshold based on testing
+        )
         
         if similar_query and past_sql:
+            similarity_message = "⚡ Found a very similar previous query:"
+            st.info(similarity_message)
             st.session_state.similar_query = similar_query
             st.session_state.past_sql = past_sql
             st.session_state.showing_suggestion = True
