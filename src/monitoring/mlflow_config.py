@@ -41,7 +41,7 @@ class QueryTracker:
         feedback: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None
     ) -> None:
-        """Log comprehensive query execution details"""
+        """Log comprehensive query execution details including latency"""
         try:
             formatted_sql = sqlparse.format(
                 generated_sql,
@@ -61,10 +61,12 @@ class QueryTracker:
                     params.update(metadata)
                 mlflow.log_params(params)
                 
-                # Calculate metrics
+                # Calculate metrics including latency
+                latency = max(0.0, total_time - execution_time)  # Ensure non-negative
                 metrics = {
                     "bigquery_execution_time": execution_time,  # Actual BigQuery execution time
                     "total_processing_time": total_time,        # Total time including LLM
+                    "latency": latency,                         # Network/processing overhead
                     "query_length": len(user_query),
                     "sql_length": len(formatted_sql),
                 }
@@ -87,7 +89,8 @@ class QueryTracker:
                 # Log tags
                 tags = {
                     "status": "error" if error else "success",
-                    "performance": self._categorize_performance(execution_time)  # Use BigQuery execution time
+                    "performance": self._categorize_performance(execution_time),
+                    "latency_category": self._categorize_latency(latency)
                 }
                 
                 if feedback:
@@ -102,7 +105,7 @@ class QueryTracker:
                 mlflow.set_tags(tags)
                 
                 # Log query details
-                self._log_query_details(user_query, formatted_sql, error)
+                self._log_query_details(user_query, formatted_sql, error, latency)
                 
         except Exception as e:
             print(f"Error logging to MLflow: {str(e)}")
@@ -125,6 +128,14 @@ class QueryTracker:
         elif execution_time < 2.0:  # Less than 2 seconds
             return "medium"
         return "slow"
+
+    def _categorize_latency(self, latency: float) -> str:
+        """Categorize latency"""
+        if latency < 0.1:  # Less than 100ms
+            return "low"
+        elif latency < 0.5:  # Less than 500ms
+            return "medium"
+        return "high"
 
     def _categorize_complexity(self, metrics: Dict[str, float]) -> str:
         complexity_score = (
@@ -155,12 +166,13 @@ class QueryTracker:
             return "delete"
         return "other"
 
-    def _log_query_details(self, user_query: str, sql: str, error: Optional[str]) -> None:
+    def _log_query_details(self, user_query: str, sql: str, error: Optional[str], latency: float) -> None:
         artifact_path = os.path.join(os.getcwd(), "query_details.txt")
         try:
             with open(artifact_path, "w") as f:
                 f.write(f"User Query: {user_query}\n\n")
                 f.write(f"Generated SQL:\n{sql}\n")
+                f.write(f"Latency: {latency:.3f} seconds\n")
                 if error:
                     f.write(f"\nError: {error}\n")
             
@@ -168,7 +180,3 @@ class QueryTracker:
         finally:
             if os.path.exists(artifact_path):
                 os.remove(artifact_path)
-
-
-
-
