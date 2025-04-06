@@ -1,310 +1,320 @@
-
-import streamlit as st
+from flask import Flask, request, jsonify
+from flask_cors import CORS
 import pandas as pd
 import time
+import os
+import json
+import tempfile
 
 from database.query_executor import execute_bigquery_query
 from database.schema import get_bigquery_schema
-from ai.llm import generate_sql, load_prompt_template
-from ui.layout import render_sidebar
-from ui.visualization import visualize_data
+from ai.llm import generate_sql, load_prompt_template, set_openai_api_key
 from feedback.feedback_manager import store_feedback
 from feedback.vector_search import retrieve_similar_query
 from feedback.chroma_setup import download_and_extract_chromadb
 from monitoring.mlflow_config import QueryTracker
-
 from query_checks.content_checker import validate_query
 from promptfilter.semantic_search import download_and_prepare_embeddings, check_query_relevance
 
+app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
+
 # Initialize schema embeddings at startup
 try:
-    # Store embeddings in session state to avoid reloading
-    if 'schema_embeddings' not in st.session_state:
-        st.session_state.schema_embeddings = download_and_prepare_embeddings()
-        if not st.session_state.schema_embeddings:
-            st.error("Failed to load schema embeddings")
+    schema_embeddings = download_and_prepare_embeddings()
+    if not schema_embeddings:
+        print("Failed to load schema embeddings")
 except Exception as e:
-    st.error(f"Failed to initialize schema embeddings: {str(e)}")
+    print(f"Failed to initialize schema embeddings: {str(e)}")
 
 # Setup ChromaDB at startup
 try:
     download_and_extract_chromadb()
 except Exception as e:
-    st.error(f"Failed to setup ChromaDB: {str(e)}")
+    print(f"Failed to setup ChromaDB: {str(e)}")
 
 # Load prompt template at startup
 try:
     load_prompt_template()
 except Exception as e:
-    st.error(f"Failed to load prompt template: {str(e)}")
+    print(f"Failed to load prompt template: {str(e)}")
 
 # Initialize the query tracker
 query_tracker = QueryTracker()
 
-st.set_page_config(
-    page_title="BigQuery Analytics",
-    layout="wide",
-    page_icon="📊"
-)
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    return jsonify({"status": "healthy"}), 200
 
-# Initialize session state
-if "schema" not in st.session_state:
-    st.session_state.schema = None
-if "result" not in st.session_state:
-    st.session_state.result = None
-if "generated_sql" not in st.session_state:
-    st.session_state.generated_sql = ""
-if "user_query" not in st.session_state:
-    st.session_state.user_query = "Show top 10 artists based on popularity"
-if "feedback_submitted" not in st.session_state:
-    st.session_state.feedback_submitted = False
-if "use_suggested" not in st.session_state:
-    st.session_state.use_suggested = "Select an option"
-if "viz_option" not in st.session_state:
-    st.session_state.viz_option = "Select an option"
-if "showing_suggestion" not in st.session_state:
-    st.session_state.showing_suggestion = False
-if "similar_query" not in st.session_state:
-    st.session_state.similar_query = None
-if "past_sql" not in st.session_state:
-    st.session_state.past_sql = None
-if "waiting_for_choice" not in st.session_state:
-    st.session_state.waiting_for_choice = False
+@app.route('/api/credentials', methods=['POST'])
+def set_credentials():
+    data = request.json
+    openai_api_key = data.get('openai_api_key')
+    google_credentials = data.get('google_credentials')
 
+    response = {"success": False, "messages": []}
 
-# Render sidebar & fetch project ID and dataset
-project_id, dataset_id = render_sidebar()
+    # Handle OpenAI API key
+    if openai_api_key:
+        try:
+            # Set the API key in the LLM module
+            set_openai_api_key(openai_api_key)
+            os.environ["OPENAI_API_KEY"] = openai_api_key
+            response["messages"].append("OpenAI API key set successfully")
+            response["openai_success"] = True
+        except Exception as e:
+            response["messages"].append(f"Failed to set OpenAI API key: {str(e)}")
+            response["openai_success"] = False
 
-st.title("📊 BigQuery Analytics Dashboard")
+    # Handle Google credentials
+    if google_credentials:
+        try:
+            # Create a temporary file to store the credentials
+            fd, temp_path = tempfile.mkstemp(suffix='.json')
+            with os.fdopen(fd, 'w') as tmp:
+                json.dump(google_credentials, tmp)
 
-# Display Schema
-if st.session_state.schema:
-    st.divider()
-    with st.expander("Schema Overview", expanded=False):
-        st.markdown(st.session_state.schema)
+            # Set the environment variable to point to this file
+            os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = temp_path
+            response["messages"].append("Google credentials set successfully")
+            response["google_success"] = True
+        except Exception as e:
+            response["messages"].append(f"Failed to set Google credentials: {str(e)}")
+            response["google_success"] = False
 
-user_query = st.text_area(
-    "Enter your question:",
-    value=st.session_state.user_query,
-    height=100,
-    key="query_input",
-    on_change=lambda: setattr(st.session_state, 'user_query', st.session_state.query_input)
-)
+    response["success"] = response.get("openai_success", False) or response.get("google_success", False)
+    return jsonify(response)
 
-# Update session state with the new query
-st.session_state.user_query = user_query
-
-def reset_states():
-    """Reset all relevant session states when generating new query"""
-    st.session_state.result = None
-    st.session_state.generated_sql = ""
-    st.session_state.feedback_submitted = False
-    # st.session_state.user_query = user_query
-    st.session_state.use_suggested = "Select an option"
-    st.session_state.viz_option = "Select an option"
-    st.session_state.showing_suggestion = False
-    st.session_state.similar_query = None
-    st.session_state.past_sql = None
-    st.session_state.waiting_for_choice = False
-    # Ensure the radio buttons are reset
-    if "use_suggested" in st.session_state:
-        del st.session_state.use_suggested
-    if "viz_option" in st.session_state:
-        del st.session_state.viz_option
-
-def execute_new_query(start_time):
-    """Execute new query generation with enhanced tracking"""
-    error = None
-    result = None
-    query_execution_time = 0
-    
+@app.route('/api/schema', methods=['POST'])
+def fetch_schema():
     try:
-        with st.spinner("Generating SQL query..."):
-            st.session_state.generated_sql = generate_sql(
-                st.session_state.user_query,
-                st.session_state.schema,
-                project_id,
-                dataset_id
-            )
+        data = request.json
+        project_id = data.get('project_id')
+        dataset_id = data.get('dataset_id')
         
-        with st.spinner("Executing SQL query..."):
-            result, query_execution_time = execute_bigquery_query(st.session_state.generated_sql)
-            # Store execution time in session state for later use
-            st.session_state.query_execution_time = query_execution_time
+        app.logger.info(f"Received schema request for project: {project_id}, dataset: {dataset_id}")
+        
+        if not project_id or not dataset_id:
+            return jsonify({'error': 'Project ID and Dataset ID are required'}), 400
+        
+        try:
+            app.logger.info("Calling get_bigquery_schema function")
+            schema = get_bigquery_schema(project_id, dataset_id)
+            app.logger.info(f"Schema retrieved: {bool(schema)}")
             
-            if result.empty or "Error" in result.columns:
-                st.session_state.result = None
-                error = "No data returned or an error occurred."
-                st.error(error)
-                if "Error" in result.columns:
-                    error = result["Error"][0]
-                    st.error(error)
+            if schema:
+                return jsonify({'schema': schema})
             else:
-                st.session_state.result = result
+                app.logger.error("Schema is empty or None")
+                return jsonify({'error': 'Failed to fetch schema - empty result'}), 500
+        except Exception as e:
+            app.logger.error(f"Error in get_bigquery_schema: {str(e)}")
+            import traceback
+            app.logger.error(traceback.format_exc())
+            return jsonify({'error': f"Schema fetch error: {str(e)}"}), 500
+    except Exception as e:
+        app.logger.error(f"General endpoint error: {str(e)}")
+        import traceback
+        app.logger.error(traceback.format_exc())
+        return jsonify({'error': f"Server error: {str(e)}"}), 500
+
+@app.route('/api/query/validate', methods=['POST'])
+def validate_user_query():
+    data = request.json
+    user_query = data.get('query')
+
+    if not user_query:
+        return jsonify({'error': 'Query is required'}), 400
+
+    try:
+        validation_error = validate_query(user_query)
+        if validation_error:
+            return jsonify({'error': validation_error}), 400
+
+        query_relevance_flag = check_query_relevance(
+            user_query,
+            schema_embeddings=schema_embeddings
+        )
+        if not query_relevance_flag:
+            return jsonify({'error': 'Query appears unrelated to the database schema'}), 400
+
+        return jsonify({'valid': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/query/similar', methods=['POST'])
+def find_similar_query():
+    data = request.json
+    user_query = data.get('query')
+
+    if not user_query:
+        return jsonify({'error': 'Query is required'}), 400
+
+    try:
+        similar_query, past_sql = retrieve_similar_query(user_query)
+
+        if similar_query and past_sql:
+            return jsonify({
+                'found': True,
+                'similar_query': similar_query,
+                'past_sql': past_sql
+            })
+        else:
+            return jsonify({'found': False})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/query/generate', methods=['POST'])
+def generate_and_execute_query():
+    data = request.json
+    user_query = data.get('query')
+    schema = data.get('schema')
+    project_id = data.get('project_id')
+    dataset_id = data.get('dataset_id')
+
+    if not all([user_query, schema, project_id, dataset_id]):
+        return jsonify({'error': 'All fields are required'}), 400
+
+    start_time = time.time()
+    error = None
+    query_execution_time = 0
+
+    try:
+        # Generate SQL
+        generated_sql = generate_sql(
+            user_query,
+            schema,
+            project_id,
+            dataset_id
+        )
+
+        # Execute SQL
+        result_df, query_execution_time = execute_bigquery_query(generated_sql)
+
+        # Convert DataFrame to list of dictionaries for JSON serialization
+        if result_df.empty or "Error" in result_df.columns:
+            if "Error" in result_df.columns:
+                error = result_df["Error"][0]
+                return jsonify({
+                    'error': error,
+                    'generated_sql': generated_sql
+                }), 400
+            else:
+                return jsonify({
+                    'error': 'No data returned',
+                    'generated_sql': generated_sql
+                }), 400
+        else:
+            # Convert to list of dicts for JSON serialization
+            result_data = result_df.to_dict(orient='records')
+            column_types = {col: str(dtype) for col, dtype in result_df.dtypes.items()}
+
+            return jsonify({
+                'generated_sql': generated_sql,
+                'results': result_data,
+                'column_types': column_types,
+                'columns': list(result_df.columns),
+                'execution_time': query_execution_time
+            })
     except Exception as e:
         error = str(e)
-        st.error(f"Error: {error}")
+        return jsonify({
+            'error': error,
+            'generated_sql': generated_sql if 'generated_sql' in locals() else None
+        }), 500
     finally:
         total_time = time.time() - start_time
-        
+
         # Log query execution details
         query_tracker.log_query_execution(
-            user_query=st.session_state.user_query,
-            generated_sql=st.session_state.generated_sql,
+            user_query=user_query,
+            generated_sql=generated_sql if 'generated_sql' in locals() else None,
             execution_time=query_execution_time,
             total_time=total_time,
-            query_result=result,
+            query_result=result_df if 'result_df' in locals() else None,
             error=error,
             metadata={
-                "dataset": dataset_id,
-                "project": project_id
+                'dataset': dataset_id,
+                'project': project_id
             }
         )
 
-if st.button("Generate & Execute Query"):
-    reset_states()
-    st.session_state.start_time = time.time()  # Store start_time in session state
+@app.route('/api/set-credentials-path', methods=['POST'])
+def set_credentials_path():
+    data = request.json
+    credentials_path = data.get('credentials_path')
     
-    if not st.session_state.schema:
-        st.error("Please load the BigQuery schema first!")
-    else:
-        # Validate query
-        validation_error = validate_query(user_query)
-        if validation_error:
-            st.error(validation_error)
-            st.stop()
+    if not credentials_path:
+        return jsonify({'error': 'Credentials path is required'}), 400
         
-        # Use the stored embeddings from session state for relevance check
-        query_relevance_flag = check_query_relevance(
-            user_query, 
-            schema_embeddings=st.session_state.schema_embeddings
-        )
-        if not query_relevance_flag:
-            st.error("❌ Query appears unrelated to the database schema")
-            st.stop()
-
-        # Try to find similar query
-        similar_query, past_sql = retrieve_similar_query(user_query)
+    try:
+        # Set the environment variable
+        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credentials_path
+        app.logger.info(f"Set GOOGLE_APPLICATION_CREDENTIALS to {credentials_path}")
         
-        if similar_query and past_sql:
-            st.session_state.similar_query = similar_query
-            st.session_state.past_sql = past_sql
-            st.session_state.showing_suggestion = True
-            st.session_state.waiting_for_choice = True
+        # Check if the file exists
+        if os.path.exists(credentials_path):
+            return jsonify({
+                'success': True,
+                'message': f'Credentials path set to {credentials_path}'
+            })
         else:
-            execute_new_query(st.session_state.start_time)  # Use start_time from session state
+            return jsonify({
+                'success': False,
+                'error': f'Credentials file not found at {credentials_path}'
+            }), 400
+    except Exception as e:
+        app.logger.error(f"Error setting credentials path: {str(e)}")
+        return jsonify({'error': str(e)}), 500@app.route('/api/query/execute', methods=['POST'])
+def execute_sql_query():
+    data = request.json
+    sql_query = data.get('sql')
 
-if st.session_state.get('waiting_for_choice', False):
-    st.write("Similar query found:", st.session_state.similar_query)
-    st.write("Suggested SQL:", st.session_state.past_sql)
-    
-    use_suggested = st.radio(
-        "Would you like to use the suggested SQL query instead of generating a new one?",
-        ["Select an option", "Yes", "No"],
-        key="use_suggested"
-    )
-    
-    if use_suggested != "Select an option":
-        st.session_state.waiting_for_choice = False  # Reset the flag
-        error = None
-        
-        if use_suggested == "Yes":
-            st.session_state.generated_sql = st.session_state.past_sql
-            # Execute the suggested query
-            try:
-                with st.spinner("Executing suggested SQL query..."):
-                    result, query_execution_time = execute_bigquery_query(st.session_state.generated_sql)
-                    if result.empty or "Error" in result.columns:
-                        st.session_state.result = None
-                        error = "No data returned or an error occurred."
-                        st.error(error)
-                        if "Error" in result.columns:
-                            error = result["Error"][0]
-                            st.error(error)
-                    else:
-                        st.session_state.result = result
-            except Exception as e:
-                error = str(e)
-                st.error(f"Error: {error}")
-            finally:
-                total_time = time.time() - st.session_state.start_time
-                query_tracker.log_query_execution(
-                    user_query=st.session_state.user_query,
-                    generated_sql=st.session_state.generated_sql,
-                    execution_time=query_execution_time,  # Use actual BigQuery execution time
-                    total_time=total_time,  # Total time including user decision
-                    error=error,
-                    metadata={
-                        "dataset": dataset_id,
-                        "project": project_id,
-                        "query_source": "suggestion"
-                    }
-                )
-        else:  # No
-            execute_new_query(st.session_state.start_time)
+    if not sql_query:
+        return jsonify({'error': 'SQL query is required'}), 400
 
-# Display Results and Collect Feedback
-if st.session_state.result is not None:
-    st.divider()
-    st.subheader("🔍 Query Results")
-    st.dataframe(st.session_state.result, use_container_width=True)
+    try:
+        result_df, query_execution_time = execute_bigquery_query(sql_query)
 
-    with st.expander("View Generated SQL", expanded=False):
-        st.code(st.session_state.generated_sql, language="sql")
+        if result_df.empty or "Error" in result_df.columns:
+            if "Error" in result_df.columns:
+                return jsonify({
+                    'error': result_df["Error"][0]
+                }), 400
+            else:
+                return jsonify({
+                    'error': 'No data returned'
+                }), 400
+        else:
+            # Convert to list of dicts for JSON serialization
+            result_data = result_df.to_dict(orient='records')
+            column_types = {col: str(dtype) for col, dtype in result_df.dtypes.items()}
 
-    # Feedback Section
-    if not st.session_state.feedback_submitted:
-        st.write("Was this SQL query helpful?")
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            if st.button("👍 Yes"):
-                # Pass execution_success=True when there's no error
-                execution_success = "Error" not in st.session_state.result.columns if st.session_state.result is not None else False
-                store_feedback(user_query, st.session_state.generated_sql, "👍 Yes", execution_success=execution_success)
-                total_time = time.time() - st.session_state.get('start_time', time.time())
-                query_tracker.log_query_execution(
-                    user_query=user_query,
-                    generated_sql=st.session_state.generated_sql,
-                    execution_time=st.session_state.get('query_execution_time', 0),
-                    total_time=total_time,
-                    feedback="👍 Yes",
-                    metadata={
-                        "dataset": dataset_id,
-                        "project": project_id
-                    }
-                )
-                st.session_state.feedback_submitted = True
-                st.success("Thank you for your feedback!")
-                
-        with col2:
-            if st.button("👎 No"):
-                # Pass execution_success=True when there's no error
-                execution_success = "Error" not in st.session_state.result.columns if st.session_state.result is not None else False
-                store_feedback(user_query, st.session_state.generated_sql, "👎 No", execution_success=execution_success)
-                total_time = time.time() - st.session_state.get('start_time', time.time())
-                query_tracker.log_query_execution(
-                    user_query=user_query,
-                    generated_sql=st.session_state.generated_sql,
-                    execution_time=st.session_state.get('query_execution_time', 0),
-                    total_time=total_time,
-                    feedback="👎 No",
-                    metadata={
-                        "dataset": dataset_id,
-                        "project": project_id
-                    }
-                )
-                st.session_state.feedback_submitted = True
-                st.success("Thank you for your feedback!")
+            return jsonify({
+                'results': result_data,
+                'column_types': column_types,
+                'columns': list(result_df.columns),
+                'execution_time': query_execution_time
+            })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
-    # Visualization Option
-    show_viz = st.radio(
-        "Would you like to see visualizations?", 
-        ["Select an option", "Yes", "No"],
-        key="viz_option"
-    )
-    if show_viz == "Select an option":
-        st.warning("Please select whether you want to see visualizations or not")
-        st.stop()
-    elif show_viz == "Yes":
-        visualize_data(st.session_state.result)
+@app.route('/api/feedback', methods=['POST'])
+def submit_feedback():
+    data = request.json
+    user_query = data.get('query')
+    generated_sql = data.get('sql')
+    feedback = data.get('feedback')
+    execution_success = data.get('execution_success', False)
+
+    if not all([user_query, generated_sql, feedback]):
+        return jsonify({'error': 'All fields are required'}), 400
+
+    try:
+        store_feedback(user_query, generated_sql, feedback, execution_success=execution_success)
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0', port=5001)

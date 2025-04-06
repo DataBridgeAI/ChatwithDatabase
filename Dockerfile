@@ -16,9 +16,10 @@ COPY src/requirements.txt requirements.txt
 
 # Install Python dependencies
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+    pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir flask flask-cors
 
-# Copy the application code (which includes config folder and .env)
+# Copy the application code
 COPY src/ /app/src/
 
 # Create necessary directories
@@ -27,12 +28,14 @@ RUN mkdir -p /app/src/feedback_db /app/retrieved_chroma
 # Set environment variables
 ENV PYTHONPATH=/app
 ENV GOOGLE_APPLICATION_CREDENTIALS="/app/src/config/gcpconnectkey.json"
+ENV FLASK_APP="/app/src/app.py"
+ENV FLASK_ENV="production"
 
-# Expose Streamlit port
-EXPOSE 8501
+# Expose Flask port
+EXPOSE 5000
 
 # Set healthcheck
-HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health || exit 1
+HEALTHCHECK CMD curl --fail http://localhost:5000/api/health || exit 1
 
-# Run Streamlit
-ENTRYPOINT ["streamlit", "run", "src/app.py", "--server.address", "0.0.0.0"]
+# Run Flask
+CMD ["python", "src/app.py"]

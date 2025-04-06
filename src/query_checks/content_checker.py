@@ -1,6 +1,5 @@
 from typing import Optional
 import re
-from detoxify import Detoxify
 
 # Check if Detoxify is available
 try:
@@ -8,11 +7,12 @@ try:
     DETOXIFY_AVAILABLE = True
 except ImportError:
     DETOXIFY_AVAILABLE = False
+    print("Warning: Detoxify package not available. Using fallback content checking.")
 
 def check_sql_safety(user_query):
     """Commands that try to modify the structure or data in the shema"""
     sql_blacklist = ["DROP", "DELETE", "ALTER", "INSERT", "TRUNCATE", "UPDATE"]  # Add more keywords if necessary
-    
+
     # Case-insensitive check for blacklisted SQL commands
     if any(word in user_query.upper() for word in sql_blacklist):
         return "🚫 Restricted SQL operation detected."
@@ -20,8 +20,13 @@ def check_sql_safety(user_query):
 
 def is_toxic(query: str) -> bool:
     """Check if the query contains toxic language."""
-    toxicity_score = Detoxify('original').predict(query)["toxicity"]
-    return toxicity_score > 0.7  # Threshold (can be adjusted)
+    if DETOXIFY_AVAILABLE:
+        toxicity_score = Detoxify('original').predict(query)["toxicity"]
+        return toxicity_score > 0.7  # Threshold (can be adjusted)
+    else:
+        # Fallback: Simple keyword-based check
+        toxic_words = ["stupid", "idiot", "hate", "kill", "damn"]
+        return any(word in query.lower() for word in toxic_words)
 
 def validate_query(user_query: str) -> str:
     """Validate query for toxicity and SQL safety."""
@@ -109,7 +114,7 @@ def block_inappropriate_query(user_query: str) -> Optional[str]:
 #     if is_sql_command(user_query):
 #         return "Restricted SQL operation detected."
 #     return None
-  
+
 def sensitivity_filter(user_query: str) -> Optional[str]:
     """
     Validate query by checking sensitivity, intent, and SQL safety.
@@ -120,7 +125,7 @@ def sensitivity_filter(user_query: str) -> Optional[str]:
         block_inappropriate_query,
         check_sql_safety
     ]
-    
+
     for check in checks:
         result = check(user_query)
         if result:
