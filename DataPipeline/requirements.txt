@@ -1,0 +1,8 @@
+sentence-transformers
+google-cloud-bigquery
+google-cloud-storage
+pandas
+numpy
+chromadb
+tf-keras
+langchain-google-vertexai

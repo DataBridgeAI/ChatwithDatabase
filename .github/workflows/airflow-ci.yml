@@ -1,0 +1,69 @@
+name: CI/CD for Airflow DAGs
+
+on:
+  push:
+    branches:
+      - main  # Run on push to main
+      - feedback-changes
+      
+  pull_request:
+    branches:
+      - main  # Run on PRs to main
+      - feedback-changes
+jobs:
+  test:
+    name: Run Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.9'
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('DataPipeline/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install Dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r DataPipeline/requirements.txt
+          pip install pytest coverage  # For testing
+
+      - name: Run Tests with Coverage
+        run: |
+          coverage run --source=DataPipeline/scripts -m pytest DataPipeline/tests/
+          coverage report -m
+          coverage xml  # Generate XML for code coverage reporting
+
+  deploy:
+    name: Deploy DAGs to Cloud Composer
+    runs-on: ubuntu-latest
+    needs: test  # Only run if tests pass
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+          project_id: chatwithdata-451800
+      
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Deploy DAGs to Cloud Composer
+        run: gsutil -m cp -r DataPipeline/dags/* gs://${{ secrets.CLOUD_COMPOSER_BUCKET }}/dags/
+
+      - name: Upload Scripts
+        run: gsutil -m cp -r DataPipeline/scripts/* gs://${{ secrets.CLOUD_COMPOSER_BUCKET }}/dags/scripts/
