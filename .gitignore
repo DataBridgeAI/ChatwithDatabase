@@ -26,3 +26,5 @@ query_details.txt
 mlflow.db
 .coverage
 model tuning/config
+DataPipeline/config/openaikey.json
+DataPipeline/.env

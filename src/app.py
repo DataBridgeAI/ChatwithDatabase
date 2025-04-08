@@ -2,17 +2,26 @@
 import streamlit as st
 import pandas as pd
 import time
+import logging
+
+# Configure root logger
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler()
+    ]
+)
 
 from database.query_executor import execute_bigquery_query
 from database.schema import get_bigquery_schema
-from ai.llm import generate_sql, load_prompt_template
+from ai.llm import generate_sql, get_latest_prompt
 from ui.layout import render_sidebar
 from ui.visualization import visualize_data
 from feedback.feedback_manager import store_feedback
 from feedback.vector_search import retrieve_similar_query
 from feedback.chroma_setup import download_and_extract_chromadb
 from monitoring.mlflow_config import QueryTracker
-
 from query_checks.content_checker import validate_query
 from promptfilter.semantic_search import download_and_prepare_embeddings, check_query_relevance
 
@@ -34,7 +43,9 @@ except Exception as e:
 
 # Load prompt template at startup
 try:
-    load_prompt_template()
+    if 'prompt_template' not in st.session_state:
+        prompt_data = get_latest_prompt()
+        st.session_state.prompt_template = prompt_data["template"]
 except Exception as e:
     st.error(f"Failed to load prompt template: {str(e)}")
 
@@ -124,7 +135,8 @@ def execute_new_query(start_time):
                 st.session_state.user_query,
                 st.session_state.schema,
                 project_id,
-                dataset_id
+                dataset_id,
+                st.session_state.prompt_template  # Add this parameter
             )
         
         with st.spinner("Executing SQL query..."):
