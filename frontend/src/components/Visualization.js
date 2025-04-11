@@ -38,7 +38,9 @@ const Visualization = () => {
   const [chartOptions, setChartOptions] = useState([]);
 
   const analyzeColumns = useCallback(() => {
-    if (!queryResults || queryResults.length === 0) return;
+    if (!queryResults || queryResults.length === 0) {
+      return;
+    }
 
     const sample = queryResults[0];
     const numCols = [];
@@ -109,8 +111,17 @@ const Visualization = () => {
     }
   }, [queryResults, showVisualization, analyzeColumns]);
 
-  if (!queryResults || !showVisualization || chartOptions.length === 0) {
+  if (!queryResults || !showVisualization) {
     return null;
+  }
+
+  if (chartOptions.length === 0) {
+    return (
+      <div className="p-4 bg-gray-50 rounded-lg border">
+        <h2 className="text-xl font-semibold mb-4">📈 Data Visualization</h2>
+        <p>No suitable visualizations available for this dataset. The data may not contain numerical columns required for charts.</p>
+      </div>
+    );
   }
 
   const renderChart = () => {
@@ -228,7 +239,7 @@ const Visualization = () => {
   };
 
   return (
-    <div className="mt-8">
+    <div>
       <h2 className="text-xl font-semibold mb-4">📈 Data Visualization</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">

@@ -5,9 +5,12 @@ const AppContext = createContext();
 export const useAppContext = () => useContext(AppContext);
 
 export const AppProvider = ({ children }) => {
+  // Application state
+  const [isSchemaLoaded, setIsSchemaLoaded] = useState(false);
+  
   // Configuration state
-  const [projectId, setProjectId] = useState('your-gcp-project-id');
-  const [datasetId, setDatasetId] = useState('your-dataset');
+  const [projectId, setProjectId] = useState('');
+  const [datasetId, setDatasetId] = useState('');
   const [schema, setSchema] = useState(null);
   
   // Query state
@@ -45,6 +48,9 @@ export const AppProvider = ({ children }) => {
   };
 
   const value = {
+    // Application state
+    isSchemaLoaded, setIsSchemaLoaded,
+    
     // Configuration
     projectId, setProjectId,
     datasetId, setDatasetId,

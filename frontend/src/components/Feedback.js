@@ -35,24 +35,7 @@ const Feedback = () => {
   
   return (
     <div className="mt-6 space-y-6">
-      <div className="p-4 bg-gray-50 rounded-lg border">
-        <h3 className="font-medium mb-3">Was this SQL query helpful?</h3>
-        <div className="flex space-x-4">
-          <button
-            className="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 flex items-center"
-            onClick={() => handleFeedback(true)}
-          >
-            👍 Yes
-          </button>
-          <button
-            className="bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600 flex items-center"
-            onClick={() => handleFeedback(false)}
-          >
-            👎 No
-          </button>
-        </div>
-      </div>
-      
+      {/* Visualization question first */}
       <div className="p-4 bg-gray-50 rounded-lg border">
         <h3 className="font-medium mb-3">Would you like to see visualizations?</h3>
         <div className="flex space-x-4">
@@ -67,6 +50,25 @@ const Feedback = () => {
             onClick={() => handleVisualizationToggle('no')}
           >
             No
+          </button>
+        </div>
+      </div>
+      
+      {/* SQL query feedback second */}
+      <div className="p-4 bg-gray-50 rounded-lg border">
+        <h3 className="font-medium mb-3">Was this SQL query helpful?</h3>
+        <div className="flex space-x-4">
+          <button
+            className="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 flex items-center"
+            onClick={() => handleFeedback(true)}
+          >
+            👍 Yes
+          </button>
+          <button
+            className="bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600 flex items-center"
+            onClick={() => handleFeedback(false)}
+          >
+            👎 No
           </button>
         </div>
       </div>

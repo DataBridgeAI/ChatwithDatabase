@@ -1,0 +1,15 @@
+artifact_uri: file:///Users/sirigowda/Desktop/Projects/ChatwithDatabase/src/mlruns/959069778369319831/5f55e8e80e6347128bb6ae9e81ae1724/artifacts
+end_time: 1744158071789
+entry_point_name: ''
+experiment_id: '959069778369319831'
+lifecycle_stage: active
+run_id: 5f55e8e80e6347128bb6ae9e81ae1724
+run_name: query_exec_20250408_202111
+run_uuid: 5f55e8e80e6347128bb6ae9e81ae1724
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1744158071751
+status: 3
+tags: []
+user_id: sirigowda

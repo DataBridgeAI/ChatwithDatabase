@@ -15,7 +15,7 @@ const QueryResult = () => {
   }
   
   return (
-    <div className="mt-6">
+    <div>
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">🔍 Query Results</h2>
         {queryExecutionTime > 0 && (
