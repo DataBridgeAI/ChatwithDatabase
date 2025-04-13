@@ -5,6 +5,7 @@ import {
   findSimilarQuery,
   generateAndExecuteQuery,
   executeSqlQuery,
+  getChatHistory,
 } from "../api/api";
 
 const QueryInput = () => {
@@ -25,9 +26,14 @@ const QueryInput = () => {
     pastSql,
     setWaitingForChoice,
     setQueryExecutionTime,
+    currentConversationId,
+    setCurrentConversationId,
+    setChatHistory,
+    showVisualization,
+    setShowVisualization
   } = useAppContext();
 
-  const [, setStartTime] = useState(null);
+  // Removed unused startTime state
   const [showSimilarQuery, setShowSimilarQuery] = useState(false);
   const [useSuggested, setUseSuggested] = useState(null);
 
@@ -37,7 +43,8 @@ const QueryInput = () => {
         userQuery,
         schema,
         projectId,
-        datasetId
+        datasetId,
+        currentConversationId
       );
 
       if (result.error) {
@@ -49,13 +56,41 @@ const QueryInput = () => {
         setGeneratedSql(result.generated_sql);
         setQueryResults(result.results);
         setQueryExecutionTime(result.execution_time);
+        
+        // Update conversation ID if a new one was created
+        if (result.conversation_id && !currentConversationId) {
+          setCurrentConversationId(result.conversation_id);
+          
+          // Refresh chat history after query
+          try {
+            const historyResponse = await getChatHistory();
+            if (historyResponse.success) {
+              setChatHistory(historyResponse.conversations);
+            }
+          } catch (historyError) {
+            console.error("Failed to refresh chat history:", historyError);
+          }
+        }
       }
     } catch (error) {
       setError(error.message || "An error occurred during query execution");
     } finally {
       setLoading(false);
     }
-  }, [userQuery, schema, projectId, datasetId, setError, setGeneratedSql, setQueryResults, setQueryExecutionTime, setLoading]);
+  }, [
+    userQuery,
+    schema,
+    projectId,
+    datasetId,
+    currentConversationId,
+    setError,
+    setGeneratedSql,
+    setQueryResults,
+    setQueryExecutionTime,
+    setLoading,
+    setCurrentConversationId,
+    setChatHistory,
+  ]);
 
   const handleSuggestedQueryChoice = useCallback(async () => {
     if (useSuggested === "yes") {
@@ -63,7 +98,7 @@ const QueryInput = () => {
       setError(null);
 
       try {
-        const result = await executeSqlQuery(pastSql);
+        const result = await executeSqlQuery(pastSql, currentConversationId, userQuery);
 
         if (result.error) {
           setError(result.error);
@@ -71,6 +106,16 @@ const QueryInput = () => {
           setGeneratedSql(pastSql);
           setQueryResults(result.results);
           setQueryExecutionTime(result.execution_time);
+          
+          // Refresh chat history after query
+          try {
+            const historyResponse = await getChatHistory();
+            if (historyResponse.success) {
+              setChatHistory(historyResponse.conversations);
+            }
+          } catch (historyError) {
+            console.error("Failed to refresh chat history:", historyError);
+          }
         }
       } catch (error) {
         setError(error.message || "An error occurred during query execution");
@@ -87,6 +132,8 @@ const QueryInput = () => {
   }, [
     useSuggested,
     pastSql,
+    currentConversationId,
+    userQuery,
     setLoading,
     setError,
     setGeneratedSql,
@@ -95,6 +142,7 @@ const QueryInput = () => {
     setShowSimilarQuery,
     setWaitingForChoice,
     executeNewQuery,
+    setChatHistory,
   ]);
 
   useEffect(() => {
@@ -105,7 +153,6 @@ const QueryInput = () => {
 
   const handleGenerateQuery = async () => {
     resetStates();
-    setStartTime(Date.now());
     setLoading(true);
     setError(null);
 
@@ -143,49 +190,81 @@ const QueryInput = () => {
     }
   };
 
+  const handleVisualizationToggle = (choice) => {
+    setShowVisualization(choice === 'yes');
+  };
+
   return (
     <div className="mb-6">
-      <label className="block text-lg font-medium mb-2">
-        Enter your question:
+      <label className="block text-lg font-medium mb-2 text-[#202124]">
+        What can I help with?
       </label>
       <textarea
         value={userQuery}
         onChange={(e) => setUserQuery(e.target.value)}
-        className="w-full p-3 border rounded-lg min-h-20 mb-4"
+        className="w-full p-3 border border-[#dadce0] rounded-lg min-h-20 mb-4 focus:outline-none focus:ring-2 focus:ring-[#1a73e8] focus:border-transparent"
         placeholder="e.g., Show top 10 artists based on popularity"
       />
 
-      <button
-        className="bg-blue-500 text-white py-2 px-6 rounded-lg hover:bg-blue-600 disabled:bg-blue-300 flex items-center"
-        onClick={handleGenerateQuery}
-        disabled={!schema || showSimilarQuery}
-      >
-        Generate & Execute Query
-      </button>
+      <div className="flex items-center space-x-6">
+        <button
+          className="bg-[#1a73e8] text-white py-2 px-6 rounded-lg hover:bg-[#174ea6] disabled:bg-[#dadce0] flex items-center shadow-sm transition-colors"
+          onClick={handleGenerateQuery}
+          disabled={!schema || showSimilarQuery}
+        >
+          Generate Query
+        </button>
+        
+        <div className="flex items-center">
+          <span className="mr-3 text-[#202124]">Would you like to see visualizations?</span>
+          <div className="flex space-x-2">
+            <button
+              className={`px-3 py-1 rounded transition-colors ${
+                showVisualization 
+                  ? 'bg-[#34a853] text-white' 
+                  : 'bg-[#f8f9fa] text-[#5f6368] border border-[#dadce0]'
+              }`}
+              onClick={() => handleVisualizationToggle('yes')}
+            >
+              Yes
+            </button>
+            <button
+              className={`px-3 py-1 rounded transition-colors ${
+                !showVisualization 
+                  ? 'bg-[#d93025] text-white' 
+                  : 'bg-[#f8f9fa] text-[#5f6368] border border-[#dadce0]'
+              }`}
+              onClick={() => handleVisualizationToggle('no')}
+            >
+              No
+            </button>
+          </div>
+        </div>
+      </div>
 
       {showSimilarQuery && (
-        <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
-          <h3 className="font-medium">Similar query found:</h3>
-          <p className="my-2">{similarQuery}</p>
-          <h3 className="font-medium mt-3">Suggested SQL:</h3>
-          <pre className="bg-gray-100 p-2 rounded my-2 overflow-x-auto text-sm">
+        <div className="mt-4 p-4 bg-[#e8f0fe] rounded-lg border border-[#dadce0]">
+          <h3 className="font-medium text-[#1a73e8]">Similar query found:</h3>
+          <p className="my-2 text-[#202124]">{similarQuery}</p>
+          <h3 className="font-medium mt-3 text-[#1a73e8]">Suggested SQL:</h3>
+          <pre className="bg-white p-2 rounded my-2 overflow-x-auto text-sm border border-[#dadce0] text-[#5f6368]">
             <code>{pastSql}</code>
           </pre>
 
           <div className="mt-4">
-            <p className="mb-2">
+            <p className="mb-2 text-[#202124]">
               Would you like to use the suggested SQL query instead of
               generating a new one?
             </p>
             <div className="flex space-x-4">
               <button
-                className="bg-green-500 text-white py-1 px-4 rounded hover:bg-green-600"
+                className="bg-[#34a853] text-white py-1 px-4 rounded hover:bg-[#2d9149] shadow-sm transition-colors"
                 onClick={() => setUseSuggested("yes")}
               >
                 Yes
               </button>
               <button
-                className="bg-red-500 text-white py-1 px-4 rounded hover:bg-red-600"
+                className="bg-[#d93025] text-white py-1 px-4 rounded hover:bg-[#c62b21] shadow-sm transition-colors"
                 onClick={() => setUseSuggested("no")}
               >
                 No

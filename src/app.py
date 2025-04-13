@@ -5,9 +5,11 @@ import time
 import os
 import json
 import tempfile
+import uuid
 
 from database.query_executor import execute_bigquery_query
 from database.schema import get_bigquery_schema
+from database.chat_history import init_chat_history_db, get_chat_history_db
 from ai.llm import generate_sql, load_prompt_template, set_openai_api_key
 from feedback.feedback_manager import store_feedback
 from feedback.vector_search import retrieve_similar_query
@@ -41,6 +43,13 @@ except Exception as e:
 
 # Initialize the query tracker
 query_tracker = QueryTracker()
+
+# Initialize the chat history database
+try:
+    init_chat_history_db("src/database/chat_history.db")
+    print("Chat history database initialized")
+except Exception as e:
+    print(f"Failed to initialize chat history database: {str(e)}")
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
@@ -171,6 +180,10 @@ def generate_and_execute_query():
     schema = data.get('schema')
     project_id = data.get('project_id')
     dataset_id = data.get('dataset_id')
+    conversation_id = data.get('conversation_id')
+    
+    # Generate a unique user ID if not provided
+    user_id = data.get('user_id', str(uuid.uuid4()))
 
     if not all([user_query, schema, project_id, dataset_id]):
         return jsonify({'error': 'All fields are required'}), 400
@@ -178,6 +191,7 @@ def generate_and_execute_query():
     start_time = time.time()
     error = None
     query_execution_time = 0
+    result_data = None
 
     try:
         # Generate SQL
@@ -191,36 +205,68 @@ def generate_and_execute_query():
         # Execute SQL
         result_df, query_execution_time = execute_bigquery_query(generated_sql)
 
+        # Handle chat history
+        db = get_chat_history_db()
+        
+        # Create a new conversation if one wasn't provided
+        if not conversation_id:
+            conversation_id = db.create_conversation(user_id, project_id, dataset_id)
+
         # Convert DataFrame to list of dictionaries for JSON serialization
         if result_df.empty or "Error" in result_df.columns:
             if "Error" in result_df.columns:
                 error = result_df["Error"][0]
+                
+                # Store the error in chat history
+                db.add_message(conversation_id, user_query, generated_sql, None)
+                
                 return jsonify({
                     'error': error,
-                    'generated_sql': generated_sql
+                    'generated_sql': generated_sql,
+                    'conversation_id': conversation_id
                 }), 400
             else:
+                # Store empty result in chat history
+                db.add_message(conversation_id, user_query, generated_sql, [])
+                
                 return jsonify({
                     'error': 'No data returned',
-                    'generated_sql': generated_sql
+                    'generated_sql': generated_sql,
+                    'conversation_id': conversation_id
                 }), 400
         else:
             # Convert to list of dicts for JSON serialization
             result_data = result_df.to_dict(orient='records')
             column_types = {col: str(dtype) for col, dtype in result_df.dtypes.items()}
+            
+            # Store the successful query in chat history
+            db.add_message(conversation_id, user_query, generated_sql, result_data)
 
             return jsonify({
                 'generated_sql': generated_sql,
                 'results': result_data,
                 'column_types': column_types,
                 'columns': list(result_df.columns),
-                'execution_time': query_execution_time
+                'execution_time': query_execution_time,
+                'conversation_id': conversation_id
             })
     except Exception as e:
         error = str(e)
+        
+        # Store the error in chat history if conversation exists
+        if conversation_id:
+            db = get_chat_history_db()
+            db.add_message(
+                conversation_id, 
+                user_query, 
+                generated_sql if 'generated_sql' in locals() else None, 
+                None
+            )
+            
         return jsonify({
             'error': error,
-            'generated_sql': generated_sql if 'generated_sql' in locals() else None
+            'generated_sql': generated_sql if 'generated_sql' in locals() else None,
+            'conversation_id': conversation_id
         }), 500
     finally:
         total_time = time.time() - start_time
@@ -235,9 +281,135 @@ def generate_and_execute_query():
             error=error,
             metadata={
                 'dataset': dataset_id,
-                'project': project_id
+                'project': project_id,
+                'conversation_id': conversation_id
             }
         )
+
+@app.route('/api/query/execute', methods=['POST'])
+def execute_sql_query():
+    data = request.json
+    sql_query = data.get('sql')
+    conversation_id = data.get('conversation_id')
+    user_query = data.get('user_query', 'Custom SQL execution')
+
+    if not sql_query:
+        return jsonify({'error': 'SQL query is required'}), 400
+
+    try:
+        result_df, query_execution_time = execute_bigquery_query(sql_query)
+
+        # Handle chat history if a conversation ID is provided
+        if conversation_id:
+            db = get_chat_history_db()
+
+        if result_df.empty or "Error" in result_df.columns:
+            if "Error" in result_df.columns:
+                error = result_df["Error"][0]
+                
+                # Store the error in chat history if a conversation ID exists
+                if conversation_id:
+                    db.add_message(conversation_id, user_query, sql_query, None)
+                
+                return jsonify({
+                    'error': error
+                }), 400
+            else:
+                # Store empty result in chat history if a conversation ID exists
+                if conversation_id:
+                    db.add_message(conversation_id, user_query, sql_query, [])
+                
+                return jsonify({
+                    'error': 'No data returned'
+                }), 400
+        else:
+            # Convert to list of dicts for JSON serialization
+            result_data = result_df.to_dict(orient='records')
+            column_types = {col: str(dtype) for col, dtype in result_df.dtypes.items()}
+            
+            # Store the successful query in chat history if a conversation ID exists
+            if conversation_id:
+                db.add_message(conversation_id, user_query, sql_query, result_data)
+
+            return jsonify({
+                'results': result_data,
+                'column_types': column_types,
+                'columns': list(result_df.columns),
+                'execution_time': query_execution_time
+            })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/feedback', methods=['POST'])
+def submit_feedback():
+    data = request.json
+    user_query = data.get('query')
+    generated_sql = data.get('sql')
+    feedback = data.get('feedback')
+    execution_success = data.get('execution_success', False)
+
+    if not all([user_query, generated_sql, feedback]):
+        return jsonify({'error': 'All fields are required'}), 400
+
+    try:
+        store_feedback(user_query, generated_sql, feedback, execution_success=execution_success)
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/chat/history', methods=['GET'])
+def get_chat_history():
+    user_id = request.args.get('user_id')
+    limit = request.args.get('limit', 5, type=int)
+    
+    try:
+        db = get_chat_history_db()
+        conversations = db.get_recent_conversations(user_id, limit)
+        
+        return jsonify({
+            'success': True,
+            'conversations': conversations
+        })
+    except Exception as e:
+        app.logger.error(f"Error fetching chat history: {str(e)}")
+        import traceback
+        app.logger.error(traceback.format_exc())
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'conversations': []
+        }), 500
+
+@app.route('/api/chat/conversation/<int:conversation_id>', methods=['GET'])
+def get_conversation(conversation_id):
+    try:
+        db = get_chat_history_db()
+        messages = db.get_conversation(conversation_id)
+        details = db.get_conversation_details(conversation_id)
+        
+        if not details:
+            return jsonify({
+                'success': False,
+                'error': 'Conversation not found',
+                'messages': [],
+                'details': {}
+            }), 404
+            
+        return jsonify({
+            'success': True,
+            'details': details,
+            'messages': messages
+        })
+    except Exception as e:
+        app.logger.error(f"Error fetching conversation: {str(e)}")
+        import traceback
+        app.logger.error(traceback.format_exc())
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'messages': [],
+            'details': {}
+        }), 500
 
 @app.route('/api/set-credentials-path', methods=['POST'])
 def set_credentials_path():
@@ -265,56 +437,54 @@ def set_credentials_path():
             }), 400
     except Exception as e:
         app.logger.error(f"Error setting credentials path: {str(e)}")
-        return jsonify({'error': str(e)}), 500@app.route('/api/query/execute', methods=['POST'])
-def execute_sql_query():
-    data = request.json
-    sql_query = data.get('sql')
-
-    if not sql_query:
-        return jsonify({'error': 'SQL query is required'}), 400
-
-    try:
-        result_df, query_execution_time = execute_bigquery_query(sql_query)
-
-        if result_df.empty or "Error" in result_df.columns:
-            if "Error" in result_df.columns:
-                return jsonify({
-                    'error': result_df["Error"][0]
-                }), 400
-            else:
-                return jsonify({
-                    'error': 'No data returned'
-                }), 400
-        else:
-            # Convert to list of dicts for JSON serialization
-            result_data = result_df.to_dict(orient='records')
-            column_types = {col: str(dtype) for col, dtype in result_df.dtypes.items()}
-
-            return jsonify({
-                'results': result_data,
-                'column_types': column_types,
-                'columns': list(result_df.columns),
-                'execution_time': query_execution_time
-            })
-    except Exception as e:
         return jsonify({'error': str(e)}), 500
-
-@app.route('/api/feedback', methods=['POST'])
-def submit_feedback():
-    data = request.json
-    user_query = data.get('query')
-    generated_sql = data.get('sql')
-    feedback = data.get('feedback')
-    execution_success = data.get('execution_success', False)
-
-    if not all([user_query, generated_sql, feedback]):
-        return jsonify({'error': 'All fields are required'}), 400
-
+    
+@app.route('/api/debug/conversations', methods=['GET'])
+def debug_conversations():
+    """Debug endpoint to check conversation data."""
     try:
-        store_feedback(user_query, generated_sql, feedback, execution_success=execution_success)
-        return jsonify({'success': True})
+        db = get_chat_history_db()
+        
+        # Get counts from database
+        conn = db._get_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT COUNT(*) FROM conversations")
+        conversation_count = cursor.fetchone()[0]
+        
+        cursor.execute("SELECT COUNT(*) FROM messages")
+        message_count = cursor.fetchone()[0]
+        
+        # Get all conversations with details
+        cursor.execute("""
+            SELECT c.id, c.timestamp, c.project_id, c.dataset_id, 
+                   COUNT(m.id) as message_count
+            FROM conversations c
+            LEFT JOIN messages m ON c.id = m.conversation_id
+            GROUP BY c.id
+            ORDER BY c.timestamp DESC
+        """)
+        
+        conversations = [dict(row) for row in cursor.fetchall()]
+        
+        # Get the conversations that would be returned by get_recent_conversations
+        recent = db.get_recent_conversations(limit=10)
+        
+        return jsonify({
+            'success': True,
+            'conversation_count': conversation_count,
+            'message_count': message_count,
+            'conversations': conversations,
+            'recent_conversations': recent
+        })
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        app.logger.error(f"Error in debug endpoint: {str(e)}")
+        import traceback
+        app.logger.error(traceback.format_exc())
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5001)

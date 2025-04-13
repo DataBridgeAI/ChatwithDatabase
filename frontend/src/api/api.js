@@ -126,7 +126,8 @@ export const generateAndExecuteQuery = async (
   query,
   schema,
   projectId,
-  datasetId
+  datasetId,
+  conversationId = null
 ) => {
   try {
     const response = await fetch(`${API_BASE_URL}/query/generate`, {
@@ -139,6 +140,7 @@ export const generateAndExecuteQuery = async (
         schema,
         project_id: projectId,
         dataset_id: datasetId,
+        conversation_id: conversationId,
       }),
     });
 
@@ -149,7 +151,7 @@ export const generateAndExecuteQuery = async (
   }
 };
 
-export const executeSqlQuery = async (sql) => {
+export const executeSqlQuery = async (sql, conversationId = null, userQuery = null) => {
   try {
     const response = await fetch(`${API_BASE_URL}/query/execute`, {
       method: "POST",
@@ -158,6 +160,8 @@ export const executeSqlQuery = async (sql) => {
       },
       body: JSON.stringify({
         sql,
+        conversation_id: conversationId,
+        user_query: userQuery
       }),
     });
 
@@ -192,6 +196,54 @@ export const submitFeedback = async (
   } catch (error) {
     console.error("Error submitting feedback:", error);
     throw error;
+  }
+};
+
+export const getChatHistory = async (userId = null, limit = 5) => {
+  try {
+    const url = new URL(`${API_BASE_URL}/chat/history`);
+    if (userId) url.searchParams.append('user_id', userId);
+    url.searchParams.append('limit', limit);
+    
+    const response = await fetch(url);
+    const data = await response.json();
+    
+    // Even if there's a 500 error, we still get JSON back with success: false
+    return {
+      success: data.success || false,
+      conversations: data.conversations || [],
+      error: data.error
+    };
+  } catch (error) {
+    console.error("Error fetching chat history:", error);
+    // Return a sensible default
+    return {
+      success: false,
+      conversations: [],
+      error: "Failed to connect to the server"
+    };
+  }
+};
+
+export const getConversation = async (conversationId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/chat/conversation/${conversationId}`);
+    const data = await response.json();
+    
+    return {
+      success: data.success || false,
+      details: data.details || {},
+      messages: data.messages || [],
+      error: data.error
+    };
+  } catch (error) {
+    console.error("Error fetching conversation:", error);
+    return {
+      success: false,
+      details: {},
+      messages: [],
+      error: "Failed to connect to the server"
+    };
   }
 };
 

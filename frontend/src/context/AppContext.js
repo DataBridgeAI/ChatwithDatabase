@@ -1,4 +1,5 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import { getChatHistory } from '../api/api';
 
 const AppContext = createContext();
 
@@ -34,6 +35,32 @@ export const AppProvider = ({ children }) => {
   
   // Execution timing
   const [queryExecutionTime, setQueryExecutionTime] = useState(0);
+  
+  // Chat history state
+  const [chatHistory, setChatHistory] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [currentConversationId, setCurrentConversationId] = useState(null);
+  
+  // Fetch chat history on component mount
+  useEffect(() => {
+    const fetchChatHistory = async () => {
+      if (isSchemaLoaded) {
+        setLoadingHistory(true);
+        try {
+          const response = await getChatHistory();
+          if (response.success) {
+            setChatHistory(response.conversations);
+          }
+        } catch (error) {
+          console.error("Failed to fetch chat history:", error);
+        } finally {
+          setLoadingHistory(false);
+        }
+      }
+    };
+    
+    fetchChatHistory();
+  }, [isSchemaLoaded]);
   
   const resetStates = () => {
     setQueryResults(null);
@@ -77,6 +104,11 @@ export const AppProvider = ({ children }) => {
     
     // Timing
     queryExecutionTime, setQueryExecutionTime,
+    
+    // Chat history
+    chatHistory, setChatHistory,
+    loadingHistory, setLoadingHistory,
+    currentConversationId, setCurrentConversationId,
     
     // Helpers
     resetStates

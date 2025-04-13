@@ -8,8 +8,7 @@ const Feedback = () => {
     generatedSql,
     queryResults,
     feedbackSubmitted,
-    setFeedbackSubmitted,
-    setShowVisualization
+    setFeedbackSubmitted
   } = useAppContext();
   
   if (!queryResults || feedbackSubmitted) {
@@ -29,43 +28,20 @@ const Feedback = () => {
     }
   };
   
-  const handleVisualizationToggle = (choice) => {
-    setShowVisualization(choice === 'yes');
-  };
-  
   return (
-    <div className="mt-6 space-y-6">
-      {/* Visualization question first */}
-      <div className="p-4 bg-gray-50 rounded-lg border">
-        <h3 className="font-medium mb-3">Would you like to see visualizations?</h3>
+    <div className="mt-6">
+      {/* SQL query feedback */}
+      <div className="p-4 bg-[#e8f0fe] rounded-lg border border-[#dadce0] shadow-sm">
+        <h3 className="font-medium mb-3 text-[#1a73e8]">Was this SQL query helpful?</h3>
         <div className="flex space-x-4">
           <button
-            className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
-            onClick={() => handleVisualizationToggle('yes')}
-          >
-            Yes
-          </button>
-          <button
-            className="bg-gray-500 text-white py-2 px-4 rounded hover:bg-gray-600"
-            onClick={() => handleVisualizationToggle('no')}
-          >
-            No
-          </button>
-        </div>
-      </div>
-      
-      {/* SQL query feedback second */}
-      <div className="p-4 bg-gray-50 rounded-lg border">
-        <h3 className="font-medium mb-3">Was this SQL query helpful?</h3>
-        <div className="flex space-x-4">
-          <button
-            className="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 flex items-center"
+            className="bg-[#34a853] text-white py-2 px-4 rounded hover:bg-[#2d9149] flex items-center shadow-sm transition-colors"
             onClick={() => handleFeedback(true)}
           >
             👍 Yes
           </button>
           <button
-            className="bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600 flex items-center"
+            className="bg-[#d93025] text-white py-2 px-4 rounded hover:bg-[#c62b21] flex items-center shadow-sm transition-colors"
             onClick={() => handleFeedback(false)}
           >
             👎 No

@@ -51,57 +51,71 @@ const LandingPage = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 px-4">
-      <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-lg">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-[#f8f9fa] px-4">
+      {/* Decorative top header */}
+      <div className="absolute top-0 left-0 right-0 h-16 bg-[#1a73e8]"></div>
+      
+      <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-lg border border-[#dadce0] mt-16 relative z-10">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-blue-600">📊 BigQuery Analytics</h1>
-          <p className="text-gray-600 mt-2">
+          <div className="w-20 h-20 bg-[#1a73e8] rounded-full flex items-center justify-center mx-auto -mt-16 shadow-md">
+            <span className="text-3xl text-white">📊</span>
+          </div>
+          <h1 className="text-3xl font-bold text-[#1a73e8] mt-4">BigQuery Analytics</h1>
+          <p className="text-[#5f6368] mt-2">
             Connect to your BigQuery dataset to get started
           </p>
         </div>
 
         <div className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-[#202124] mb-1">
               Project ID
             </label>
             <input
               type="text"
               value={projectId}
               onChange={(e) => setProjectId(e.target.value)}
-              className="w-full p-3 border rounded-lg focus:ring-blue-500 focus:border-blue-500"
+              className="w-full p-3 border border-[#dadce0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a73e8] focus:border-transparent transition-all"
               placeholder="your-gcp-project-id"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-[#202124] mb-1">
               Dataset ID
             </label>
             <input
               type="text"
               value={datasetId}
               onChange={(e) => setDatasetId(e.target.value)}
-              className="w-full p-3 border rounded-lg focus:ring-blue-500 focus:border-blue-500"
+              className="w-full p-3 border border-[#dadce0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a73e8] focus:border-transparent transition-all"
               placeholder="your-dataset"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-[#202124] mb-1">
               Credentials Path
             </label>
             <input
               type="text"
               value={credentials}
               onChange={(e) => setCredentials(e.target.value)}
-              className="w-full p-3 border rounded-lg focus:ring-blue-500 focus:border-blue-500"
+              className="w-full p-3 border border-[#dadce0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a73e8] focus:border-transparent transition-all"
               placeholder="/path/to/credentials.json"
             />
+            <p className="text-xs text-[#5f6368] mt-1">Path to your Google Cloud service account key file</p>
           </div>
 
+          {/* Error message display */}
+          {setError && (
+            <div className="bg-[#fce8e6] text-[#d93025] p-3 rounded-lg text-sm hidden">
+              Error message would appear here
+            </div>
+          )}
+
           <button
-            className="w-full bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors"
+            className="w-full bg-[#1a73e8] text-white p-3 rounded-lg hover:bg-[#174ea6] focus:outline-none focus:ring-2 focus:ring-[#1a73e8] focus:ring-opacity-50 transition-colors shadow-sm"
             onClick={handleLoadSchema}
             disabled={loading}
           >
@@ -135,6 +149,10 @@ const LandingPage = () => {
           </button>
         </div>
       </div>
+      
+      <footer className="mt-8 text-center text-[#5f6368] text-sm">
+        <p>BigQuery Analytics Dashboard &copy; 2025</p>
+      </footer>
     </div>
   );
 };
