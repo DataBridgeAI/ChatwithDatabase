@@ -1,54 +1,38 @@
+from langchain_openai import ChatOpenAI
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
-from langchain.chat_models import ChatOpenAI
+from google.cloud import storage
+import json
 import os
-from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
+# Function to set OpenAI API key that's missing
+def set_openai_api_key(api_key: str) -> None:
+    """Set the OpenAI API key for the application."""
+    os.environ["OPENAI_API_KEY"] = api_key
+    # Reinitialize the LLM with the new key
+    global llm
+    llm = ChatOpenAI(model_name="gpt-4", temperature=0.3)
 
-# Get API key from environment
-openai_api_key = os.getenv("OPENAI_API_KEY")
 
-# Initialize LLM with None, will be set later if not available now
-llm = None
+# Initializing LLM i.e GPT 4 for this project
+llm = ChatOpenAI(model_name="gpt-4", temperature=0.3)
 
-# Try to initialize LLM if API key is available
-if openai_api_key:
-    try:
-        llm = ChatOpenAI(model_name="gpt-4", temperature=0.3, openai_api_key=openai_api_key)
-        print("LLM initialized with API key from environment")
-    except Exception as e:
-        print(f"Failed to initialize LLM: {str(e)}")
+# Global variable to store the prompt template
+PROMPT_TEMPLATE = None
 
-def set_openai_api_key(api_key):
-    """Set the OpenAI API key and reinitialize the LLM."""
-    global llm, openai_api_key
-    openai_api_key = api_key
-    llm = ChatOpenAI(model_name="gpt-4", temperature=0.3, openai_api_key=api_key)
-    return True
-
-# Default prompt template
-PROMPT_TEMPLATE = """
-You are an expert SQL query generator for BigQuery. Your task is to convert natural language questions into SQL queries.
-
-Schema information:
-{schema}
-
-User query: {user_query}
-
-Project ID: {project_id}
-Dataset ID: {dataset_id}
-
-Generate a SQL query that answers the user's question. The query should be valid BigQuery SQL.
-Only return the SQL query without any explanations.
-"""
-
-def load_prompt_template() -> None:
-    """Initialize the prompt template."""
+def load_prompt_template(bucket_name: str = "sql-prompts-store") -> None:
+    """Load the latest prompt template from GCS bucket during app initialization."""
     global PROMPT_TEMPLATE
-    # The template is already loaded as a constant
-    print("Using default prompt template")
+    storage_client = storage.Client()
+    bucket = storage_client.bucket(bucket_name)
+    blobs = list(bucket.list_blobs(prefix="prompts/"))
+    
+    if not blobs:
+        raise ValueError("No prompt templates found in storage")
+        
+    latest_blob = max(blobs, key=lambda x: x.name)
+    prompt_data = json.loads(latest_blob.download_as_string())
+    PROMPT_TEMPLATE = prompt_data["template"]
 
 def clean_sql(raw_sql: str) -> str:
     """Remove unnecessary markdown and whitespace from SQL."""
@@ -57,25 +41,32 @@ def clean_sql(raw_sql: str) -> str:
 
 def generate_sql(user_query: str, schema: str, project_id: str, dataset_id: str) -> str:
     """Generate SQL query from natural language using GPT-4 for BigQuery."""
-    global PROMPT_TEMPLATE, llm, openai_api_key
-
-    # Check if LLM is initialized
-    if not llm:
-        if not openai_api_key:
-            raise ValueError("OpenAI API key is not set. Please set it using the credentials endpoint.")
-        llm = ChatOpenAI(model_name="gpt-4", temperature=0.3, openai_api_key=openai_api_key)
-
-    # Generate SQL using the template
-    chain = LLMChain(llm=llm, prompt=PromptTemplate(
+    global PROMPT_TEMPLATE
+    
+    if PROMPT_TEMPLATE is None:
+        raise RuntimeError("Prompt template not loaded. Call load_prompt_template() during app initialization.")
+    
+    # Create the prompt template
+    prompt = PromptTemplate(
         template=PROMPT_TEMPLATE,
         input_variables=["schema", "user_query", "project_id", "dataset_id"]
-    ))
-
-    response = chain.run({
+    )
+    
+    # Use the new pipe-based approach instead of LLMChain
+    chain = prompt | llm
+    
+    # Use invoke instead of run
+    response = chain.invoke({
         "schema": schema,
         "user_query": user_query,
         "project_id": project_id,
         "dataset_id": dataset_id
     })
-
-    return clean_sql(response)
+    
+    # Extract the content from the response (format differs in newer versions)
+    if hasattr(response, 'content'):
+        result = response.content
+    else:
+        result = str(response)
+        
+    return clean_sql(result)
