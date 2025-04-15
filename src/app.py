@@ -2,6 +2,7 @@
 import streamlit as st
 import pandas as pd
 import time
+import json
 
 from database.query_executor import execute_bigquery_query
 from database.schema import get_bigquery_schema
@@ -12,6 +13,7 @@ from feedback.feedback_manager import store_feedback
 from feedback.vector_search import retrieve_similar_query
 from feedback.chroma_setup import download_and_extract_chromadb
 from monitoring.mlflow_config import QueryTracker
+from utils.data_formatter import dataframe_to_json
 
 from query_checks.content_checker import validate_query
 from promptfilter.semantic_search import download_and_prepare_embeddings, check_query_relevance
@@ -247,10 +249,31 @@ if st.session_state.get('waiting_for_choice', False):
 if st.session_state.result is not None:
     st.divider()
     st.subheader("🔍 Query Results")
+    
+    # Display results
     st.dataframe(st.session_state.result, use_container_width=True)
-
-    with st.expander("View Generated SQL", expanded=False):
-        st.code(st.session_state.generated_sql, language="sql")
+    
+    # Add download buttons in columns
+    col1, col2 = st.columns([1, 4])
+    with col1:
+        try:
+            # Convert to JSON and create download button
+            json_data = dataframe_to_json(st.session_state.result)
+            json_str = json.dumps(json_data, indent=2)
+            
+            st.download_button(
+                label="📥 Download JSON",
+                data=json_str,
+                file_name="query_results.json",
+                mime="application/json",
+                help="Download the query results in JSON format"
+            )
+        except Exception as e:
+            st.error(f"Cannot create JSON download: {str(e)}")
+    
+    with col2:
+        with st.expander("View Generated SQL", expanded=False):
+            st.code(st.session_state.generated_sql, language="sql")
 
     # Feedback Section
     if not st.session_state.feedback_submitted:
