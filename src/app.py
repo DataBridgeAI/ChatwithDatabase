@@ -6,6 +6,7 @@ import os
 import json
 import tempfile
 import uuid
+from dotenv import load_dotenv
 
 from database.query_executor import execute_bigquery_query
 from database.schema import get_bigquery_schema
@@ -18,8 +19,45 @@ from monitoring.mlflow_config import QueryTracker
 from query_checks.content_checker import validate_query
 from promptfilter.semantic_search import download_and_prepare_embeddings, check_query_relevance
 
+# Load environment variables from .env file
+load_dotenv('src/.env')
+
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
+
+# Setup credentials from environment variables
+def setup_credentials():
+    try:
+        # Setup OpenAI API key if available in environment
+        if "OPENAI_API_KEY" in os.environ:
+            openai_api_key = os.environ["OPENAI_API_KEY"]
+            set_openai_api_key(openai_api_key)
+            print("OpenAI API key loaded from environment")
+        
+        # If credentials JSON is provided directly
+        if "GOOGLE_APPLICATION_CREDENTIALS_JSON" in os.environ:
+            credentials_json = json.loads(os.environ["GOOGLE_APPLICATION_CREDENTIALS_JSON"])
+            
+            # Create a temporary file to store the credentials
+            fd, temp_path = tempfile.mkstemp(suffix='.json')
+            with os.fdopen(fd, 'w') as tmp:
+                json.dump(credentials_json, tmp)
+                
+            # Set the environment variable
+            os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = temp_path
+            print("Google credentials loaded from environment JSON")
+            return True
+            
+        # If direct path is provided
+        elif "GOOGLE_APPLICATION_CREDENTIALS" in os.environ and os.path.exists(os.environ["GOOGLE_APPLICATION_CREDENTIALS"]):
+            print(f"Using Google credentials from: {os.environ['GOOGLE_APPLICATION_CREDENTIALS']}")
+            return True
+            
+        print("Warning: Google credentials not found in environment")
+        return False
+    except Exception as e:
+        print(f"Error setting up credentials: {str(e)}")
+        return False
 
 # Initialize schema embeddings at startup
 try:
@@ -40,6 +78,15 @@ try:
     load_prompt_template()
 except Exception as e:
     print(f"Failed to load prompt template: {str(e)}")
+
+# Setup credentials during startup
+try:
+    if setup_credentials():
+        print("Credentials setup successfully")
+    else:
+        print("Warning: Credentials not fully configured")
+except Exception as e:
+    print(f"Failed to setup credentials: {str(e)}")
 
 # Initialize the query tracker
 query_tracker = QueryTracker()
@@ -98,8 +145,8 @@ def set_credentials():
 def fetch_schema():
     try:
         data = request.json
-        project_id = data.get('project_id')
-        dataset_id = data.get('dataset_id')
+        project_id = data.get('project_id') or os.environ.get('PROJECT_ID')
+        dataset_id = data.get('dataset_id') or os.environ.get('DATASET_ID')
         
         app.logger.info(f"Received schema request for project: {project_id}, dataset: {dataset_id}")
         
@@ -178,8 +225,8 @@ def generate_and_execute_query():
     data = request.json
     user_query = data.get('query')
     schema = data.get('schema')
-    project_id = data.get('project_id')
-    dataset_id = data.get('dataset_id')
+    project_id = data.get('project_id') or os.environ.get('PROJECT_ID')
+    dataset_id = data.get('dataset_id') or os.environ.get('DATASET_ID')
     conversation_id = data.get('conversation_id')
     
     # Generate a unique user ID if not provided
