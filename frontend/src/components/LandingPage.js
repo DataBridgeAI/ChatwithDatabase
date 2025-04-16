@@ -1,6 +1,7 @@
+// frontend/src/components/LandingPage.js
 import React, { useState } from "react";
 import { useAppContext } from "../context/AppContext";
-import { fetchSchema, setCredentialsPath } from "../api/api";
+import { fetchSchema } from "../api/api";
 
 const LandingPage = () => {
   const {
@@ -14,7 +15,7 @@ const LandingPage = () => {
   } = useAppContext();
 
   const [loading, setLoading] = useState(false);
-  const [credentials, setCredentials] = useState("/Users/sirigowda/Desktop/a.json");
+  // Removed the credentials state
 
   const handleLoadSchema = async () => {
     if (!projectId.trim() || !datasetId.trim()) {
@@ -26,21 +27,12 @@ const LandingPage = () => {
     setError(null);
 
     try {
-      // First, set the credentials path
-      const credResult = await setCredentialsPath(credentials);
-      console.log("Credentials path result:", credResult);
-
-      if (credResult.success) {
-        // Then fetch schema
-        const response = await fetchSchema(projectId, datasetId);
-        if (response.schema) {
-          setSchema(response.schema);
-          setIsSchemaLoaded(true); // This will trigger navigation to the chat page
-        } else if (response.error) {
-          setError(response.error);
-        }
-      } else {
-        setError(credResult.error || "Failed to set credentials path");
+      const response = await fetchSchema(projectId, datasetId);
+      if (response.schema) {
+        setSchema(response.schema);
+        setIsSchemaLoaded(true); // This will trigger navigation to the chat page
+      } else if (response.error) {
+        setError(response.error);
       }
     } catch (error) {
       setError(error.message || "Failed to load schema");
@@ -91,20 +83,6 @@ const LandingPage = () => {
               className="w-full p-3 border border-[#dadce0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a73e8] focus:border-transparent transition-all"
               placeholder="your-dataset"
             />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-[#202124] mb-1">
-              Credentials Path
-            </label>
-            <input
-              type="text"
-              value={credentials}
-              onChange={(e) => setCredentials(e.target.value)}
-              className="w-full p-3 border border-[#dadce0] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a73e8] focus:border-transparent transition-all"
-              placeholder="/path/to/credentials.json"
-            />
-            <p className="text-xs text-[#5f6368] mt-1">Path to your Google Cloud service account key file</p>
           </div>
 
           {/* Error message display */}

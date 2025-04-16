@@ -33,7 +33,6 @@ const QueryInput = () => {
     setShowVisualization
   } = useAppContext();
 
-  // Removed unused startTime state
   const [showSimilarQuery, setShowSimilarQuery] = useState(false);
   const [useSuggested, setUseSuggested] = useState(null);
 
@@ -123,11 +122,17 @@ const QueryInput = () => {
         setLoading(false);
         setShowSimilarQuery(false);
         setWaitingForChoice(false);
+        // Important: Reset useSuggested to null so it can be triggered again
+        setUseSuggested(null);
       }
     } else if (useSuggested === "no") {
+      // If user selects no, we need to continue with generating a new query
       setShowSimilarQuery(false);
       setWaitingForChoice(false);
+      // Generate and execute a new query
       executeNewQuery();
+      // Important: Reset useSuggested to null after handling
+      setUseSuggested(null);
     }
   }, [
     useSuggested,
@@ -152,7 +157,16 @@ const QueryInput = () => {
   }, [useSuggested, handleSuggestedQueryChoice]);
 
   const handleGenerateQuery = async () => {
+    // Reset all states to ensure a fresh start
     resetStates();
+    
+    // Clear any current conversation context
+    setCurrentConversationId(null);
+    
+    // Reset suggestion states
+    setShowSimilarQuery(false);
+    setUseSuggested(null);
+    
     setLoading(true);
     setError(null);
 
@@ -171,7 +185,7 @@ const QueryInput = () => {
         return;
       }
 
-      // Look for similar query
+      // Always check for similar query first
       const similarResult = await findSimilarQuery(userQuery);
       if (similarResult.found) {
         setSimilarQuery(similarResult.similar_query);
@@ -180,10 +194,12 @@ const QueryInput = () => {
         setShowSimilarQuery(true);
         setLoading(false);
         return;
+      } else {
+        // No similar query found, generate a new query but don't execute it immediately
+        // Instead, we'll store it and execute only when user confirms
+        setLoading(false);
+        executeNewQuery();
       }
-
-      // Generate and execute query
-      await executeNewQuery();
     } catch (error) {
       setError(error.message || "An error occurred");
       setLoading(false);
@@ -197,7 +213,7 @@ const QueryInput = () => {
   return (
     <div className="mb-6">
       <label className="block text-lg font-medium mb-2 text-[#202124]">
-        What can I help with?
+        Enter your question:
       </label>
       <textarea
         value={userQuery}
