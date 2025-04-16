@@ -15,7 +15,7 @@ from feedback.feedback_manager import store_feedback
 from feedback.vector_search import retrieve_similar_query
 from feedback.chroma_setup import download_and_extract_chromadb
 from monitoring.mlflow_config import QueryTracker
-from query_checks.content_checker import validate_query
+from query_checks.content_checker import sensitivity_filter
 from promptfilter.semantic_search import download_and_prepare_embeddings, check_query_relevance
 
 app = Flask(__name__)
@@ -136,7 +136,7 @@ def validate_user_query():
         return jsonify({'error': 'Query is required'}), 400
 
     try:
-        validation_error = validate_query(user_query)
+        validation_error = sensitivity_filter(user_query)
         if validation_error:
             return jsonify({'error': validation_error}), 400
 
