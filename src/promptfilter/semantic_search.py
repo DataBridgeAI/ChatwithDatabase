@@ -9,7 +9,7 @@ import re
 from typing import Dict, List, Tuple, Any, Optional
 import chromadb
 from chromadb.config import Settings
-import Levenshtein
+
 from rapidfuzz import fuzz, process
 
 # Configuration Parameters
