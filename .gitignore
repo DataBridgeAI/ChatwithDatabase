@@ -34,6 +34,7 @@ query_details.txt
 mlflow.db
 .dvc/
 src/src/database/chat_history.db
+src/embeddings/
 
 # System Files
 .DS_Store
