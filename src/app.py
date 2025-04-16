@@ -224,7 +224,7 @@ def find_similar_query():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/query/generate', methods=['POST'])
-def generate_and_execute_query():
+def generate_query():
     data = request.json
     user_query = data.get('query')
     schema = data.get('schema')
@@ -245,12 +245,18 @@ def generate_and_execute_query():
 
     try:
         # Generate SQL
-        generated_sql = generate_sql(
-            user_query,
-            schema,
-            project_id,
-            dataset_id
-        )
+        try:
+            generated_sql = generate_sql(
+                user_query=user_query,
+                schema=schema,
+                project_id=project_id,
+                dataset_id=dataset_id
+            )
+        except ValueError as ve:
+            return jsonify({
+                'error': str(ve),
+                'conversation_id': conversation_id
+            }), 400
 
         # Execute SQL
         result_df, query_execution_time = execute_bigquery_query(generated_sql)
@@ -285,8 +291,8 @@ def generate_and_execute_query():
                     'conversation_id': conversation_id
                 }), 400
         else:
-            # Convert to list of dicts for JSON serialization
-            result_data = result_df.to_dict(orient='records')
+            # Convert to JSON using the data formatter
+            result_data = dataframe_to_json(result_df)
             column_types = {col: str(dtype) for col, dtype in result_df.dtypes.items()}
             
             # Store the successful query in chat history
