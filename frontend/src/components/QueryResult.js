@@ -10,37 +10,6 @@ const QueryResult = () => {
   
   const [showSql, setShowSql] = useState(false);
   
-  const downloadResults = async () => {
-    try {
-      const response = await fetch('http://localhost:5001/api/query/download', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ results: queryResults }),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Download failed');
-      }
-      
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'query_results.json';
-      document.body.appendChild(a);
-      a.click();
-      
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch (error) {
-      console.error('Download error:', error);
-      alert('Failed to download results: ' + error.message);
-    }
-  };
-  
   if (!queryResults) {
     return null;
   }
@@ -49,20 +18,11 @@ const QueryResult = () => {
     <div>
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">🔍 Query Results</h2>
-        <div className="flex items-center gap-4">
-          <button
-            onClick={downloadResults}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center gap-2 shadow-sm transition-colors"
-          >
-            <span>📥</span>
-            Download JSON
-          </button>
-          {queryExecutionTime > 0 && (
-            <span className="text-sm text-gray-500">
-              Execution time: {queryExecutionTime.toFixed(2)}s
-            </span>
-          )}
-        </div>
+        {queryExecutionTime > 0 && (
+          <span className="text-sm text-gray-500">
+            Execution time: {queryExecutionTime.toFixed(2)}s
+          </span>
+        )}
       </div>
       
       <div className="mb-4">

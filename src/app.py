@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify
 from flask_cors import CORS
 import pandas as pd
 import time
@@ -7,8 +7,6 @@ import json
 import tempfile
 import uuid
 from dotenv import load_dotenv
-import json
-from io import BytesIO
 
 from database.query_executor import execute_bigquery_query
 from database.schema import get_bigquery_schema
@@ -20,7 +18,6 @@ from feedback.chroma_setup import download_and_extract_chromadb
 from monitoring.mlflow_config import QueryTracker
 from query_checks.content_checker import validate_query
 from promptfilter.semantic_search import download_and_prepare_embeddings, check_query_relevance
-from ai.data_formatter import dataframe_to_json
 
 # Load environment variables from .env file
 load_dotenv('src/.env')
@@ -195,7 +192,7 @@ def validate_user_query():
             schema_embeddings=schema_embeddings
         )
         if not query_relevance_flag:
-            return jsonify({'error': ' ❌ Query appears unrelated to the database schema'}), 400
+            return jsonify({'error': 'Query appears unrelated to the database schema'}), 400
 
         return jsonify({'valid': True})
     except Exception as e:
@@ -535,44 +532,6 @@ def debug_conversations():
             'success': False,
             'error': str(e)
         }), 500
-
-#download the results as json file
-@app.route('/api/query/download', methods=['POST'])
-def download_results():
-    try:
-        data = request.json
-        if not data or 'results' not in data:
-            return jsonify({'error': 'No results provided'}), 400
-            
-        result_df = pd.DataFrame(data['results'])
-        
-        try:
-            # Convert to JSON using the data formatter
-            json_data = dataframe_to_json(result_df)
-            json_str = json.dumps(json_data, indent=2)
-        except Exception as format_error:
-            return jsonify({'error': str(format_error)}), 500
-        
-        # Create a BytesIO object
-        buffer = BytesIO()
-        buffer.write(json_str.encode())
-        buffer.seek(0)
-        
-        # Create response with the file
-        response = send_file(
-            buffer,
-            mimetype='application/json',
-            as_attachment=True,
-            download_name='query_results.json'
-        )
-        
-        # Add CORS headers
-        response.headers['Access-Control-Allow-Origin'] = '*'
-        response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
-        
-        return response
-    except Exception as e:
-        return jsonify({'error': f'Download failed: {str(e)}'}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5001)
