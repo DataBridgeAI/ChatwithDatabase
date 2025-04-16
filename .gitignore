@@ -33,6 +33,7 @@ retrieved_chroma.zip
 query_details.txt
 mlflow.db
 .dvc/
+src/src/database/chat_history.db
 
 # System Files
 .DS_Store
