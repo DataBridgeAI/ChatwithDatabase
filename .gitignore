@@ -34,7 +34,7 @@ query_details.txt
 mlflow.db
 .dvc/
 src/src/database/chat_history.db
-src/embeddings/
+src/embeddings/schema_embeddings.json
 
 # System Files
 .DS_Store
@@ -71,3 +71,4 @@ src/chat_history.db
 # Logs
 DataPipeline/logs/
 logs/
+
