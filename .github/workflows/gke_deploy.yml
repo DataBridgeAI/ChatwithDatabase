@@ -5,7 +5,7 @@ name: CI/CD Pipeline  # Name of the workflow
 
 on:
   push:
-    branches: [ main ]  # Trigger this workflow on every push to the 'main' branch
+    branches: [ Aditya_deployment ]  # Trigger this workflow on every push to the 'main' branch
 
 jobs:
   build-and-deploy:
