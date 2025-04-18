@@ -11,6 +11,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      # Add Docker layer caching
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
       - name: Set up Google Cloud SDK
         uses: google-github-actions/setup-gcloud@v0
         with:
@@ -29,33 +41,40 @@ jobs:
           ls -la src/
 
       - name: Build Backend Docker image
-        run: |
-          cd src
-          echo "Building from directory: $(pwd)"
-          echo "Files in current directory:"
-          ls -la
-          # Use -f to specify the exact filename with its capitalization
-          docker build -t gcr.io/chatwithdata-451800/chatwithdatabase-backend:${{ github.sha }} -f Dockerfile .
-          docker tag gcr.io/chatwithdata-451800/chatwithdatabase-backend:${{ github.sha }} gcr.io/chatwithdata-451800/chatwithdatabase-backend:latest
+        uses: docker/build-push-action@v2
+        with:
+          context: ./src
+          file: ./src/Dockerfile
+          push: false
+          tags: gcr.io/chatwithdata-451800/chatwithdatabase-backend:${{ github.sha }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new
 
-      
-      
       - name: Build Frontend Docker image
-        run: |
-          cd frontend
-          echo "Building from directory: $(pwd)"
-          echo "Files in current directory:"
-          ls -la
-          docker build -t gcr.io/chatwithdata-451800/chatwithdatabase-frontend:${{ github.sha }} -f Dockerfile .
-          docker tag gcr.io/chatwithdata-451800/chatwithdatabase-frontend:${{ github.sha }} gcr.io/chatwithdata-451800/chatwithdatabase-frontend:latest
+        uses: docker/build-push-action@v2
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: false
+          tags: gcr.io/chatwithdata-451800/chatwithdatabase-frontend:${{ github.sha }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new
 
-      - name: Push images to Google Container Registry
+      # Move cache to prevent growing cache size
+      - name: Move cache
         run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
+      - name: Tag and Push images to Google Container Registry
+        run: |
+          docker tag gcr.io/chatwithdata-451800/chatwithdatabase-backend:${{ github.sha }} gcr.io/chatwithdata-451800/chatwithdatabase-backend:latest
+          docker tag gcr.io/chatwithdata-451800/chatwithdatabase-frontend:${{ github.sha }} gcr.io/chatwithdata-451800/chatwithdatabase-frontend:latest
           docker push gcr.io/chatwithdata-451800/chatwithdatabase-backend:${{ github.sha }}
           docker push gcr.io/chatwithdata-451800/chatwithdatabase-backend:latest
           docker push gcr.io/chatwithdata-451800/chatwithdatabase-frontend:${{ github.sha }}
           docker push gcr.io/chatwithdata-451800/chatwithdatabase-frontend:latest
-      
+
       - name: Set up Kubernetes configuration
         run: |
           # Install the GKE auth plugin
