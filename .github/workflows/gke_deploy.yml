@@ -2,7 +2,7 @@ name: GKE Deployment
 
 on:
   push:
-    branches: [ Aditya_deployment ]
+    branches: [ kube2 ]
 
 jobs:
   build-and-deploy:
