@@ -71,4 +71,5 @@ src/chat_history.db
 # Logs
 DataPipeline/logs/
 logs/
+src/retreieved_chroma
 

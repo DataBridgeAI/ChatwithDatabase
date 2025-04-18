@@ -76,8 +76,7 @@ x-airflow-common:
     # AIRFLOW_CONFIG: '/opt/airflow/config/airflow.cfg'
     #adding google app credentials
     GOOGLE_APPLICATION_CREDENTIALS: /opt/airflow/config/gcpconnectkey.json # <-- ADD THIS LINE
-    OPENAI_API_KEY: ${OPENAI_API_KEY}  # This will read from .env file
-    PYTHONPATH: /opt/airflow/scripts:/opt/project  # <-- Add this line
+    PYTHONPATH: /opt/airflow/scripts  # <-- Add this line
     AIRFLOW_CONN_GOOGLE_CLOUD_DEFAULT: '{
       "conn_type": "google_cloud_platform",
       "extra": {
@@ -92,7 +91,6 @@ x-airflow-common:
     - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
     - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
     - ${AIRFLOW_PROJ_DIR:-.}/scripts:/opt/airflow/scripts  # <-- Add this line
-    - ../:/opt/project
 
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:

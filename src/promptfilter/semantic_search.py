@@ -163,7 +163,7 @@ def extract_potential_schema_terms(query: str) -> List[str]:
     # Filter out common SQL keywords and stopwords that are unlikely to be schema elements
     sql_keywords = {
         'select', 'from', 'where', 'join', 'and', 'or', 'not', 'like', 'in', 'between',
-        'group', 'by', 'having', 'order', 'limit', 'offset', 'union', 'all', 'distinct',
+        'group', 'by', 'having', 'limit', 'offset', 'union', 'all', 'distinct',
         'as', 'on', 'using', 'inner', 'outer', 'left', 'right', 'full', 'case', 'when',
         'then', 'else', 'end', 'is', 'null', 'true', 'false', 'asc', 'desc', 'with'
     }

@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nl-to-sql-frontend
+  labels:
+    app: nl-to-sql-frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nl-to-sql-frontend
+  template:
+    metadata:
+      labels:
+        app: nl-to-sql-frontend
+    spec:
+      containers:
+      - name: nl-to-sql-frontend
+        image: gcr.io/chatwithdata-451800/nl-to-sql-frontend:latest
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 15
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 15
+          periodSeconds: 10

@@ -1,16 +1,15 @@
-FROM node:18-alpine
+FROM node:16 as build
 
 WORKDIR /app
-
-# Copy package files and install dependencies
-COPY package.json package-lock.json* ./
+COPY package*.json ./
 RUN npm install
-
-# Copy the rest of the code
 COPY . .
+RUN npm run build
 
-# Expose React development server port
+FROM node:16-slim
+WORKDIR /app
+COPY --from=build /app/build ./build
+COPY --from=build /app/package*.json ./
+RUN npm install --only=production
 EXPOSE 3000
-
-# Start the React development server
 CMD ["npm", "start"]
