@@ -1,0 +1,43 @@
+# --------------------- DEPLOYMENT + SERVICE FILE ---------------------
+
+# -------- DEPLOYMENT: Runs your backend app with 2 pods --------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: llm-app-backend  # Name of the deployment
+
+spec:
+  replicas: 2  # Run 2 copies (pods) of the app
+  selector:
+    matchLabels:
+      app: llm-app-backend  # Pods must have this label to be managed by this deployment
+
+  template:
+    metadata:
+      labels:
+        app: llm-app-backend  # Each pod gets this label
+
+    spec:
+      containers:
+      - name: backend  # Name of the container
+        image: gcr.io/chatwithdata-451800/chatwithdatabase-backend:latest  # Your backend image from GCR
+        ports:
+        - containerPort: 8000  # The app inside listens on port 8000
+
+---
+
+# -------- SERVICE: Makes the backend accessible inside the cluster --------
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service  # Name of the service
+
+spec:
+  selector:
+    app: llm-app-backend  # Connect this service to pods with this label
+
+  ports:
+  - port: 80         # Expose the service on port 80 (what other apps will use)
+    targetPort: 8000 # Forward to port 8000 in the backend pods
+
+  type: ClusterIP  # Only accessible from inside the Kubernetes cluster

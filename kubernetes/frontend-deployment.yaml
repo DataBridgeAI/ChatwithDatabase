@@ -1,0 +1,43 @@
+# ------------------------- FRONTEND DEPLOYMENT + SERVICE -------------------------
+
+# -------- DEPLOYMENT: Runs your frontend app on 2 pods --------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: llm-app-frontend  # Name of the frontend deployment
+
+spec:
+  replicas: 2  # Run 2 instances (pods) of the frontend app
+  selector:
+    matchLabels:
+      app: llm-app-frontend  # Pods must have this label to be managed by this deployment
+
+  template:  # Template for the pods
+    metadata:
+      labels:
+        app: llm-app-frontend  # Label for the pods
+
+    spec:
+      containers:
+      - name: frontend  # Name of the container inside each pod
+        image: gcr.io/chatwithdata-451800/chatwithdatabase-frontend:latest  # Docker image stored in Google Container Registry
+        ports:
+        - containerPort: 80  # The app inside the container listens on port 80
+
+---
+
+# -------- SERVICE: Makes the frontend accessible to the internet --------
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service  # Name of the service
+
+spec:
+  selector:
+    app: llm-app-frontend  # This service will connect to the pods with this label
+
+  ports:
+  - port: 80         # Port exposed to the internet
+    targetPort: 80   # Port inside the container
+
+  type: LoadBalancer  # Publicly expose the frontend using a cloud provider's LoadBalancer
