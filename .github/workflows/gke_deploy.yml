@@ -38,6 +38,7 @@ jobs:
           context: ./src
           file: ./src/Dockerfile
           push: false
+          load: true  # Add this line to load the image into Docker's local image store
           tags: gcr.io/chatwithdata-451800/chatwithdatabase-backend:${{ github.sha }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
@@ -49,6 +50,7 @@ jobs:
           context: ./frontend
           file: ./frontend/Dockerfile
           push: false
+          load: true  # Add this line to load the image into Docker's local image store
           tags: gcr.io/chatwithdata-451800/chatwithdatabase-frontend:${{ github.sha }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
