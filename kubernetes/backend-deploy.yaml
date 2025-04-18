@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: llm-app-backend
 spec:
-  replicas: 1  # Start with just 1 replica for easier debugging
+  replicas: 1
   selector:
     matchLabels:
       app: llm-app-backend
@@ -20,7 +20,6 @@ spec:
         env:
         - name: DEBUG
           value: "True"
-        # Add any environment variables your app needs
         resources:
           requests:
             memory: "256Mi"
