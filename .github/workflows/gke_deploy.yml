@@ -1,71 +1,94 @@
-# This is a GitHub Actions workflow to automatically build and deploy your app
-# when you push code to the main branch.
-
-name: CI/CD Pipeline  # Name of the workflow
+name: GKE Deployment
 
 on:
   push:
-    branches: [ Aditya_deployment ]  # Trigger this workflow on every push to the 'main' branch
+    branches: [ Aditya_deployment ]
 
 jobs:
   build-and-deploy:
-    runs-on: ubuntu-latest  # Use the latest Ubuntu virtual machine
-
+    runs-on: ubuntu-latest
     steps:
-    # Step 1: Pull your code from GitHub
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    # Step 2: Set up Google Cloud SDK so we can interact with GCP
-    - name: Set up Google Cloud SDK
-      uses: google-github-actions/setup-gcloud@v0
-      with:
-        project_id: chatwithdata-451800  # Your GCP project ID
-        service_account_key: ${{ secrets.GCP_CREDENTIALS }}  # Secret key stored in GitHub
-        export_default_credentials: true  # Makes the credentials available for GCloud CLI
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v0
+        with:
+          project_id: chatwithdata-451800
+          service_account_key: ${{ secrets.GCP_CREDENTIALS }}
+          export_default_credentials: true
 
-    # Step 3: Enable Docker to push to Google Container Registry (GCR)
-    - name: Configure Docker to use Google Cloud
-      run: gcloud auth configure-docker
+      - name: Configure Docker to use Google Cloud
+        run: gcloud auth configure-docker
 
-    # Step 4: Build and tag the Backend Docker image
-    - name: Build Backend Docker image
-      run: |
-        cd src  # Navigate to the backend source code folder
-        docker build -t gcr.io/chatwithdata-451800/chatwithdatabase-backend:${{ github.sha }} .
-        docker tag gcr.io/chatwithdata-451800/chatwithdatabase-backend:${{ github.sha }} gcr.io/chatwithdata-451800/chatwithdatabase-backend:latest
+      - name: Debug file structure
+        run: |
+          echo "Project root directory contents:"
+          ls -la
+          echo "src directory contents:"
+          ls -la src/
 
-    # Step 5: Build and tag the Frontend Docker image
-    - name: Build Frontend Docker image
-      run: |
-        cd frontend  # Navigate to the frontend folder
-        docker build -t gcr.io/chatwithdata-451800/chatwithdatabase-frontend:${{ github.sha }} .
-        docker tag gcr.io/chatwithdata-451800/chatwithdatabase-frontend:${{ github.sha }} gcr.io/chatwithdata-451800/chatwithdatabase-frontend:latest
+      - name: Build Backend Docker image
+        run: |
+          cd src
+          echo "Building from directory: $(pwd)"
+          echo "Files in current directory:"
+          ls -la
+          docker build -t gcr.io/chatwithdata-451800/chatwithdatabase-backend:${{ github.sha }} -f Dockerfile .
+          docker tag gcr.io/chatwithdata-451800/chatwithdatabase-backend:${{ github.sha }} gcr.io/chatwithdata-451800/chatwithdatabase-backend:latest
 
-    # Step 6: Push both images (backend + frontend) to Google Container Registry
-    - name: Push images to Google Container Registry
-      run: |
-        docker push gcr.io/chatwithdata-451800/chatwithdatabase-backend:${{ github.sha }}
-        docker push gcr.io/chatwithdata-451800/chatwithdatabase-backend:latest
-        docker push gcr.io/chatwithdata-451800/chatwithdatabase-frontend:${{ github.sha }}
-        docker push gcr.io/chatwithdata-451800/chatwithdatabase-frontend:latest
+      - name: Build Frontend Docker image
+        run: |
+          cd frontend
+          echo "Building from directory: $(pwd)"
+          echo "Files in current directory:"
+          ls -la
+          docker build -t gcr.io/chatwithdata-451800/chatwithdatabase-frontend:${{ github.sha }} -f Dockerfile .
+          docker tag gcr.io/chatwithdata-451800/chatwithdatabase-frontend:${{ github.sha }} gcr.io/chatwithdata-451800/chatwithdatabase-frontend:latest
 
-    # Step 7: Connect to your Google Kubernetes cluster
-    - name: Set up Kubernetes configuration
-      run: |
-        gcloud container clusters get-credentials chatwithdatabase-cluster --zone us-central1-a
+      - name: Push images to Google Container Registry
+        run: |
+          docker push gcr.io/chatwithdata-451800/chatwithdatabase-backend:${{ github.sha }}
+          docker push gcr.io/chatwithdata-451800/chatwithdatabase-backend:latest
+          docker push gcr.io/chatwithdata-451800/chatwithdatabase-frontend:${{ github.sha }}
+          docker push gcr.io/chatwithdata-451800/chatwithdatabase-frontend:latest
 
-    # Step 8: Update Kubernetes deployment files with new image tags and deploy
-    - name: Deploy to Kubernetes
-      run: |
-        # Replace 'latest' tag with the specific commit SHA in deployment files
-        sed -i 's|gcr.io/chatwithdata-451800/chatwithdatabase-backend:latest|gcr.io/chatwithdata-451800/chatwithdatabase-backend:${{ github.sha }}|' kubernetes/backend-deployment.yaml
-        sed -i 's|gcr.io/chatwithdata-451800/chatwithdatabase-frontend:latest|gcr.io/chatwithdata-451800/chatwithdatabase-frontend:${{ github.sha }}|' kubernetes/frontend-deployment.yaml
+      - name: Set up Kubernetes configuration
+        run: |
+          gcloud container clusters get-credentials chatwithdatabase-cluster --zone us-central1-a
 
-        # Apply the updated deployment files to your Kubernetes cluster
-        kubectl apply -f kubernetes/backend-deployment.yaml
-        kubectl apply -f kubernetes/frontend-deployment.yaml
+      - name: Deploy to Kubernetes
+        run: |
+          # Debug - List the kubernetes directory contents
+          echo "Kubernetes directory contents:"
+          ls -la kubernetes/
+          
+          # Update the image tags in the deployment files
+          sed -i 's|gcr.io/chatwithdata-451800/chatwithdatabase-backend:latest|gcr.io/chatwithdata-451800/chatwithdatabase-backend:${{ github.sha }}|' kubernetes/backend-deployment.yaml
+          sed -i 's|gcr.io/chatwithdata-451800/chatwithdatabase-frontend:latest|gcr.io/chatwithdata-451800/chatwithdatabase-frontend:${{ github.sha }}|' kubernetes/frontend-deployment.yaml
+          
+          # Apply Kubernetes configurations
+          kubectl apply -f kubernetes/backend-deployment.yaml
+          kubectl apply -f kubernetes/frontend-deployment.yaml
+          
+          # Wait for deployments to be ready
+          kubectl rollout status deployment/llm-app-backend
+          kubectl rollout status deployment/llm-app-frontend
 
-        # Wait until both backend and frontend are successfully deployed
-        kubectl rollout status deployment/llm-app-backend
-        kubectl rollout status deployment/llm-app-frontend
+      - name: Get Service URL
+        run: |
+          echo "Waiting for external IP..."
+          for i in {1..10}; do
+            EXTERNAL_IP=$(kubectl get service frontend-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+            if [ -n "$EXTERNAL_IP" ]; then
+              echo "Application is available at: http://$EXTERNAL_IP"
+              break
+            fi
+            echo "Waiting for external IP to be assigned... ($i/10)"
+            sleep 30
+          done
+          
+          if [ -z "$EXTERNAL_IP" ]; then
+            echo "External IP not yet assigned. Check service status manually."
+            kubectl get services
+          fi
