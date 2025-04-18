@@ -15,12 +15,14 @@ spec:
       containers:
       - name: backend
         image: gcr.io/chatwithdata-451800/chatwithdatabase-backend:latest
+        command: ["/bin/sh", "-c"]
+        args: ["pip install langchain_openai && cd /app && python app.py"]
         ports:
         - containerPort: 8000
         env:
         - name: DEBUG
           value: "True"
-        # Add any environment variables your app needs
+        # You may need to add other environment variables here
         resources:
           requests:
             memory: "256Mi"
