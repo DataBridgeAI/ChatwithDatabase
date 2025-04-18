@@ -34,9 +34,12 @@ jobs:
           echo "Building from directory: $(pwd)"
           echo "Files in current directory:"
           ls -la
+          # Use -f to specify the exact filename with its capitalization
           docker build -t gcr.io/chatwithdata-451800/chatwithdatabase-backend:${{ github.sha }} -f Dockerfile .
           docker tag gcr.io/chatwithdata-451800/chatwithdatabase-backend:${{ github.sha }} gcr.io/chatwithdata-451800/chatwithdatabase-backend:latest
 
+      
+      
       - name: Build Frontend Docker image
         run: |
           cd frontend
