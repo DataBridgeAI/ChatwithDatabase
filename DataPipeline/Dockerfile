@@ -7,4 +7,4 @@ USER airflow
 COPY requirements.txt /requirements.txt
 
 # Install the required Python packages
-RUN pip install --no-cache-dir -r /requirements.txt
+RUN pip install --no-cache-dir -r /requirements.tx

@@ -7,12 +7,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy backend code
-COPY . ./src/
-
-# Copy related modules needed by the backend
-COPY ../Model_validation/ ./Model_validation/
-COPY ../PromptValidation/ ./PromptValidation/
-COPY ../hyperparameterTuning/ ./hyperparameterTuning/
+COPY . .
 
 # Set environment variables
 ENV PYTHONPATH=/app
@@ -21,4 +16,4 @@ ENV PYTHONPATH=/app
 EXPOSE 5001
 
 # Run the application
-CMD ["python", "src/app.py"]
+CMD ["python", "app.py"]
