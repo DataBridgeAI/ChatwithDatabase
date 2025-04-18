@@ -1,0 +1,67 @@
+name: Deploy to GKE
+
+on:
+  push:
+    branches:
+      - deployment-div
+  workflow_run:
+    workflows: ["CI/CD for Airflow DAGs", "Model and User Query Relevance CI"]
+    types:
+      - completed
+
+env:
+  PROJECT_ID: chatwithdata-451800
+  GKE_CLUSTER: chat-cluster
+  GKE_ZONE: us-central1
+  FRONTEND_IMAGE: gcr.io/chatwithdata-451800/chatapp-ui
+  BACKEND_IMAGE: gcr.io/chatwithdata-451800/chatapp-api
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Google Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        project_id: ${{ env.PROJECT_ID }}
+        service_account_key: ${{ secrets.GCP_CREDENTIALS }}
+        export_default_credentials: true
+
+    - name: Configure Docker for GCR
+      run: gcloud auth configure-docker
+
+    - name: Build Frontend Image
+      run: |
+        docker build -t ${{ env.FRONTEND_IMAGE }}:${{ github.sha }} -t ${{ env.FRONTEND_IMAGE }}:latest ./frontend
+        docker push ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
+        docker push ${{ env.FRONTEND_IMAGE }}:latest
+
+    - name: Build Backend Image
+      run: |
+        docker build -t ${{ env.BACKEND_IMAGE }}:${{ github.sha }} -t ${{ env.BACKEND_IMAGE }}:latest ./src
+        docker push ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
+        docker push ${{ env.BACKEND_IMAGE }}:latest
+
+    - name: Get GKE credentials
+      run: |
+        gcloud container clusters get-credentials ${{ env.GKE_CLUSTER }} \
+          --zone ${{ env.GKE_ZONE }}
+
+    - name: Create Secrets
+      run: |
+        kubectl create secret generic app-secrets \
+          --from-literal=openai-api-key=${{ secrets.OPENAI_API_KEY }} \
+          --dry-run=client -o yaml | kubectl apply -f -
+        
+        kubectl create secret generic gcp-credentials \
+          --from-file=key.json=${{ secrets.GCP_CREDENTIALS }} \
+          --dry-run=client -o yaml | kubectl apply -f -
+
+    - name: Deploy to GKE
+      run: |
+        kubectl apply -f k8s/
+        kubectl set image deployment/frontend frontend=${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
+        kubectl set image deployment/backend backend=${{ env.BACKEND_IMAGE }}:${{ github.sha }}
+
