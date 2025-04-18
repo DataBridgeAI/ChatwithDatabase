@@ -5,6 +5,7 @@ from google.cloud import storage
 import json
 import os
 import logging
+from langchain_openai import ChatOpenAI
 
 # Configure logging
 logging.basicConfig(
