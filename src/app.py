@@ -36,12 +36,10 @@ load_dotenv('src/.env')
 #     }
 # })  # Enable CORS for all routes
 
+# Load environment variables from .env file
+
 app = Flask(__name__)
-CORS(app, resources={
-    r"/api/*": {
-        "origins": "*"
-    }
-})
+CORS(app)  # Enable CORS for all routes
 
 # Setup credentials from environment variables
 def setup_credentials():

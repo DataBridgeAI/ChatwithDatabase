@@ -8,6 +8,11 @@ spec:
   selector:
     matchLabels:
       app: backend
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   template:
     metadata:
       labels:
@@ -16,6 +21,7 @@ spec:
       containers:
       - name: backend
         image: gcr.io/chatwithdata-451800/backend:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 5001
         resources:

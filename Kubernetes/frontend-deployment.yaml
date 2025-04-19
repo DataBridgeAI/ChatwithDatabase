@@ -27,7 +27,7 @@ spec:
             cpu: "200m"
         env:
         - name: REACT_APP_API_URL
-          value: "/api"
+          value: "http://34.160.152.110/api"
         - name: GCP_PROJECT_ID
           valueFrom:
             secretKeyRef:
