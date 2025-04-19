@@ -64,4 +64,5 @@ jobs:
     - name: Verify Deployment
       run: |
         kubectl rollout status deployment/backend -n nl-to-sql
+        
         kubectl rollout status deployment/frontend -n nl-to-sql
