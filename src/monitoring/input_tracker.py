@@ -19,59 +19,35 @@ class InvalidInput:
     validation_details: Dict
 
 class InputTracker:
-    def __init__(self, alert_threshold: int = 5, time_window_minutes: int = 60):
+    def __init__(self):
         self.invalid_inputs = []
-        self.alert_threshold = alert_threshold
-        self.time_window = timedelta(minutes=time_window_minutes)
         
     def track_invalid_input(self, query: str, error_type: str, validation_details: Dict):
-        """Track an invalid input occurrence"""
-        self.invalid_inputs.append(InvalidInput(
+        """Track an invalid input occurrence and send immediate alert"""
+        current_input = InvalidInput(
             query=query,
             error_type=error_type,
             timestamp=datetime.now(),
             validation_details=validation_details
-        ))
+        )
         
-        # Check if we need to generate an alert
-        self._check_and_alert()
+        self.invalid_inputs.append(current_input)
+        self._generate_alert(current_input)
     
-    def _check_and_alert(self):
-        """Check patterns and generate alerts if threshold is exceeded"""
-        recent_inputs = [
-            input for input in self.invalid_inputs 
-            if datetime.now() - input.timestamp <= self.time_window
-        ]
-        
-        if len(recent_inputs) >= self.alert_threshold:
-            self._generate_alert(recent_inputs)
-    
-    def _generate_alert(self, recent_inputs: List[InvalidInput]):
-        """Generate actionable alert with root cause analysis"""
-        error_types = defaultdict(int)
-        patterns = defaultdict(list)
-        
-        for input in recent_inputs:
-            error_types[input.error_type] += 1
-            patterns[input.error_type].append(input.query)
-        
-        most_common_error = max(error_types.items(), key=lambda x: x[1])
+    def _generate_alert(self, invalid_input: InvalidInput):
+        """Generate actionable alert for single invalid input"""
+        root_cause = self._analyze_root_cause(invalid_input.error_type, [invalid_input.query])
         
         alert = {
-            "alert_type": "High Invalid Input Rate",
+            "alert_type": "Invalid Input Detected",
             "timestamp": datetime.now().isoformat(),
             "details": {
-                "total_invalid_inputs": len(recent_inputs),
-                "time_window_minutes": self.time_window.total_minutes,
-                "error_breakdown": dict(error_types),
-                "most_common_error": {
-                    "type": most_common_error[0],
-                    "count": most_common_error[1],
-                    "sample_queries": patterns[most_common_error[0]][:3]
-                }
+                "query": invalid_input.query,
+                "error_type": invalid_input.error_type,
+                "validation_details": invalid_input.validation_details
             },
-            "root_cause_analysis": self._analyze_root_cause(most_common_error[0], patterns[most_common_error[0]]),
-            "recommended_actions": self._get_recommended_actions(most_common_error[0])
+            "root_cause_analysis": root_cause,
+            "recommended_actions": self._get_recommended_actions(invalid_input.error_type)
         }
         
         self._send_alert(alert)
@@ -128,20 +104,13 @@ class InputTracker:
     
     def _format_slack_message(self, alert: Dict) -> str:
         """Format alert data into a readable Slack message"""
-        most_common_error = alert["details"]["most_common_error"]
         root_cause = alert["root_cause_analysis"]
         
         message = (
             f"🚨 *{alert['alert_type']}*\n\n"
-            f"*Summary:*\n"
-            f"• Total Invalid Inputs: {alert['details']['total_invalid_inputs']}\n"
-            f"• Time Window: {alert['details']['time_window_minutes']} minutes\n\n"
-            
-            f"*Most Common Error:*\n"
-            f"• Type: {most_common_error['type']}\n"
-            f"• Count: {most_common_error['count']}\n"
-            f"• Sample Queries:\n"
-            f"{chr(10).join(['  - ' + query for query in most_common_error['sample_queries']])}\n\n"
+            f"*Query Details:*\n"
+            f"• Error Type: {alert['details']['error_type']}\n"
+            f"• Query: `{alert['details']['query']}`\n\n"
             
             f"*Root Cause Analysis:*\n"
             f"• Category: {root_cause['category']}\n"
@@ -176,4 +145,7 @@ class InputTracker:
                 
         except Exception as e:
             logger.error(f"Error sending Slack alert: {str(e)}")
+
+
+
 
