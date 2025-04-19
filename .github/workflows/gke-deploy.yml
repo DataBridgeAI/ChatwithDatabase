@@ -58,19 +58,24 @@ jobs:
 
     - name: Create Secrets
       run: |
+        # Create OpenAI API key secret
         kubectl create secret generic app-secrets \
           --from-literal=openai-api-key=${{ secrets.OPENAI_API_KEY }} \
           --dry-run=client -o yaml | kubectl apply -f -
         
+        # Create GCP credentials secret by first writing the JSON to a temporary file
+        echo '${{ secrets.GCP_CREDENTIALS }}' > key.json
         kubectl create secret generic gcp-credentials \
-          --from-file=key.json=${{ secrets.GCP_CREDENTIALS }} \
+          --from-file=key.json=key.json \
           --dry-run=client -o yaml | kubectl apply -f -
+        rm key.json
 
     - name: Deploy to GKE
       run: |
         kubectl apply -f k8s/
         kubectl set image deployment/frontend frontend=${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
         kubectl set image deployment/backend backend=${{ env.BACKEND_IMAGE }}:${{ github.sha }}
+
 
 
 
