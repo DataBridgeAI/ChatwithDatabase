@@ -29,5 +29,5 @@ spec:
         - name: GCP_PROJECT_ID
           valueFrom:
             secretKeyRef:
-              name: secrets  # Changed from app-secrets to secrets
+              name: app-secrets  # Use app-secrets
               key: GCP_PROJECT_ID
