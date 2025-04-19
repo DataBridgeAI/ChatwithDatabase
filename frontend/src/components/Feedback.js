@@ -31,17 +31,17 @@ const Feedback = () => {
   return (
     <div className="mt-6">
       {/* SQL query feedback */}
-      <div className="p-4 bg-[#e8f0fe] rounded-lg border border-[#dadce0] shadow-sm">
-        <h3 className="font-medium mb-3 text-[#1a73e8]">Was this SQL query helpful?</h3>
+      <div className="p-4 glass-dark rounded-lg border-2 border-blue-500/30 shadow-lg">
+        <h3 className="font-medium mb-3 text-blue-300">Was this SQL query helpful?</h3>
         <div className="flex space-x-4">
           <button
-            className="bg-[#34a853] text-white py-2 px-4 rounded hover:bg-[#2d9149] flex items-center shadow-sm transition-colors"
+            className="bg-green-600 text-white py-2 px-4 rounded-full hover:bg-green-700 flex items-center shadow-lg transition-colors border-2 border-green-500/60"
             onClick={() => handleFeedback(true)}
           >
             👍 Yes
           </button>
           <button
-            className="bg-[#d93025] text-white py-2 px-4 rounded hover:bg-[#c62b21] flex items-center shadow-sm transition-colors"
+            className="bg-red-600 text-white py-2 px-4 rounded-full hover:bg-red-700 flex items-center shadow-lg transition-colors border-2 border-red-500/60"
             onClick={() => handleFeedback(false)}
           >
             👎 No

@@ -9,7 +9,7 @@ const QueryResult = () => {
     queryExecutionTime
   } = useAppContext();
   
-  const [showSql, setShowSql] = useState(false);
+  const [showSql, setShowSql] = useState(true);
   
   const downloadResults = async () => {
     try {
@@ -47,28 +47,28 @@ const QueryResult = () => {
   }
   
   return (
-    <div>
+    <div className="fade-in">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">🔍 Query Results</h2>
+        <h2 className="text-xl font-semibold text-blue-300">🔍 Query Results</h2>
         <div className="flex items-center gap-4">
           <button
             onClick={downloadResults}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center gap-2 shadow-sm transition-colors"
+            className="px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 flex items-center gap-2 shadow-lg transition-all border-2 border-blue-400"
           >
             <span>📥</span>
             Download JSON
           </button>
           {queryExecutionTime > 0 && (
-            <span className="text-sm text-gray-500">
+            <span className="text-sm text-blue-400">
               Execution time: {queryExecutionTime.toFixed(2)}s
             </span>
           )}
         </div>
       </div>
       
-      <div className="mb-4">
+      <div className="mb-6">
         <button
-          className="text-blue-500 hover:text-blue-700 flex items-center"
+          className="text-blue-400 hover:text-blue-300 flex items-center transition-colors"
           onClick={() => setShowSql(!showSql)}
         >
           {showSql ? 'Hide' : 'View'} Generated SQL
@@ -84,31 +84,37 @@ const QueryResult = () => {
         </button>
         
         {showSql && (
-          <div className="mt-2 p-4 bg-gray-800 text-white rounded-md overflow-x-auto">
-            <pre className="text-sm">{generatedSql}</pre>
+          <div className="mt-3 glass-dark rounded-xl overflow-hidden shadow-lg border-2 border-blue-500/30">
+            <pre className="p-4 text-blue-200 font-mono text-sm overflow-x-auto">{generatedSql}</pre>
           </div>
         )}
       </div>
       
-      <div className="overflow-x-auto bg-white rounded-lg border shadow-sm">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
+      <div className="glass rounded-xl overflow-hidden shadow-lg border-2 border-blue-500/30 glow-border">
+        <table className="min-w-full">
+          <thead>
+            <tr className="bg-blue-800/30 border-b border-blue-500/30">
               {queryResults.length > 0 && Object.keys(queryResults[0]).map((column, index) => (
                 <th
                   key={index}
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  className="px-6 py-3 text-left text-xs font-medium text-blue-300 uppercase tracking-wider"
                 >
                   {column}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody>
             {queryResults.map((row, rowIndex) => (
-              <tr key={rowIndex} className={rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+              <tr 
+                key={rowIndex} 
+                className={`${rowIndex % 2 === 0 
+                  ? 'bg-blue-900/20' 
+                  : 'bg-blue-800/20'
+                } transition-colors hover:bg-blue-700/30`}
+              >
                 {Object.values(row).map((value, cellIndex) => (
-                  <td key={cellIndex} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td key={cellIndex} className="px-6 py-4 whitespace-nowrap text-sm text-blue-200">
                     {value !== null ? String(value) : 'NULL'}
                   </td>
                 ))}

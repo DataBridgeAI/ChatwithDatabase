@@ -18,13 +18,14 @@ import {
   ScatterChart,
 } from "recharts";
 
+// Modern color palette for glass theme
 const COLORS = [
-  "#0088FE",
-  "#00C49F",
-  "#FFBB28",
-  "#FF8042",
-  "#8884d8",
-  "#82ca9d",
+  "#60a5fa", // blue
+  "#4ade80", // green
+  "#f59e0b", // amber
+  "#ec4899", // pink
+  "#8b5cf6", // purple
+  "#14b8a6", // teal
 ];
 
 const Visualization = () => {
@@ -117,9 +118,9 @@ const Visualization = () => {
 
   if (chartOptions.length === 0) {
     return (
-      <div className="p-4 bg-gray-50 rounded-lg border">
-        <h2 className="text-xl font-semibold mb-4">📈 Data Visualization</h2>
-        <p>No suitable visualizations available for this dataset. The data may not contain numerical columns required for charts.</p>
+      <div className="glass p-6 rounded-xl border border-[#334155]/50 shadow-lg">
+        <h2 className="text-xl font-semibold mb-4 text-white">📈 Data Visualization</h2>
+        <p className="text-gray-300">No suitable visualizations available for this dataset. The data may not contain numerical columns required for charts.</p>
       </div>
     );
   }
@@ -127,24 +128,65 @@ const Visualization = () => {
   const renderChart = () => {
     if (!chartType) return null;
 
+    // Common chart theme props
+    const chartTheme = {
+      style: {
+        background: 'transparent',
+      },
+    };
+
+    // Text styling for the chart
+    const textStyle = {
+      fill: '#94a3b8',
+      fontSize: 12,
+    };
+
+    // Grid styling
+    const gridStyle = {
+      stroke: '#334155',
+      strokeDasharray: '3 3',
+      opacity: 0.6,
+    };
+
+    // Tooltip styling
+    const tooltipStyle = {
+      backgroundColor: 'rgba(30, 41, 59, 0.9)',
+      borderColor: '#475569',
+      color: '#f1f5f9',
+    };
+
     switch (chartType) {
       case "Bar":
         return (
           <ResponsiveContainer width="100%" height={400}>
-            <BarChart data={queryResults}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey={xAxis} />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey={yAxis} fill="#8884d8" name={yAxis}>
-                {colorBy &&
-                  queryResults.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
-                    />
-                  ))}
+            <BarChart data={queryResults} {...chartTheme}>
+              <CartesianGrid {...gridStyle} />
+              <XAxis 
+                dataKey={xAxis} 
+                tick={textStyle} 
+                axisLine={{ stroke: '#475569' }} 
+              />
+              <YAxis 
+                tick={textStyle} 
+                axisLine={{ stroke: '#475569' }} 
+              />
+              <Tooltip 
+                contentStyle={tooltipStyle}
+                cursor={{fill: 'rgba(51, 65, 85, 0.4)'}}
+              />
+              <Legend
+                wrapperStyle={{ color: '#94a3b8' }}
+              />
+              <Bar dataKey={yAxis} name={yAxis} radius={[4, 4, 0, 0]}>
+                {colorBy
+                  ? queryResults.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS[index % COLORS.length]}
+                      />
+                    ))
+                  : <Cell fill={COLORS[0]} />
+                }
               </Bar>
             </BarChart>
           </ResponsiveContainer>
@@ -153,16 +195,30 @@ const Visualization = () => {
       case "Line":
         return (
           <ResponsiveContainer width="100%" height={400}>
-            <LineChart data={queryResults}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey={xAxis} />
-              <YAxis />
-              <Tooltip />
-              <Legend />
+            <LineChart data={queryResults} {...chartTheme}>
+              <CartesianGrid {...gridStyle} />
+              <XAxis 
+                dataKey={xAxis} 
+                tick={textStyle} 
+                axisLine={{ stroke: '#475569' }}
+              />
+              <YAxis 
+                tick={textStyle} 
+                axisLine={{ stroke: '#475569' }}
+              />
+              <Tooltip
+                contentStyle={tooltipStyle}
+              />
+              <Legend 
+                wrapperStyle={{ color: '#94a3b8' }}
+              />
               <Line
                 type="monotone"
                 dataKey={yAxis}
-                stroke="#8884d8"
+                stroke={COLORS[0]}
+                strokeWidth={2}
+                dot={{ fill: COLORS[0], r: 4, strokeWidth: 0 }}
+                activeDot={{ r: 6, strokeWidth: 0 }}
                 name={yAxis}
               />
             </LineChart>
@@ -172,7 +228,7 @@ const Visualization = () => {
       case "Pie":
         return (
           <ResponsiveContainer width="100%" height={400}>
-            <PieChart>
+            <PieChart {...chartTheme}>
               <Pie
                 data={queryResults}
                 cx="50%"
@@ -182,7 +238,6 @@ const Visualization = () => {
                   `${name}: ${(percent * 100).toFixed(0)}%`
                 }
                 outerRadius={150}
-                fill="#8884d8"
                 dataKey={yAxis}
                 nameKey={xAxis}
               >
@@ -193,8 +248,12 @@ const Visualization = () => {
                   />
                 ))}
               </Pie>
-              <Tooltip />
-              <Legend />
+              <Tooltip
+                contentStyle={tooltipStyle}
+              />
+              <Legend 
+                wrapperStyle={{ color: '#94a3b8' }}
+              />
             </PieChart>
           </ResponsiveContainer>
         );
@@ -202,16 +261,33 @@ const Visualization = () => {
       case "Scatter":
         return (
           <ResponsiveContainer width="100%" height={400}>
-            <ScatterChart>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey={xAxis} type="number" name={xAxis} />
-              <YAxis dataKey={yAxis} type="number" name={yAxis} />
-              <Tooltip cursor={{ strokeDasharray: "3 3" }} />
-              <Legend />
+            <ScatterChart {...chartTheme}>
+              <CartesianGrid {...gridStyle} />
+              <XAxis 
+                dataKey={xAxis} 
+                type="number" 
+                name={xAxis} 
+                tick={textStyle} 
+                axisLine={{ stroke: '#475569' }}
+              />
+              <YAxis 
+                dataKey={yAxis} 
+                type="number" 
+                name={yAxis} 
+                tick={textStyle} 
+                axisLine={{ stroke: '#475569' }}
+              />
+              <Tooltip
+                cursor={{ strokeDasharray: "3 3", stroke: '#475569' }}
+                contentStyle={tooltipStyle}
+              />
+              <Legend 
+                wrapperStyle={{ color: '#94a3b8' }}
+              />
               <Scatter
                 name={`${xAxis} vs ${yAxis}`}
                 data={queryResults}
-                fill="#8884d8"
+                fill={COLORS[0]}
               />
             </ScatterChart>
           </ResponsiveContainer>
@@ -219,16 +295,27 @@ const Visualization = () => {
 
       case "Histogram":
         // For histogram, we'll use a bar chart with frequency count
-        // This is a simplified version
         return (
           <ResponsiveContainer width="100%" height={400}>
-            <BarChart data={queryResults}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey={xAxis} />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey={xAxis} fill="#8884d8" />
+            <BarChart data={queryResults} {...chartTheme}>
+              <CartesianGrid {...gridStyle} />
+              <XAxis 
+                dataKey={xAxis} 
+                tick={textStyle} 
+                axisLine={{ stroke: '#475569' }}
+              />
+              <YAxis 
+                tick={textStyle} 
+                axisLine={{ stroke: '#475569' }}
+              />
+              <Tooltip
+                contentStyle={tooltipStyle}
+                cursor={{fill: 'rgba(51, 65, 85, 0.4)'}}
+              />
+              <Legend 
+                wrapperStyle={{ color: '#94a3b8' }}
+              />
+              <Bar dataKey={xAxis} fill={COLORS[0]} radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         );
@@ -239,14 +326,14 @@ const Visualization = () => {
   };
 
   return (
-    <div>
-      <h2 className="text-xl font-semibold mb-4">📈 Data Visualization</h2>
+    <div className="fade-in">
+      <h2 className="text-xl font-semibold mb-4 text-white">📈 Data Visualization</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div>
-          <label className="block text-sm font-medium mb-1">Chart Type</label>
+          <label className="block text-sm font-medium mb-1 text-gray-300">Chart Type</label>
           <select
-            className="w-full p-2 border rounded"
+            className="w-full p-2 glass-light rounded-full text-white border border-[#334155]/50 focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={chartType}
             onChange={(e) => setChartType(e.target.value)}
           >
@@ -259,9 +346,9 @@ const Visualization = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">X-Axis</label>
+          <label className="block text-sm font-medium mb-1 text-gray-300">X-Axis</label>
           <select
-            className="w-full p-2 border rounded"
+            className="w-full p-2 glass-light rounded-full text-white border border-[#334155]/50 focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={xAxis}
             onChange={(e) => setXAxis(e.target.value)}
             disabled={!chartType}
@@ -284,11 +371,11 @@ const Visualization = () => {
           chartType === "Scatter" ||
           chartType === "Pie") && (
           <div>
-            <label className="block text-sm font-medium mb-1">
+            <label className="block text-sm font-medium mb-1 text-gray-300">
               Y-Axis / Values
             </label>
             <select
-              className="w-full p-2 border rounded"
+              className="w-full p-2 glass-light rounded-full text-white border border-[#334155]/50 focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={yAxis}
               onChange={(e) => setYAxis(e.target.value)}
               disabled={!chartType}
@@ -307,11 +394,11 @@ const Visualization = () => {
             chartType === "Scatter" ||
             chartType === "Bar") && (
             <div>
-              <label className="block text-sm font-medium mb-1">
+              <label className="block text-sm font-medium mb-1 text-gray-300">
                 Color By (optional)
               </label>
               <select
-                className="w-full p-2 border rounded"
+                className="w-full p-2 glass-light rounded-full text-white border border-[#334155]/50 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={colorBy}
                 onChange={(e) => setColorBy(e.target.value)}
               >
@@ -326,7 +413,7 @@ const Visualization = () => {
           )}
       </div>
 
-      <div className="bg-white p-4 rounded-lg border shadow-sm">
+      <div className="glass p-6 rounded-xl border border-[#334155]/50 shadow-lg">
         {renderChart()}
       </div>
     </div>
