@@ -1,7 +1,7 @@
 import json
 import pandas as pd
 from typing import Dict, Any
-from datetime import datetime
+from datetime import datetime, date
 from google.cloud.bigquery import Row
 
 def dataframe_to_json(df: pd.DataFrame, max_size_mb: int = 10) -> Dict[str, Any]:
@@ -15,16 +15,18 @@ def dataframe_to_json(df: pd.DataFrame, max_size_mb: int = 10) -> Dict[str, Any]
             # Check if column contains datetime-like data
             if (df[col].dtype.name in ['datetime64[ns]', 'datetime64', 'timestamp'] or
                 str(df[col].dtype).startswith('datetime') or
-                (not df.empty and isinstance(df[col].iloc[0], datetime))):
+                (not df.empty and isinstance(df[col].iloc[0], (datetime, date)))):
                 df[col] = df[col].apply(lambda x: x.isoformat() if pd.notnull(x) else None)
         
         # Convert DataFrame to JSON records
         json_data = df.to_dict(orient='records')
         
-        # Additional JSON serialization check
+        # Additional JSON serialization check with enhanced datetime handling
         def json_serial(obj):
-            if isinstance(obj, datetime):
+            if isinstance(obj, (datetime, date)):
                 return obj.isoformat()
+            if isinstance(obj, Row):
+                return dict(obj)
             raise TypeError(f"Type {type(obj)} not serializable")
         
         # Verify JSON serialization

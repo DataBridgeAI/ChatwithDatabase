@@ -199,7 +199,7 @@ def validate_user_query():
             validation_details["details"] = validation_error
             input_tracker.track_invalid_input(
                 query=user_query,
-                error_type="sensitivity",
+                error_type="bias",
                 validation_details=validation_details
             )
             return jsonify({'error': validation_error}), 400
