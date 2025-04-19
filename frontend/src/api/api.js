@@ -5,6 +5,8 @@ if (!API_BASE_URL) {
   throw new Error('API URL is not configured');
 }
 
+export { API_BASE_URL };
+
 export const fetchSchema = async (projectId, datasetId) => {
   try {
     const response = await fetch(`${API_BASE_URL}/schema`, {

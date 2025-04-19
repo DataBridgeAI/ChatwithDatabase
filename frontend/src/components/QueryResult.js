@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAppContext } from '../context/AppContext';
+import { API_BASE_URL } from '../api/api';
 
 const QueryResult = () => {
   const {
@@ -12,7 +13,7 @@ const QueryResult = () => {
   
   const downloadResults = async () => {
     try {
-      const response = await fetch('http://localhost:5001/api/query/download', {
+      const response = await fetch(`${API_BASE_URL}/query/download`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
