@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: backend
-        image: gcr.io/chatwithdata-451800/chatapp-api:latest  # Changed from backend
+        image: gcr.io/chatwithdata-451800/chatapp-api:latest
         ports:
         - containerPort: 5001
         env:
@@ -23,6 +23,8 @@ spec:
             secretKeyRef:
               name: app-secrets
               key: openai-api-key
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: "/var/secrets/google/key.json"
         volumeMounts:
         - name: google-cloud-key
           mountPath: /var/secrets/google
@@ -31,4 +33,5 @@ spec:
       - name: google-cloud-key
         secret:
           secretName: gcp-credentials
+
 

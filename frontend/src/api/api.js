@@ -1,5 +1,5 @@
 // API service for BigQuery Analytics
-const API_BASE_URL = "http://localhost:5001/api";
+const API_BASE_URL = process.env.REACT_APP_API_URL || "http://backend-service:5001/api";
 
 export const fetchSchema = async (projectId, datasetId) => {
   try {

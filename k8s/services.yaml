@@ -9,7 +9,7 @@ spec:
   type: LoadBalancer
   ports:
   - port: 80
-    targetPort: 3000
+    targetPort: 80
   selector:
     app: frontend
 ---
@@ -20,8 +20,14 @@ metadata:
   annotations:
     cloud.google.com/neg: '{"ingress": true}'
 spec:
-  ports:
-  - port: 5001
-    targetPort: 5001
   selector:
     app: backend
+  ports:
+    - name: http
+      protocol: TCP
+      port: 5001
+      targetPort: 5001
+  type: ClusterIP
+
+
+
