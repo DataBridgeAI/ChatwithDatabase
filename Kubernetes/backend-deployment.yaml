@@ -30,4 +30,4 @@ spec:
           valueFrom:
             secretKeyRef:
               name: app-secrets
-              key: gcp-project-id
+              key: GCP_PROJECT_ID

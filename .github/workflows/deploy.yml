@@ -49,17 +49,17 @@ jobs:
 
     - name: Update Deployment Manifests
       run: |
-        sed -i "s|gcr.io/chatwithdata-451800/backend:latest|gcr.io/chatwithdata-451800/backend:$GITHUB_SHA|g" kubernetes/backend-deployment.yaml
-        sed -i "s|gcr.io/chatwithdata-451800/frontend:latest|gcr.io/chatwithdata-451800/frontend:$GITHUB_SHA|g" kubernetes/frontend-deployment.yaml
+        sed -i "s|gcr.io/chatwithdata-451800/backend:latest|gcr.io/chatwithdata-451800/backend:$GITHUB_SHA|g" Kubernetes/backend-deployment.yaml
+        sed -i "s|gcr.io/chatwithdata-451800/frontend:latest|gcr.io/chatwithdata-451800/frontend:$GITHUB_SHA|g" Kubernetes/frontend-deployment.yaml
 
     - name: Deploy to GKE
       run: |
-        kubectl apply -f kubernetes/configmap.yaml
-        kubectl apply -f kubernetes/backend-deployment.yaml
-        kubectl apply -f kubernetes/backend-service.yaml
-        kubectl apply -f kubernetes/frontend-deployment.yaml
-        kubectl apply -f kubernetes/frontend-service.yaml
-        kubectl apply -f kubernetes/ingress.yaml
+        kubectl apply -f Kubernetes/configmap.yaml
+        kubectl apply -f Kubernetes/backend-deployment.yaml
+        kubectl apply -f Kubernetes/backend-service.yaml
+        kubectl apply -f Kubernetes/frontend-deployment.yaml
+        kubectl apply -f Kubernetes/frontend-service.yaml
+        kubectl apply -f Kubernetes/ingress.yaml
 
     - name: Verify Deployment
       run: |

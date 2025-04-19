@@ -28,3 +28,8 @@ spec:
         env:
         - name: REACT_APP_API_URL
           value: "/api"
+        - name: GCP_PROJECT_ID
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: GCP_PROJECT_ID
