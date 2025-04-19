@@ -15,7 +15,7 @@ export const AppProvider = ({ children }) => {
   const [schema, setSchema] = useState(null);
   
   // Query state
-  const [userQuery, setUserQuery] = useState('Show top 10 artists based on popularity');
+  const [userQuery, setUserQuery] = useState('');  // Set to empty string instead of default question
   const [generatedSql, setGeneratedSql] = useState('');
   const [queryResults, setQueryResults] = useState(null);
   const [loading, setLoading] = useState(false);
