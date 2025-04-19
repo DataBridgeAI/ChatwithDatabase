@@ -9,44 +9,49 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
-      
+
     - name: Setup Google Cloud SDK
       uses: google-github-actions/setup-gcloud@v0
       with:
         project_id: chatwithdata-451800
         service_account_key: ${{ secrets.GCP_CREDENTIALS }}
-        
+
+    - name: Authenticate with GCP
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
+
     - name: Configure Docker
       run: gcloud auth configure-docker
-      
+
     - name: Build Backend Image
       run: |
         cd src
         docker build -t gcr.io/chatwithdata-451800/backend:$GITHUB_SHA .
         docker push gcr.io/chatwithdata-451800/backend:$GITHUB_SHA
-        
+
     - name: Build Frontend Image
       run: |
         cd frontend
         docker build -t gcr.io/chatwithdata-451800/frontend:$GITHUB_SHA .
         docker push gcr.io/chatwithdata-451800/frontend:$GITHUB_SHA
-        
+
     - name: Get GKE Credentials
       uses: google-github-actions/get-gke-credentials@v1
       with:
-        cluster_name: chatwithdatabase-cluster
-        location: us-central1-a
+        cluster_name: sqlchatbot-cluster
+        location: us-east1-b
         project_id: chatwithdata-451800
-        
+
     - name: Update Deployment Manifests
       run: |
         sed -i "s|gcr.io/chatwithdata-451800/backend:latest|gcr.io/chatwithdata-451800/backend:$GITHUB_SHA|g" kubernetes/backend-deployment.yaml
         sed -i "s|gcr.io/chatwithdata-451800/frontend:latest|gcr.io/chatwithdata-451800/frontend:$GITHUB_SHA|g" kubernetes/frontend-deployment.yaml
-        
+
     - name: Deploy to GKE
       run: |
         kubectl apply -f kubernetes/configmap.yaml
@@ -55,8 +60,8 @@ jobs:
         kubectl apply -f kubernetes/frontend-deployment.yaml
         kubectl apply -f kubernetes/frontend-service.yaml
         kubectl apply -f kubernetes/ingress.yaml
-        
+
     - name: Verify Deployment
       run: |
-        kubectl rollout status deployment/backend
-        kubectl rollout status deployment/frontend
+        kubectl rollout status deployment/backend -n nl-to-sql
+        kubectl rollout status deployment/frontend -n nl-to-sql

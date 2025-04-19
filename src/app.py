@@ -25,8 +25,23 @@ from ai.data_formatter import dataframe_to_json
 # Load environment variables from .env file
 load_dotenv('src/.env')
 
+# app = Flask(__name__)
+# CORS(app, resources={
+#     r"/api/*": {
+#         "origins": [
+#             "http://localhost:3000",  # Development
+#             "https://your-domain.com", # Production domain
+#             "*"  # Or this for testing (not recommended for production)
+#         ]
+#     }
+# })  # Enable CORS for all routes
+
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+CORS(app, resources={
+    r"/api/*": {
+        "origins": "*"
+    }
+})
 
 # Setup credentials from environment variables
 def setup_credentials():
