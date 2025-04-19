@@ -14,17 +14,18 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: gcr.io/chatwithdata-451800/chatapp-ui:latest  # Changed from frontend
+        image: gcr.io/chatwithdata-451800/chatapp-ui:latest
         ports:
         - containerPort: 80
         env:
         - name: REACT_APP_API_URL
-          value: "http://34.118.234.200:5001/api"  # Use backend service ClusterIP
+          value: "http://34.10.210.167/api"  # Update this to your API URL
         - name: OPENAI_API_KEY
           valueFrom:
             secretKeyRef:
               name: app-secrets
               key: openai-api-key
+
 
 
 

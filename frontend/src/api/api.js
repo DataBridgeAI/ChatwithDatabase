@@ -1,8 +1,8 @@
 // API service for BigQuery Analytics
-const API_BASE_URL = process.env.REACT_APP_API_URL;
+const API_BASE_URL = window._env_?.REACT_APP_API_URL || 'http://34.10.210.167/api';
 
 if (!API_BASE_URL) {
-  throw new Error('REACT_APP_API_URL environment variable is not set');
+  throw new Error('API URL is not configured');
 }
 
 export const fetchSchema = async (projectId, datasetId) => {
