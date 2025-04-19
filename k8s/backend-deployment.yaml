@@ -25,6 +25,11 @@ spec:
               key: openai-api-key
         - name: GOOGLE_APPLICATION_CREDENTIALS
           value: "/var/secrets/google/key.json"
+        - name: SLACK_WEBHOOK_URL
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: slack-webhook-url
         volumeMounts:
         - name: google-cloud-key
           mountPath: /var/secrets/google
@@ -33,5 +38,6 @@ spec:
       - name: google-cloud-key
         secret:
           secretName: gcp-credentials
+
 
 

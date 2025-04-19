@@ -21,6 +21,7 @@ from monitoring.mlflow_config import QueryTracker
 from query_checks.content_checker import sensitivity_filter
 from promptfilter.semantic_search import download_and_prepare_embeddings, check_query_relevance
 from ai.data_formatter import dataframe_to_json
+from monitoring.input_tracker import InputTracker
 
 # Load environment variables from .env file
 load_dotenv('src/.env')
@@ -100,6 +101,9 @@ try:
     print("Chat history database initialized")
 except Exception as e:
     print(f"Failed to initialize chat history database: {str(e)}")
+
+# Initialize the tracker
+input_tracker = InputTracker(alert_threshold=5, time_window_minutes=60)
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
@@ -186,19 +190,46 @@ def validate_user_query():
         return jsonify({'error': 'Query is required'}), 400
 
     try:
+        validation_details = {}
+        
+        # Check for sensitive content
         validation_error = sensitivity_filter(user_query)
         if validation_error:
+            validation_details["error_type"] = "sensitivity"
+            validation_details["details"] = validation_error
+            input_tracker.track_invalid_input(
+                query=user_query,
+                error_type="sensitivity",
+                validation_details=validation_details
+            )
             return jsonify({'error': validation_error}), 400
 
+        # Check query relevance
         query_relevance_flag = check_query_relevance(
             user_query,
             schema_embeddings=schema_embeddings
         )
         if not query_relevance_flag:
+            validation_details["error_type"] = "relevance"
+            validation_details["details"] = "Query unrelated to schema"
+            input_tracker.track_invalid_input(
+                query=user_query,
+                error_type="relevance",
+                validation_details=validation_details
+            )
             return jsonify({'error': ' ❌ Query appears unrelated to the database schema'}), 400
 
         return jsonify({'valid': True})
     except Exception as e:
+        validation_details = {
+            "error_type": "system_error",
+            "details": str(e)
+        }
+        input_tracker.track_invalid_input(
+            query=user_query,
+            error_type="system_error",
+            validation_details=validation_details
+        )
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/query/similar', methods=['POST'])
