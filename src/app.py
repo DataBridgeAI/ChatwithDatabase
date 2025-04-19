@@ -103,7 +103,7 @@ except Exception as e:
     print(f"Failed to initialize chat history database: {str(e)}")
 
 # Initialize the tracker
-input_tracker = InputTracker(alert_threshold=5, time_window_minutes=60)
+input_tracker = InputTracker()  # Remove the parameters since we're not using them anymore
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
