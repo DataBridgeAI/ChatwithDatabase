@@ -17,6 +17,13 @@ spec:
         image: gcr.io/chatwithdata-451800/chatapp-ui:latest
         ports:
         - containerPort: 80
+        resources:
+          requests:
+            cpu: "250m"     # Request 0.25 cores
+            memory: "512Mi" # Request 512MB memory
+          limits:
+            cpu: "500m"     # Limit to 0.5 cores
+            memory: "1Gi"   # Limit to 1GB memory
         env:
         - name: REACT_APP_API_URL
           value: "http://34.10.210.167/api"  # Update this to your API URL
@@ -25,7 +32,3 @@ spec:
             secretKeyRef:
               name: app-secrets
               key: openai-api-key
-
-
-
-
