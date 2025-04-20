@@ -30,3 +30,4 @@ snorkel
 langchain-openai
 google-cloud-logging
 google-cloud
+hf_xet
