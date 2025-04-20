@@ -196,88 +196,77 @@ def download_and_extract_chroma_db(dataset_id: str) -> Optional[str]:
     Download and extract the ChromaDB zip file for a dataset.
     Returns the path to the extracted ChromaDB directory.
     """
-    # Create cache directory if it doesn't exist
-    cache_dir = os.path.join(os.path.dirname(__file__), '..', 'cache')
-    os.makedirs(cache_dir, exist_ok=True)
-    
-    # Define paths
-    local_zip_path = os.path.join(cache_dir, f"schema_chroma_{dataset_id}.zip")
-    local_db_path = os.path.join(cache_dir, f"schema_chroma_{dataset_id}")
-    
-    # Check if ChromaDB already exists locally
+    # Create embeddings directory inside src/embeddings/
+    embeddings_dir = os.path.join(os.path.dirname(__file__), '..', 'embeddings')
+    os.makedirs(embeddings_dir, exist_ok=True)
+
+    # Define dataset-specific path
+    local_db_path = os.path.join(embeddings_dir, f'chroma_{dataset_id}')
+    local_zip_path = os.path.join(embeddings_dir, f'schema_chroma_{dataset_id}.zip')
+
+    # Check if already extracted
     if os.path.exists(local_db_path) and os.listdir(local_db_path):
         print(f"🔄 Using cached ChromaDB for dataset {dataset_id}")
         return local_db_path
-    
-    # Clean up any existing partial files with better error handling
+
+    # Clean up previous partials
     if os.path.exists(local_zip_path):
         try:
             os.remove(local_zip_path)
         except Exception as e:
             print(f"⚠️ Warning: Could not remove zip file: {str(e)}")
-    
+
     if os.path.exists(local_db_path):
         try:
-            # First try to close any connections to the database
-            gc.collect()  # Encourage Python to clean up resources
-            
-            # Try to remove the directory
+            gc.collect()  # Clean up any open connections
             shutil.rmtree(local_db_path, ignore_errors=True)
         except Exception as e:
             print(f"⚠️ Warning: Could not remove DB directory: {str(e)}")
-            # Create a new directory with a timestamp to avoid conflicts
             timestamp = int(time.time())
-            local_db_path = os.path.join(cache_dir, f"schema_chroma_{dataset_id}_{timestamp}")
-            
-    # Create directory for extraction
+            local_db_path = os.path.join(embeddings_dir, f'chroma_{dataset_id}_{timestamp}')
+
+    # Prepare for new extraction
     os.makedirs(local_db_path, exist_ok=True)
-    
+
     try:
         print(f"📥 Downloading ChromaDB for dataset {dataset_id}...")
-        
-        # Download the zip file from GCS - use the folder structure you provided
-        # First try the dataset-specific folder
+
         bucket = gcs_client.bucket(BUCKET_NAME)
         gcs_zip_path = f"{dataset_id}/schema_chroma.zip"
-        
         blob = bucket.blob(gcs_zip_path)
+
         if not blob.exists():
-            # Try alternative location
             gcs_zip_path = f"chroma_db/{dataset_id}/schema_chroma.zip"
             blob = bucket.blob(gcs_zip_path)
-            
+
             if not blob.exists():
-                # Try one more pattern
                 gcs_zip_path = f"chroma_db/schema_chroma.zip"
                 blob = bucket.blob(gcs_zip_path)
-                
+
                 if not blob.exists():
                     print(f"❌ Could not find ChromaDB zip for {dataset_id}")
                     return None
-        
+
         print(f"Downloading from: {gcs_zip_path}")
         blob.download_to_filename(local_zip_path)
         print(f"✅ Download complete: {local_zip_path}")
-        
-        # Extract the zip file
+
         print(f"Extracting to: {local_db_path}")
         with zipfile.ZipFile(local_zip_path, 'r') as zip_ref:
             zip_ref.extractall(local_db_path)
-        
+
         print(f"✅ Extraction complete: {local_db_path}")
         print(f"Extracted files: {os.listdir(local_db_path)}")
-        
-        # Optionally, remove the zip file to save space
+
         try:
             os.remove(local_zip_path)
         except:
             pass
-        
+
         return local_db_path
-        
+
     except Exception as e:
         print(f"❌ Error downloading/extracting ChromaDB: {str(e)}")
-        import traceback
         traceback.print_exc()
         return None
 
