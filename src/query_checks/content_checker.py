@@ -77,7 +77,7 @@ GENDER_GROUPS = r'\b(women|men|trans|nonbinary|gay|lesbian|queer|bisexual|pansex
 POLITICS_KEYWORDS = r'\b(party|democracy|liberals|conservatives|socialists|communism|republicans|democrats|' \
                     r'trump|biden|politics|election|vote|government|policy|president|prime minister|congress|' \
                     r'parliament|senate|dictator|monarchy|anarchy|fascism|capitalism|marxism|libertarian|' \
-                    r'nationalism|patriotism|citizen|state|union|law|constitution|bill|tax|welfare|campaign|' \
+                    r'nationalism|patriotism|citizen|union|law|constitution|bill|tax|welfare|campaign|' \
                     r'lobby|activism|protest|reform|revolution|regime|diplomacy|embassy|treaty|sanction|' \
                     r'corruption|scandal|ideology|left|right|center|radical|moderate)\b'
 
@@ -118,21 +118,21 @@ OBSCENE_PATTERN = r'\b(fuck|fukkard|fucked|fucking|shit|shite|shitted|shitting|b
 def lf_region_probe(row):
     text = row["text"].lower()
     if detect_probe(text, PROBE_PATTERN, REGION_KEYWORDS):
-        return "🌍 This query involves a regional or national topic irrelevant to the dataset. Please ask a data-related question."
+        return "This query involves a regional or national topic irrelevant to the dataset. Please ask a data-related question."
     return None
 
 @labeling_function()
 def lf_region_keywords(row):
     text = row["text"].lower()
     if detect_keywords(text, REGION_KEYWORDS):
-        return "🌍 This query mentions a region or nationality not relevant to the dataset. Please focus on data-related queries."
+        return "This query mentions a region or nationality not relevant to the dataset. Please focus on data-related queries."
     return None
 
 @labeling_function()
 def lf_region_bias(row):
     text = row["text"].lower()
     if detect_bias(text, REGION_GROUPS, BIAS_PATTERN):
-        return "🌍 This query suggests bias about a region or nationality, which is inappropriate for this dataset. Please rephrase."
+        return "This query suggests bias about a region or nationality, which is inappropriate for this dataset. Please rephrase."
     return None
 
 # Religion
@@ -140,21 +140,21 @@ def lf_region_bias(row):
 def lf_religion_probe(row):
     text = row["text"].lower()
     if detect_probe(text, PROBE_PATTERN, RELIGION_KEYWORDS):
-        return "🙏 This query involves a religious topic irrelevant to the dataset. Please ask a data-related question."
+        return "This query involves a religious topic irrelevant to the dataset. Please ask a data-related question."
     return None
 
 @labeling_function()
 def lf_religion_keywords(row):
     text = row["text"].lower()
     if detect_keywords(text, RELIGION_KEYWORDS):
-        return "🙏 This query mentions a religious topic not relevant to the dataset. Please focus on data-related queries."
+        return " This query mentions a religious topic not relevant to the dataset. Please focus on data-related queries."
     return None
 
 @labeling_function()
 def lf_religion_bias(row):
     text = row["text"].lower()
     if detect_bias(text, RELIGION_GROUPS, BIAS_PATTERN):
-        return "🙏 This query suggests bias about a religion, which is inappropriate for this dataset. Please rephrase."
+        return " This query suggests bias about a religion, which is inappropriate for this dataset. Please rephrase."
     return None
 
 # Racial/Ethnicity
@@ -162,21 +162,21 @@ def lf_religion_bias(row):
 def lf_racial_probe(row):
     text = row["text"].lower()
     if detect_probe(text, PROBE_PATTERN, RACIAL_KEYWORDS):
-        return "🌐 This query involves a racial or ethnic topic irrelevant to the dataset. Please ask a data-related question."
+        return " This query involves a racial or ethnic topic irrelevant to the dataset. Please ask a data-related question."
     return None
 
 @labeling_function()
 def lf_racial_keywords(row):
     text = row["text"].lower()
     if detect_keywords(text, RACIAL_KEYWORDS):
-        return "🌐 This query mentions a racial or ethnic topic not relevant to the dataset. Please focus on data-related queries."
+        return " This query mentions a racial or ethnic topic not relevant to the dataset. Please focus on data-related queries."
     return None
 
 @labeling_function()
 def lf_racial_bias(row):
     text = row["text"].lower()
     if detect_bias(text, RACIAL_GROUPS, BIAS_PATTERN):
-        return "🌐 This query suggests bias about race or ethnicity, which is inappropriate for this dataset. Please rephrase."
+        return " This query suggests bias about race or ethnicity, which is inappropriate for this dataset. Please rephrase."
     return None
 
 # Gender
@@ -184,21 +184,21 @@ def lf_racial_bias(row):
 def lf_gender_probe(row):
     text = row["text"].lower()
     if detect_probe(text, PROBE_PATTERN, GENDER_KEYWORDS):
-        return "👤 This query involves a gender or sexuality topic irrelevant to the dataset. Please ask a data-related question."
+        return " This query involves a gender or sexuality topic irrelevant to the dataset. Please ask a data-related question."
     return None
 
 @labeling_function()
 def lf_gender_keywords(row):
     text = row["text"].lower()
     if detect_keywords(text, GENDER_KEYWORDS):
-        return "👤 This query mentions a gender or sexuality topic not relevant to the dataset. Please focus on data-related queries."
+        return " This query mentions a gender or sexuality topic not relevant to the dataset. Please focus on data-related queries."
     return None
 
 @labeling_function()
 def lf_gender_bias(row):
     text = row["text"].lower()
     if detect_bias(text, GENDER_GROUPS, BIAS_PATTERN):
-        return "👤 This query suggests bias about gender or sexuality, which is inappropriate for this dataset. Please rephrase."
+        return " This query suggests bias about gender or sexuality, which is inappropriate for this dataset. Please rephrase."
     return None
 
 # Politics
@@ -206,14 +206,14 @@ def lf_gender_bias(row):
 def lf_politics_probe(row):
     text = row["text"].lower()
     if detect_probe(text, PROBE_PATTERN, POLITICS_KEYWORDS):
-        return "🏛️ This query involves a political topic irrelevant to the dataset. Please ask a data-related question."
+        return " This query involves a political topic irrelevant to the dataset. Please ask a data-related question."
     return None
 
 @labeling_function()
 def lf_politics_keywords(row):
     text = row["text"].lower()
     if detect_keywords(text, POLITICS_KEYWORDS):
-        return "🏛️ This query mentions a political topic not relevant to the dataset. Please focus on data-related queries."
+        return " This query mentions a political topic not relevant to the dataset. Please focus on data-related queries."
     return None
 
 # Terrorism
@@ -221,14 +221,14 @@ def lf_politics_keywords(row):
 def lf_terrorism_probe(row):
     text = row["text"].lower()
     if detect_probe(text, PROBE_PATTERN, TERRORISM_KEYWORDS):
-        return "⚠️ This query relates to violence or terrorism, which is inappropriate for this dataset. I can’t assist."
+        return " This query relates to violence or terrorism, which is inappropriate for this dataset. I can’t assist."
     return None
 
 @labeling_function()
 def lf_harmful_intent(row):
     text = row["text"].lower()
     if re.search(ACTION_PATTERN, text) and re.search(HARM_PATTERN, text):
-        return "⚠️ This query suggests harmful intent (e.g., violence, hate), which is inappropriate for this dataset. I can’t assist."
+        return " This query suggests harmful intent (e.g., violence, hate), which is inappropriate for this dataset. I can’t assist."
     return None
 
 # Other Categories (Age, Miscellaneous, Obscene, SQL)
@@ -236,28 +236,28 @@ def lf_harmful_intent(row):
 def lf_age_probe(row):
     text = row["text"].lower()
     if detect_probe(text, PROBE_PATTERN, AGE_KEYWORDS):
-        return "⏳ This query involves an age-related topic irrelevant to the dataset. Please ask a data-related question."
+        return " This query involves an age-related topic irrelevant to the dataset. Please ask a data-related question."
     return None
 
 @labeling_function()
 def lf_age_keywords(row):
     text = row["text"].lower()
     if detect_keywords(text, AGE_KEYWORDS):
-        return "⏳ This query mentions an age-related topic not relevant to the dataset. Please focus on data-related queries."
+        return " This query mentions an age-related topic not relevant to the dataset. Please focus on data-related queries."
     return None
 
 @labeling_function()
 def lf_misc_bias(row):
     text = row["text"].lower()
     if detect_bias(text, MISC_GROUPS, BIAS_PATTERN):
-        return "🤔 This query suggests bias about a social group (e.g., wealth, ability), which is inappropriate for this dataset. Please rephrase."
+        return " This query suggests bias about a social group (e.g., wealth, ability), which is inappropriate for this dataset. Please rephrase."
     return None
 
 @labeling_function()
 def lf_obscene_language(row):
     text = row["text"].lower()
     if re.search(OBSCENE_PATTERN, text):
-        return "🚫 This query contains inappropriate language not suitable for this dataset. Please rephrase."
+        return " This query contains inappropriate language not suitable for this dataset. Please rephrase."
     return None
 
 @labeling_function()
@@ -265,7 +265,7 @@ def lf_sql_injection(row):
     text = row["text"].upper()
     sql_blacklist = ["DROP", "DELETE", "ALTER", "INSERT", "TRUNCATE", "UPDATE"]
     if any(word in text for word in sql_blacklist):
-        return "🚫 This query contains restricted SQL operations. Please use valid data queries."
+        return " This query contains restricted SQL operations. Please use valid data queries."
     return None
 
 # Centralized Sensitivity Filter
