@@ -24,6 +24,22 @@ jobs:
       with:
         python-version: '3.9'
 
+    # Add GCP Authentication steps
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+        project_id: ${{ env.PROJECT_ID }}
+      
+    - name: Set up Google Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+
+    # Initialize Vertex AI
+    - name: Initialize Vertex AI
+      run: |
+        gcloud auth configure-docker
+        gcloud config set project ${{ env.PROJECT_ID }}
+
     - name: Install test packages
       run: |
         python -m pip install --upgrade pip
@@ -31,6 +47,8 @@ jobs:
         pip install pytest pytest-cov
 
     - name: Run tests
+      env:
+        GOOGLE_CLOUD_PROJECT: ${{ env.PROJECT_ID }}
       run: |
         pytest src/tests/ --cov=src --cov-report=term-missing -v
 
