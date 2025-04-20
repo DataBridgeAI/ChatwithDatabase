@@ -13,7 +13,6 @@ import chromadb
 from chromadb.config import Settings
 import gc
 import time
-
 from rapidfuzz import fuzz, process
 
 # Configuration Parameters
@@ -27,168 +26,146 @@ embedding_model = VertexAIEmbeddings(model=VERTEX_MODEL)
 gcs_client = storage.Client()
 print("Initialized storage client and embedding model")
 
-# Cache to store vector DBs by dataset_id
+# Cache to store vector DBs and embeddings by dataset_id
 VECTOR_DB_CACHE = {}
+EMBEDDINGS_CACHE = {}
 
 def preprocess_text(text: str) -> str:
-    """
-    Preprocess text for better matching:
-    1. Convert to lowercase
-    2. Remove special characters (except spaces)
-    3. Normalize whitespace
-    """
-    # Convert to lowercase
     text = text.lower()
-    
-    # Remove special characters but keep spaces between words
     text = re.sub(r'[^\w\s]', ' ', text)
-    
-    # Normalize whitespace
     text = re.sub(r'\s+', ' ', text).strip()
-    
     return text
 
 def setup_chroma_client(dataset_id: str) -> chromadb.PersistentClient:
-    """
-    Set up and return a ChromaDB client for the specified dataset
-    """
-    # Create embeddings directory if it doesn't exist
     embeddings_dir = os.path.join(os.path.dirname(__file__), '..', 'embeddings')
     os.makedirs(embeddings_dir, exist_ok=True)
-    
-    # Create dataset-specific directory
     chroma_persist_dir = os.path.join(embeddings_dir, f'chroma_{dataset_id}')
     os.makedirs(chroma_persist_dir, exist_ok=True)
-    
-    client = chromadb.PersistentClient(path=chroma_persist_dir)
-    return client
+    return chromadb.PersistentClient(path=chroma_persist_dir)
 
-def initialize_vector_db(schema_embeddings: Dict[str, Any], dataset_id: str) -> chromadb.Collection:
-    """
-    Initialize or update the vector database with schema embeddings
-    """
-    client = setup_chroma_client(dataset_id)
-    
-    # Collection name based on dataset_id
-    collection_name = f"schema_embeddings_{dataset_id}"
-    
-    # Remove existing collection if it exists
+def download_and_extract_chroma_db(dataset_id: str) -> Optional[str]:
+    embeddings_dir = os.path.join(os.path.dirname(__file__), '..', 'embeddings')
+    os.makedirs(embeddings_dir, exist_ok=True)
+    local_db_path = os.path.join(embeddings_dir, f'chroma_{dataset_id}')
+    local_zip_path = os.path.join(embeddings_dir, f'schema_chroma_{dataset_id}.zip')
+
+    if os.path.exists(local_db_path) and os.listdir(local_db_path):
+        print(f"🔄 Using cached ChromaDB for dataset {dataset_id}")
+        return local_db_path
+
+    if os.path.exists(local_zip_path):
+        try:
+            os.remove(local_zip_path)
+        except Exception as e:
+            print(f"⚠️ Warning: Could not remove zip file: {str(e)}")
+
+    if os.path.exists(local_db_path):
+        try:
+            gc.collect()
+            shutil.rmtree(local_db_path, ignore_errors=True)
+        except Exception as e:
+            print(f"⚠️ Warning: Could not remove DB directory: {str(e)}")
+            timestamp = int(time.time())
+            local_db_path = os.path.join(embeddings_dir, f'chroma_{dataset_id}_{timestamp}')
+
+    os.makedirs(local_db_path, exist_ok=True)
+
     try:
-        client.delete_collection(collection_name)
-    except:
-        pass
-    
-    # Create a new collection
-    collection = client.create_collection(
-        name=collection_name,
-        metadata={"description": f"Schema embeddings for {dataset_id} dataset"}
-    )
-    
-    # Prepare data for batch insertion
-    ids = []
-    embeddings = []
-    metadatas = []
-    documents = []
-    
-    for key, value in schema_embeddings.items():
-        ids.append(key)
-        embeddings.append(value["embedding"])
-        table, column = key.split(":")
-        metadatas.append({
-            "table": table,
-            "column": column,
-            "full_key": key
-        })
-        documents.append(value["semantic_text"])
-    
-    # Add embeddings to the collection
-    collection.add(
-        ids=ids,
-        embeddings=embeddings,
-        metadatas=metadatas,
-        documents=documents
-    )
-    
-    return collection
+        print(f"📅 Downloading ChromaDB for dataset {dataset_id}...")
+        bucket = gcs_client.bucket(BUCKET_NAME)
+        gcs_zip_path = f"{dataset_id}/schema_chroma.zip"
+        blob = bucket.blob(gcs_zip_path)
+
+        if not blob.exists():
+            gcs_zip_path = f"chroma_db/{dataset_id}/schema_chroma.zip"
+            blob = bucket.blob(gcs_zip_path)
+            if not blob.exists():
+                gcs_zip_path = f"chroma_db/schema_chroma.zip"
+                blob = bucket.blob(gcs_zip_path)
+                if not blob.exists():
+                    print(f"❌ Could not find ChromaDB zip for {dataset_id}")
+                    return None
+
+        print(f"Downloading from: {gcs_zip_path}")
+        blob.download_to_filename(local_zip_path)
+        print(f"✅ Download complete: {local_zip_path}")
+
+        print(f"Extracting to: {local_db_path}")
+        with zipfile.ZipFile(local_zip_path, 'r') as zip_ref:
+            zip_ref.extractall(local_db_path)
+
+        print(f"✅ Extraction complete: {local_db_path}")
+        print(f"Extracted files: {os.listdir(local_db_path)}")
+
+        try:
+            os.remove(local_zip_path)
+        except:
+            pass
+
+        return local_db_path
+
+    except Exception as e:
+        print(f"❌ Error downloading/extracting ChromaDB: {str(e)}")
+        traceback.print_exc()
+        return None
 
 def get_vector_db(dataset_id: str) -> Optional[chromadb.Collection]:
-    """
-    Get or create the vector database collection.
-    Now downloads and loads ChromaDB directly from the zip file.
-    """
     global VECTOR_DB_CACHE
-    
-    # Return from cache if available
-    if dataset_id in VECTOR_DB_CACHE and VECTOR_DB_CACHE[dataset_id] is not None:
-        return VECTOR_DB_CACHE[dataset_id]
-    
-    # Download and extract the ChromaDB
-    db_path = download_and_extract_chroma_db(dataset_id)
-    if not db_path:
-        print(f"❌ Could not download ChromaDB for dataset {dataset_id}")
-        VECTOR_DB_CACHE[dataset_id] = None
-        return None
-    
+
+    embeddings_dir = os.path.join(os.path.dirname(__file__), '..', 'embeddings')
+    local_db_path = os.path.join(embeddings_dir, f'chroma_{dataset_id}')
+
+    if os.path.exists(local_db_path) and os.listdir(local_db_path):
+        print(f"📂 Found local ChromaDB at {local_db_path}")
+        db_path = local_db_path
+    else:
+        print(f"📦 Local ChromaDB not found for {dataset_id}, attempting to download...")
+        db_path = download_and_extract_chroma_db(dataset_id)
+        if not db_path:
+            print(f"❌ Could not load vector DB for dataset {dataset_id}")
+            return None
+
     try:
-        # Create ChromaDB client
         client = chromadb.PersistentClient(path=db_path)
-        
-        # Try different collection naming patterns
+
         collection_patterns = [
             f"schema_embeddings_{dataset_id}",
             "schema_embeddings",
             dataset_id,
             "embeddings"
         ]
-        
-        # List available collections
+
         try:
             collection_names = client.list_collections()
             print(f"Available collections: {collection_names}")
         except Exception as e:
             print(f"⚠️ Error listing collections: {str(e)}")
             collection_names = []
-        
+
         collection = None
-        
-        # First try known patterns
         for pattern in collection_patterns:
             if pattern in collection_names:
                 try:
                     collection = client.get_collection(pattern)
-                    print(f"✅ Found collection with name: {pattern}")
+                    print(f"✅ Found collection: {pattern}")
                     break
                 except Exception as e:
                     print(f"⚠️ Error getting collection {pattern}: {str(e)}")
-        
-        # If no pattern matched, try the first available collection
+
         if collection is None and collection_names:
             try:
-                first_collection = collection_names[0]
-                print(f"Trying first available collection: {first_collection}")
-                collection = client.get_collection(first_collection)
+                collection = client.get_collection(collection_names[0])
+                print(f"Fallback to first available collection: {collection_names[0]}")
             except Exception as e:
-                print(f"❌ Error getting first collection: {str(e)}")
-        
-        # Store in cache and return
-        if collection:
-            VECTOR_DB_CACHE[dataset_id] = collection
-            try:
-                count = len(collection.get(include=[])["ids"])
-                print(f"Collection has {count} embeddings")
-            except Exception as e:
-                print(f"⚠️ Error getting collection count: {str(e)}")
-            return collection
-        else:
-            print(f"❌ No usable collection found in ChromaDB for {dataset_id}")
-            VECTOR_DB_CACHE[dataset_id] = None
-            return None
-            
+                print(f"❌ Failed to load fallback collection: {str(e)}")
+                return None
+
+        VECTOR_DB_CACHE[dataset_id] = collection
+        return collection
+
     except Exception as e:
-        print(f"❌ Error setting up ChromaDB: {str(e)}")
-        import traceback
+        print(f"❌ Error setting up ChromaDB for dataset {dataset_id}: {str(e)}")
         traceback.print_exc()
-        VECTOR_DB_CACHE[dataset_id] = None
         return None
 
 def download_and_extract_chroma_db(dataset_id: str) -> Optional[str]:
@@ -708,5 +685,5 @@ def main():
             print(f"Dataset: '{current_dataset_id}'")
             print(f"Result: {'✅ RELEVANT' if is_relevant else '❌ NOT RELEVANT'}")
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()

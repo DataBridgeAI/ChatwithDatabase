@@ -64,18 +64,20 @@ def setup_credentials():
         return False
 
 # Initialize schema embeddings at startup
-try:
-    dataset_id = os.environ.get('DATASET_ID', 'RetailDataset')  # Get default dataset_id from environment or use RetailDataset as fallback
-    if dataset_id:
-        schema_embeddings = download_and_prepare_embeddings(dataset_id=dataset_id)
-        if schema_embeddings:
-            print(f"✅ Successfully loaded schema embeddings for dataset: {dataset_id}")
-        else:
-            print(f"❌ Failed to load schema embeddings for dataset: {dataset_id}")
-    else:
-        print("❌ No dataset_id provided in environment variables")
-except Exception as e:
-    print(f"Failed to initialize schema embeddings: {str(e)}")
+# try:
+#     data = request.json
+#     project_id = data.get('project_id') or os.environ.get('PROJECT_ID')
+#     dataset_id = data.get('dataset_id') or os.environ.get('DATASET_ID')
+#     if dataset_id:
+#         schema_embeddings = download_and_prepare_embeddings(dataset_id=dataset_id)
+#         if schema_embeddings:
+#             print(f"✅ Successfully loaded schema embeddings for dataset: {dataset_id}")
+#         else:
+#             print(f"❌ Failed to load schema embeddings for dataset: {dataset_id}")
+#     else:
+#         print("❌ No dataset_id provided in environment variables")
+# except Exception as e:
+#     print(f"Failed to initialize schema embeddings: {str(e)}")
 
 # Setup ChromaDB at startup
 try:
@@ -110,6 +112,24 @@ except Exception as e:
 
 # Initialize the tracker
 input_tracker = InputTracker()  # Remove the parameters since we're not using them anymore
+
+# Initialize ChromaDB for available datasets at startup
+try:
+    from promptfilter.semantic_search import list_available_datasets, get_vector_db
+    
+    available_datasets = list_available_datasets()
+    if available_datasets:
+        default_dataset = os.environ.get('DATASET_ID') or available_datasets[0]
+        print(f"Initializing vector DB for default dataset: {default_dataset}")
+        vector_db = get_vector_db(default_dataset)
+        if vector_db:
+            print(f"✅ Successfully initialized vector DB for dataset: {default_dataset}")
+        else:
+            print(f"❌ Failed to initialize vector DB for dataset: {default_dataset}")
+    else:
+        print("❌ No datasets available for ChromaDB initialization")
+except Exception as e:
+    print(f"Failed to initialize ChromaDB: {str(e)}")
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
@@ -187,7 +207,6 @@ def fetch_schema():
         app.logger.error(traceback.format_exc())
         return jsonify({'error': f"Server error: {str(e)}"}), 500
 
-# Replace the current validate_user_query route with this version
 @app.route('/api/query/validate', methods=['POST'])
 def validate_user_query():
     data = request.json
@@ -241,26 +260,6 @@ def validate_user_query():
             validation_details=validation_details
         )
         return jsonify({'error': str(e)}), 500
-
-
-    # Initialize ChromaDB for available datasets at startup
-    try:
-        from promptfilter.semantic_search import list_available_datasets, get_vector_db
-        
-        available_datasets = list_available_datasets()
-        if available_datasets:
-            default_dataset = os.environ.get('DATASET_ID') or available_datasets[0]
-            print(f"Initializing vector DB for default dataset: {default_dataset}")
-            vector_db = get_vector_db(default_dataset)
-            if vector_db:
-                print(f"✅ Successfully initialized vector DB for dataset: {default_dataset}")
-            else:
-                print(f"❌ Failed to initialize vector DB for dataset: {default_dataset}")
-        else:
-            print("❌ No datasets available for ChromaDB initialization")
-    except Exception as e:
-        print(f"Failed to initialize ChromaDB: {str(e)}")
-
 
 @app.route('/api/query/similar', methods=['POST'])
 def find_similar_query():
@@ -409,6 +408,7 @@ def execute_sql_query():
     sql_query = data.get('sql')
     conversation_id = data.get('conversation_id')
     user_query = data.get('user_query', 'Custom SQL execution')
+    dataset_id = data.get('dataset_id') or os.environ.get('DATASET_ID')
 
     if not sql_query:
         return jsonify({'error': 'SQL query is required'}), 400
@@ -478,6 +478,7 @@ def submit_feedback():
 def get_chat_history():
     user_id = request.args.get('user_id')
     limit = request.args.get('limit', 5, type=int)
+    dataset_id = request.args.get('dataset_id') or os.environ.get('DATASET_ID')
     
     try:
         db = get_chat_history_db()
