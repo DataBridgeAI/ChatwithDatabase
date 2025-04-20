@@ -236,7 +236,7 @@ def validate_user_query():
                 error_type="relevance",
                 validation_details=validation_details
             )
-            monitor.log_event("Query appears unrelated to the database schema", severity="INFO")
+            monitor.log_event("Query appears unrelated to the database schema", severity="ERROR")
             return jsonify({'error': ' Query appears unrelated to the database schema'}), 400
 
         return jsonify({'valid': True})
@@ -250,7 +250,7 @@ def validate_user_query():
             error_type="system_error",
             validation_details=validation_details
         )
-        monitor.log_event("Exception encountered during query validation", severity="INFO")
+        monitor.log_event("Exception encountered during query validation", severity="ERROR")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/query/similar', methods=['POST'])
@@ -306,7 +306,7 @@ def generate_query():
             )
             monitor.log_event(" SQL Query generated successfully", severity="INFO")
         except ValueError as ve:
-            monitor.log_event("Error generating SQL", severity="INFO")
+            monitor.log_event("Error generating SQL", severity="ERROR")
             return jsonify({
                 'error': str(ve),
                 'conversation_id': conversation_id
@@ -469,7 +469,7 @@ def submit_feedback():
         monitor.log_event("Stored the feedback successfully", severity="INFO")
         return jsonify({'success': True})
     except Exception as e:
-        monitor.log_event("Error encountered during feedback submission", severity="INFO")
+        monitor.log_event("Error encountered during feedback submission", severity="ERROR")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/chat/history', methods=['GET'])
