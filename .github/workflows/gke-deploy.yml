@@ -95,6 +95,7 @@ jobs:
     - name: Create Secrets
       run: |
         kubectl create secret generic app-secrets \
+          --from-literal=project-id=${{ env.PROJECT_ID }} \
           --from-literal=openai-api-key=${{ secrets.OPENAI_API_KEY }} \
           --from-literal=slack-webhook-url=${{ secrets.SLACK_WEBHOOK }} \
           --dry-run=client -o yaml | kubectl apply -f -
