@@ -49,13 +49,13 @@ def upload_zip_to_gcs():
     print(f"Uploaded {ZIP_FILE_PATH} to gs://{BUCKET_NAME}/{GCS_ZIP_PATH}")
 
 
-def extract_schema():
+def extract_schema(dataset_id: str = DATASET_ID):
     """
     Extract schema details with rich context information.
     This method is schema-agnostic and doesn't make assumptions about column names.
     """
     client = bigquery.Client(project=PROJECT_ID)
-    dataset_ref = client.dataset(DATASET_ID)
+    dataset_ref = client.dataset(dataset_id)  # Use the passed dataset_id
     tables = client.list_tables(dataset_ref)
 
     schema_data = []
@@ -74,8 +74,8 @@ def extract_schema():
 
         for field in table_schema:
             # Get column statistics and sample values
-            column_stats = get_column_statistics(client, DATASET_ID, table.table_id, field.name, field.field_type)
-            sample_values = get_sample_values(client, DATASET_ID, table.table_id, field.name)
+            column_stats = get_column_statistics(client, dataset_id, table.table_id, field.name, field.field_type)  # Pass dataset_id
+            sample_values = get_sample_values(client, dataset_id, table.table_id, field.name)  # Pass dataset_id
             
             # Create semantic text using available data without assumptions
             semantic_text = create_column_semantic_text(
@@ -286,10 +286,14 @@ def create_column_semantic_text(
     
     return semantic_text
 
-def generate_schema_embeddings():
+def generate_schema_embeddings(dataset_id: str):
     """Generate embeddings for schema data."""
-    schema_data = extract_schema()
+    schema_data = extract_schema(dataset_id)  # Pass dataset_id to extract_schema
     
+    # If no schema data, return None
+    if not schema_data:
+        return None
+        
     # Create schema texts with standard descriptions
     schema_texts = [item["semantic_text"] for item in schema_data]
     
@@ -305,7 +309,7 @@ def generate_schema_embeddings():
             'data_type': item['data_type']
         }
     
-    print(f"Generated {len(schema_texts)} schema embeddings")
+    print(f"Generated {len(schema_texts)} schema embeddings for dataset {dataset_id}")
     return schema_dict
 
 def initialize_vector_db(schema_embeddings: Dict[str, Any]) -> chromadb.Collection:
@@ -354,18 +358,85 @@ def initialize_vector_db(schema_embeddings: Dict[str, Any]) -> chromadb.Collecti
     
     return collection
 
+def get_all_datasets(project_id: str) -> List[str]:
+    """Get all datasets in the project."""
+    client = bigquery.Client(project=project_id)
+    datasets = list(client.list_datasets())
+    return [dataset.dataset_id for dataset in datasets]
+
 def generate_and_store_embeddings():
-    """Main function to orchestrate the embeddings generation and storage process."""
+    """Generate embeddings for all datasets in the project."""
     try:
-        print("\n🔄 Starting schema embeddings generation process...")
+        print("\n🔄 Starting schema embeddings generation for all datasets...")
         
-        # Generate embeddings
-        schema_embeddings = generate_schema_embeddings()
+        # Get all datasets
+        datasets = get_all_datasets(PROJECT_ID)
+        print(f"Found {len(datasets)} datasets: {datasets}")
         
-        # Initialize ChromaDB and store it (both locally and in GCS)
-        initialize_vector_db(schema_embeddings)
-        
-        print("\n✅ Schema embeddings generation and storage process completed successfully!")
+        for dataset_id in datasets:
+            print(f"\n📊 Processing dataset: {dataset_id}")
+            
+            # Generate embeddings for this dataset
+            schema_embeddings = generate_schema_embeddings(dataset_id)
+            
+            # Skip if no embeddings were generated
+            if not schema_embeddings:
+                print(f"⚠️ No schema data found for dataset {dataset_id}, skipping...")
+                continue
+                
+            # Update paths for this dataset
+            local_persist_path = f"./schema_chroma_{dataset_id}/"
+            zip_file_path = f"./schema_chroma_{dataset_id}.zip"
+            gcs_zip_path = f"chroma_db/{dataset_id}/schema_chroma.zip"
+            
+            # Ensure the local directory exists
+            os.makedirs(local_persist_path, exist_ok=True)
+            
+            # Initialize ChromaDB for this dataset
+            chroma_client = chromadb.PersistentClient(path=local_persist_path)
+            collection = chroma_client.get_or_create_collection(
+                name=f"schema_embeddings_{dataset_id}",
+                metadata={"description": f"Schema embeddings for {dataset_id}"}
+            )
+            
+            # Prepare data for batch insertion
+            ids = []
+            embeddings = []
+            metadatas = []
+            documents = []
+            
+            for key, value in schema_embeddings.items():
+                ids.append(key)
+                embeddings.append(value["embedding"])
+                table, column = key.split(":")
+                metadatas.append({
+                    "table": table,
+                    "column": column,
+                    "data_type": value.get("data_type", "unknown"),
+                    "dataset_id": dataset_id
+                })
+                documents.append(value["semantic_text"])
+            
+            # Add embeddings to the collection
+            collection.add(
+                ids=ids,
+                embeddings=embeddings,
+                metadatas=metadatas,
+                documents=documents
+            )
+            
+            print(f"✅ Added {len(ids)} embeddings to ChromaDB for dataset {dataset_id}")
+            
+            # Zip and upload to GCS
+            shutil.make_archive(zip_file_path.replace(".zip", ""), 'zip', local_persist_path)
+            
+            bucket = storage_client.bucket(BUCKET_NAME)
+            blob = bucket.blob(gcs_zip_path)
+            blob.upload_from_filename(zip_file_path)
+            
+            print(f"✅ Uploaded embeddings for {dataset_id} to GCS")
+            
+        print("\n✅ Schema embeddings generation completed for all datasets!")
         return True
         
     except Exception as e:
@@ -373,5 +444,5 @@ def generate_and_store_embeddings():
         return False
 
 if __name__ == "__main__":
-    # Run the process
+    # Run the process for all datasets
     generate_and_store_embeddings()

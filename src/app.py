@@ -181,10 +181,13 @@ def fetch_schema():
         app.logger.error(traceback.format_exc())
         return jsonify({'error': f"Server error: {str(e)}"}), 500
 
+# Replace the current validate_user_query route with this version
 @app.route('/api/query/validate', methods=['POST'])
 def validate_user_query():
     data = request.json
     user_query = data.get('query')
+    # Get dataset_id from the request or use default
+    dataset_id = data.get('dataset_id') or os.environ.get('DATASET_ID')
 
     if not user_query:
         return jsonify({'error': 'Query is required'}), 400
@@ -204,11 +207,12 @@ def validate_user_query():
             )
             return jsonify({'error': validation_error}), 400
 
-        # Check query relevance
+        # Check query relevance - Pass dataset_id instead of schema_embeddings
         query_relevance_flag = check_query_relevance(
-            user_query,
-            schema_embeddings=schema_embeddings
+            user_input=user_query,
+            dataset_id=dataset_id
         )
+        
         if not query_relevance_flag:
             validation_details["error_type"] = "relevance"
             validation_details["details"] = "Query unrelated to schema"
@@ -231,6 +235,26 @@ def validate_user_query():
             validation_details=validation_details
         )
         return jsonify({'error': str(e)}), 500
+
+
+    # Initialize ChromaDB for available datasets at startup
+    try:
+        from promptfilter.semantic_search import list_available_datasets, get_vector_db
+        
+        available_datasets = list_available_datasets()
+        if available_datasets:
+            default_dataset = os.environ.get('DATASET_ID') or available_datasets[0]
+            print(f"Initializing vector DB for default dataset: {default_dataset}")
+            vector_db = get_vector_db(default_dataset)
+            if vector_db:
+                print(f"✅ Successfully initialized vector DB for dataset: {default_dataset}")
+            else:
+                print(f"❌ Failed to initialize vector DB for dataset: {default_dataset}")
+        else:
+            print("❌ No datasets available for ChromaDB initialization")
+    except Exception as e:
+        print(f"Failed to initialize ChromaDB: {str(e)}")
+
 
 @app.route('/api/query/similar', methods=['POST'])
 def find_similar_query():
