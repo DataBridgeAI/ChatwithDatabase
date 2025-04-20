@@ -16,7 +16,7 @@ kubectl create namespace $NAMESPACE --dry-run=client -o yaml | kubectl apply -f 
 
 # Create secrets
 Write-Host "Creating secrets..."
-kubectl create secret generic app-secrets `
+kubectl create secret generic secrets `  # Changed from app-secrets to secrets
   --namespace=$NAMESPACE `
   --from-literal=gcp-project-id=$PROJECT_ID `
   --dry-run=client -o yaml | kubectl apply -f -
