@@ -32,7 +32,7 @@ export const fetchSchema = async (projectId, datasetId) => {
   }
 };
 
-export const validateQuery = async (query) => {
+export const validateQuery = async (query, datasetId) => {
   try {
     const response = await fetch(`${API_BASE_URL}/query/validate`, {
       method: "POST",
@@ -41,6 +41,7 @@ export const validateQuery = async (query) => {
       },
       body: JSON.stringify({
         query,
+        dataset_id: datasetId
       }),
     });
 
