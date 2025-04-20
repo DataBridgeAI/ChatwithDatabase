@@ -21,7 +21,10 @@ from monitoring.mlflow_config import QueryTracker
 from query_checks.content_checker import sensitivity_filter
 from promptfilter.semantic_search import download_and_prepare_embeddings, check_query_relevance
 from ai.data_formatter import dataframe_to_json
+from monitoring_utils import GCPMonitoring
 
+project_id = os.environ.get('PROJECT_ID')
+monitor = GCPMonitoring(project_id)
 # Load environment variables from .env file
 load_dotenv('src/.env')
 
@@ -260,7 +263,9 @@ def generate_query():
 
         # Execute SQL
         result_df, query_execution_time = execute_bigquery_query(generated_sql)
-
+        monitor.log_event("Query execution completed successfully.")
+        monitor.log_custom_metric("query_execution_time", '1')
+        monitor.log_event("Sent metric: query_execution_time = 1")
         # Handle chat history
         db = get_chat_history_db()
         
