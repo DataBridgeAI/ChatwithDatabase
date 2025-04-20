@@ -1,4 +1,7 @@
-sentence-transformers
+# sentence-transformers
+sentence-transformers==2.6.1
+transformers==4.37.2
+accelerate==0.26.1
 google-cloud-bigquery
 google-cloud-storage
 pandas
@@ -6,3 +9,7 @@ numpy
 chromadb
 tf-keras
 langchain-google-vertexai
+langchain
+langchain-community
+langchain-openai
+openai

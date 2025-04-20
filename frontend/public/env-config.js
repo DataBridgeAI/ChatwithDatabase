@@ -1,0 +1,3 @@
+window._env_ = {
+  REACT_APP_API_URL: "http://34.10.210.167/api"
+};
