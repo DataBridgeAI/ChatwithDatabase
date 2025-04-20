@@ -1,5 +1,5 @@
 // API service for BigQuery Analytics
-const API_BASE_URL = window._env_?.REACT_APP_API_URL || 'http://34.10.210.167/api';
+const API_BASE_URL = window._env_?.REACT_APP_API_URL || 'http://34.9.102.94/api';
 
 if (!API_BASE_URL) {
   throw new Error('API URL is not configured');

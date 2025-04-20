@@ -26,7 +26,7 @@ spec:
             memory: "1Gi"   # Limit to 1GB memory
         env:
         - name: REACT_APP_API_URL
-          value: "http://34.10.210.167/api"  # Update this to your API URL
+          value: "http://34.9.102.94/api"  # Update this to your API URL
         - name: OPENAI_API_KEY
           valueFrom:
             secretKeyRef:
