@@ -16,7 +16,7 @@ import time
 from rapidfuzz import fuzz, process
 
 # Configuration Parameters
-PROJECT_ID = "chatwithdata-451800"
+DEFAULT_PROJECT_ID = "chatwithdata-451800"
 VERTEX_MODEL = "textembedding-gecko@003"
 BUCKET_NAME = "bigquery-embeddings-store"
 
@@ -476,29 +476,23 @@ def find_fuzzy_matches(schema_keys: List[str], query_terms: List[str]) -> List[D
     
     return sorted(list(unique_matches.values()), key=lambda x: x["match_score"], reverse=True)
 
-def check_query_relevance(user_input: str, dataset_id: str, threshold: float = 0.70) -> bool:
-    """
-    Check if the user query is relevant to the schema and return a boolean result.
-    
-    Args:
-        user_input: The user's query
-        dataset_id: The dataset ID to check against
-        threshold: Similarity threshold for determining relevance
-        
-    Returns:
-        bool: True if query is relevant, False otherwise
-    """
+def check_query_relevance(user_input: str, dataset_id: str, project_id: str = None, threshold: float = 0.70) -> bool:
     try:
-        print(f"\nChecking query relevance for '{user_input}' against dataset '{dataset_id}'")
+        project_id = project_id or DEFAULT_PROJECT_ID
+        print(f"\nDEBUG: Checking relevance for query: '{user_input}'")
         
         # Step 1: Preprocess input
         processed_input = preprocess_text(user_input)
         
-        # Step 2: Get vector DB directly (now downloads ChromaDB if needed)
+        # Step 2: Get vector DB directly
         vector_db = get_vector_db(dataset_id)
         if not vector_db:
-            print(f"❌ Could not get vector DB for dataset {dataset_id}")
-            return False  # Changed to return False (NOT RELEVANT) in case of errors
+            print(f"DEBUG: Vector DB not found for dataset {dataset_id}")
+            return False
+
+        # Log the actual similarity score for debugging
+        print(f"DEBUG: Processed input: '{processed_input}'")
+        print(f"DEBUG: Using threshold: {threshold}")
         
         # Step 3: Get schema information from the vector DB
         try:

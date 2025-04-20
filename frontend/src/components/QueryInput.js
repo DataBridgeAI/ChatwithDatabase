@@ -14,7 +14,7 @@ const QueryInput = () => {
     setUserQuery,
     schema,
     projectId,
-    datasetId,
+    datasetId,  // Make sure this is destructured from context
     setGeneratedSql,
     setQueryResults,
     resetStates,
@@ -32,6 +32,11 @@ const QueryInput = () => {
     showVisualization,
     setShowVisualization
   } = useAppContext();
+
+  // Add debug logging for dataset ID
+  useEffect(() => {
+    console.log("[QueryInput] Current dataset ID:", datasetId);
+  }, [datasetId]);
 
   const [showSimilarQuery, setShowSimilarQuery] = useState(false);
   const [useSuggested, setUseSuggested] = useState(null);
@@ -162,6 +167,8 @@ const QueryInput = () => {
 
   // Main query generation handler
   const handleGenerateQuery = async () => {
+    console.log("[handleGenerateQuery] Starting with dataset:", datasetId);
+    
     // Reset all states to ensure a fresh start
     resetStates();
     
@@ -182,8 +189,16 @@ const QueryInput = () => {
     }
 
     try {
+      console.log("[handleGenerateQuery] Validating query with:", {
+        query: userQuery,
+        datasetId: datasetId,
+        projectId: projectId
+      });
+
       // Validate the query
-      const validationResult = await validateQuery(userQuery);
+      const validationResult = await validateQuery(userQuery, datasetId, projectId);
+      console.log("[handleGenerateQuery] Validation result:", validationResult);
+      
       if (validationResult.error) {
         setError(validationResult.error);
         setLoading(false);

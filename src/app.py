@@ -209,20 +209,35 @@ def fetch_schema():
 
 @app.route('/api/query/validate', methods=['POST'])
 def validate_user_query():
+    print("\n=== Query Validation Request ===")
     data = request.json
+    print("Request data:", data)
+    
     user_query = data.get('query')
-    # Get dataset_id from the request or use default
+    project_id = data.get('project_id') or os.environ.get('PROJECT_ID')
     dataset_id = data.get('dataset_id') or os.environ.get('DATASET_ID')
+    
+    print(f"Processing validation:")
+    print(f"- User Query: {user_query}")
+    print(f"- Project ID: {project_id}")
+    print(f"- Dataset ID: {dataset_id}")
 
     if not user_query:
+        print("Error: Missing query")
         return jsonify({'error': 'Query is required'}), 400
+    
+    if not dataset_id:
+        print("Error: Missing dataset ID")
+        return jsonify({'error': 'Dataset ID is required'}), 400
 
     try:
         validation_details = {}
         
         # Check for sensitive content
+        print("Checking for sensitive content...")
         validation_error = sensitivity_filter(user_query)
         if validation_error:
+            print(f"Sensitivity check failed: {validation_error}")
             validation_details["error_type"] = "sensitivity"
             validation_details["details"] = validation_error
             input_tracker.track_invalid_input(
@@ -232,13 +247,18 @@ def validate_user_query():
             )
             return jsonify({'error': validation_error}), 400
 
-        # Check query relevance - Pass dataset_id instead of schema_embeddings
+        # Check query relevance
+        print(f"Checking query relevance for dataset: {dataset_id}")
         query_relevance_flag = check_query_relevance(
             user_input=user_query,
-            dataset_id=dataset_id
+            dataset_id=dataset_id,
+            project_id=project_id
         )
         
+        print(f"Relevance check result: {query_relevance_flag}")
+        
         if not query_relevance_flag:
+            print("Query failed relevance check")
             validation_details["error_type"] = "relevance"
             validation_details["details"] = "Query unrelated to schema"
             input_tracker.track_invalid_input(
@@ -246,10 +266,12 @@ def validate_user_query():
                 error_type="relevance",
                 validation_details=validation_details
             )
-            return jsonify({'error': ' ❌ Query appears unrelated to the database schema'}), 400
+            return jsonify({'error': '❌ Query appears unrelated to the database schema'}), 400
 
+        print("Validation successful")
         return jsonify({'valid': True})
     except Exception as e:
+        print(f"Validation error: {str(e)}")
         validation_details = {
             "error_type": "system_error",
             "details": str(e)
