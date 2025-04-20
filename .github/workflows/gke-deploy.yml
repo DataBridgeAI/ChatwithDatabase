@@ -3,11 +3,11 @@ name: Deploy to GKE
 on:
   push:
     branches:
-      - deployment-div
+      - deployment-video
 
 env:
   PROJECT_ID: chatwithdata-451800
-  GKE_CLUSTER: chat-cluster
+  GKE_CLUSTER: chatwithdb-cluster
   GKE_ZONE: us-central1
   FRONTEND_IMAGE: gcr.io/chatwithdata-451800/chatapp-ui
   BACKEND_IMAGE: gcr.io/chatwithdata-451800/chatapp-api
