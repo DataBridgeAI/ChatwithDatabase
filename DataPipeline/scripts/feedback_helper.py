@@ -50,24 +50,6 @@ def upload_zip_to_gcs():
     blob.upload_from_filename(ZIP_FILE_PATH)
     print(f"Uploaded {ZIP_FILE_PATH} to gs://{GCS_BUCKET_NAME}/{GCS_ZIP_PATH}")
 
-def generate_query_embeddings(queries):
-    """Generate embeddings for fetched queries and store them locally."""
-    if not queries:
-        print("No queries found. Skipping embedding generation.")
-        return
-
-    chroma_client = PersistentClient(path=LOCAL_PERSIST_PATH)
-    collection = chroma_client.get_or_create_collection(name="queries")
-
-    for query_data in queries:
-        user_query, generated_sql, feedback = query_data
-        embedding = embedding_model.encode(user_query)
-        collection.add(
-            documents=[user_query],
-            embeddings=[embedding],
-            metadatas=[{"generated_sql": generated_sql, "feedback": feedback}],
-            ids=[str(hash(user_query))]
-        )
 
 def fetch_user_queries(hours=24):
     """Fetch user queries from the last specified hours"""
