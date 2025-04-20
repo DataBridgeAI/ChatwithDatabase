@@ -65,7 +65,8 @@ def setup_credentials():
 
 # Initialize schema embeddings at startup
 try:
-    schema_embeddings = download_and_prepare_embeddings()
+    dataset_id = os.environ.get('DATASET_ID')  # Get default dataset_id from environment
+    schema_embeddings = download_and_prepare_embeddings(dataset_id)
     if not schema_embeddings:
         print("Failed to load schema embeddings")
 except Exception as e:
