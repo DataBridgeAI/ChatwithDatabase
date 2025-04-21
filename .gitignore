@@ -72,3 +72,6 @@ src/chat_history.db
 DataPipeline/logs/
 logs/
 
+#Embeddings
+src/embeddings
+

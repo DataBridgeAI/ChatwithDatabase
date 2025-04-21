@@ -13,8 +13,6 @@ PROJECT_ID = "chatwithdata-451800"
 DATASET_ID = "RetailDataset"
 VERTEX_MODEL = "textembedding-gecko@003"
 BUCKET_NAME = "bigquery-embeddings-store"
-#EMBEDDINGS_FILE = "schema_embeddings.json"
-#LOCAL_EMBEDDINGS_PATH = f"/tmp/{EMBEDDINGS_FILE}"
 
 GCS_PERSIST_PATH = "chroma_db/"
 ZIP_FILE_PATH = "./schema_chroma.zip"
@@ -115,11 +113,8 @@ def create_table_context(client, table_id, table_obj):
         for row in row_count_result:
             context["row_count"] = row.row_count
         
-        # Get column count
         context["column_count"] = len(table_obj.schema)
-        
-        # Check for potential primary keys
-        # Look for columns that might be primary keys (unique, not null)
+
         for field in table_obj.schema:
             if field.name.lower().endswith('id') or field.name.lower() == 'id':
                 query = f"""

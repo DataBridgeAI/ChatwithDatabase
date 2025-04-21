@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - deployment-div
+      - dynamic-dataset
 
 env:
   PROJECT_ID: chatwithdata-451800

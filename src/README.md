@@ -508,6 +508,204 @@ This implementation structure ensures:
 
 ---
 
+## Cloud Deployment Architecture
+
+### 1. Deployment Service Overview
+Our project utilizes Google Kubernetes Engine (GKE) for containerized deployment, providing scalability, reliability, and automated management of our ML infrastructure.
+
+#### 1.1 Infrastructure Components
+- **Container Registry**: Google Container Registry (GCR)
+  - Frontend Image: `gcr.io/chatwithdata-451800/chatapp-ui`
+  - Backend Image: `gcr.io/chatwithdata-451800/chatapp-api`
+- **Kubernetes Cluster**: GKE in `us-central1`
+  - Cluster Name: `chat-cluster`
+  - Node Configuration: 
+    - Machine Type: `e2-standard-2`
+    - Auto-scaling enabled: 2-5 nodes
+
+#### 1.2 Resource Management
+- **Frontend Pod Resources**:
+  ```yaml
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "512Mi"
+    limits:
+      cpu: "500m"
+      memory: "1Gi"
+  ```
+- **Backend Pod Resources**:
+  ```yaml
+  resources:
+    requests:
+      cpu: "250m"
+    limits:
+      cpu: "500m"
+  ```
+
+### 2. Deployment Automation
+
+#### 2.1 CI/CD Pipeline Components
+- **GitHub Actions Workflows**:
+  - `gke-deploy.yml`: Main deployment pipeline
+  - `model-ci.yml`: Model validation and testing
+  - `airflow-ci.yml`: DAG deployment to Cloud Composer
+
+#### 2.2 Automated Deployment Process
+1. **Build Stage**:
+   ```bash
+   docker build -t $FRONTEND_IMAGE:$TAG ./frontend
+   docker build -t $BACKEND_IMAGE:$TAG ./src
+   ```
+
+2. **Push Stage**:
+   ```bash
+   docker push $FRONTEND_IMAGE:$TAG
+   docker push $BACKEND_IMAGE:$TAG
+   ```
+
+3. **Deploy Stage**:
+   ```bash
+   kubectl apply -f k8s/
+   kubectl set image deployment/frontend frontend=$FRONTEND_IMAGE:$TAG
+   kubectl set image deployment/backend backend=$BACKEND_IMAGE:$TAG
+   ```
+
+### 3. Repository Integration
+
+#### 3.1 Automatic Deployment Triggers
+- Push to `deployment-div` branch
+- Pull request merges to main branch
+- Scheduled model validation runs
+
+#### 3.2 Required Secrets
+```yaml
+GCP_CREDENTIALS: Service account key JSON
+SLACK_WEBHOOK: Notification webhook URL
+CLOUD_COMPOSER_BUCKET: DAG storage bucket
+```
+
+### 4. Deployment Replication Guide
+
+#### 4.1 Prerequisites
+1. Install required tools:
+   ```bash
+   # Install Google Cloud SDK
+   curl https://sdk.cloud.google.com | bash
+   
+   # Install kubectl
+   gcloud components install kubectl
+   
+   # Install Docker
+   sudo apt-get install docker-ce docker-ce-cli containerd.io
+   ```
+
+2. Configure authentication:
+   ```bash
+   # Set up GCP authentication
+   gcloud auth login
+   gcloud config set project chatwithdata-451800
+   
+   # Configure Docker for GCR
+   gcloud auth configure-docker gcr.io -q
+   ```
+
+#### 4.2 Deployment Steps
+
+1. **Clone Repository**:
+   ```bash
+   git clone <repository-url>
+   cd <repository-name>
+   ```
+
+2. **Set Up Environment**:
+   ```bash
+   # Create .env file
+   cp .env.example .env
+   
+   # Add required API keys and credentials
+   echo "OPENAI_API_KEY=your-key" >> .env
+   echo "GOOGLE_APPLICATION_CREDENTIALS=path/to/credentials.json" >> .env
+   ```
+
+3. **Deploy Infrastructure**:
+   ```bash
+   # Create GKE cluster
+   gcloud container clusters create chat-cluster \
+     --zone us-central1 \
+     --num-nodes 2 \
+     --enable-autoscaling \
+     --min-nodes 2 \
+     --max-nodes 5
+   
+   # Get credentials
+   gcloud container clusters get-credentials chat-cluster --zone us-central1
+   ```
+
+4. **Deploy Application**:
+   ```bash
+   # Apply Kubernetes configurations
+   kubectl apply -f k8s/
+   
+   # Verify deployment
+   kubectl get pods
+   kubectl get services
+   ```
+
+#### 4.3 Verification Steps
+1. Check deployment status:
+   ```bash
+   kubectl get deployments
+   kubectl get pods
+   ```
+
+2. Access the application:
+   ```bash
+   # Get external IP
+   kubectl get service frontend-service
+   ```
+
+3. Monitor logs:
+   ```bash
+   # Frontend logs
+   kubectl logs -l app=frontend
+   
+   # Backend logs
+   kubectl logs -l app=backend
+   ```
+
+### 5. Monitoring and Logging
+
+#### 5.1 Deployment Monitoring
+- Cloud Monitoring dashboards
+- Kubernetes Engine monitoring
+- Custom metrics via MLflow
+
+#### 5.2 Log Management
+- Stackdriver Logging integration
+- Custom log exporters to BigQuery
+- Slack notifications for critical events
+
+### 6. Troubleshooting Guide
+
+#### 6.1 Common Issues
+1. **Image Pull Errors**:
+   - Verify GCR permissions
+   - Check image tags
+   - Validate service account credentials
+
+2. **Resource Constraints**:
+   - Monitor node resources
+   - Adjust pod resource limits
+   - Enable cluster autoscaling
+
+3. **Network Issues**:
+   - Verify firewall rules
+   - Check service configurations
+   - Validate ingress settings
+
+---
+
 ## Conclusion
 This project successfully implements a natural language to SQL query generation system by combining GPT-4's capabilities with robust engineering practices. The solution features real-time schema validation, automated prompt testing, and comprehensive safety checks, all integrated within a production-ready CI/CD pipeline. Through MLflow monitoring, hyperparameter optimization, and similarity-based feedback retrieval using ChromaDB, the system maintains high accuracy while ensuring reliable and safe query generation. This practical approach demonstrates effective integration of ML capabilities with software engineering best practices.
 
