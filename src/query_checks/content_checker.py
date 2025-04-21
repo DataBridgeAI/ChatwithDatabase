@@ -1,8 +1,15 @@
 # query_checks/content_checker.py
 import re
 from typing import Optional
-from snorkel.labeling import labeling_function
 import pandas as pd
+from snorkel.labeling import labeling_function
+
+# Check if Detoxify is available
+try:
+    from detoxify import Detoxify
+    DETOXIFY_AVAILABLE = True
+except ImportError:
+    DETOXIFY_AVAILABLE = False
 
 # Reusable Detection Functions
 def detect_probe(text: str, probe_pattern: str, keywords: str) -> bool:
@@ -17,12 +24,61 @@ def detect_bias(text: str, groups: str, bias_pattern: str) -> bool:
     """Detect bias or stereotypes with specific groups and bias terms."""
     return bool(re.search(groups, text) and re.search(bias_pattern, text))
 
+# Detoxify Integration
+def analyze_with_detoxify(text: str) -> dict:
+    """Use Detoxify to analyze text if available, return empty dict otherwise."""
+    if DETOXIFY_AVAILABLE:
+        return Detoxify('original').predict(text)
+    return {}
+
+def is_sensitive(text: str, detoxify_results: dict = None) -> bool:
+    """
+    Check if text is sensitive (religion, gender, race, etc.).
+    Modular and reusable.
+    """
+    text = text.lower()
+    detoxify_results = detoxify_results or analyze_with_detoxify(text)
+    if detoxify_results:
+        # Detoxify-based detection for religion, gender, etc.
+        return (detoxify_results.get('toxicity', 0) > 0.7 or
+                detoxify_results.get('identity_attack', 0) > 0.5 or
+                detoxify_results.get('insult', 0) > 0.5)
+    else:
+        # Fallback: Structural detection for probing questions
+        probe_pattern = r'\b(what|which|who|why|how|is|are|best|worst|better|worse)\b'
+        relational_clue = r'\b(of|in|for|about|than)\b'
+        return (re.search(probe_pattern, text) and re.search(relational_clue, text))
+
+def is_harmful(text: str, detoxify_results: dict = None) -> bool:
+    """
+    Check if text suggests harmful intent (terrorism, violence).
+    Modular and reusable.
+    """
+    text = text.lower()
+    detoxify_results = detoxify_results or analyze_with_detoxify(text)
+    if detoxify_results:
+        # Detoxify-based detection for harmful intent
+        return (detoxify_results.get('threat', 0) > 0.5 or
+                detoxify_results.get('obscene', 0) > 0.5)
+    else:
+        # Fallback: Action-oriented harmful intent
+        action_pattern = r'\b(how|do|make|start|plan)\b'
+        harm_pattern = r'\b(war|kill|attack)\b'
+        return (re.search(action_pattern, text) and re.search(harm_pattern, text))
+
+def is_sql_command(text: str) -> bool:
+    """
+    Check if text resembles an SQL command.
+    Modular and minimal hardcoding.
+    """
+    sql_pattern = r'\b[A-Z]{2,}\b'
+    return re.search(sql_pattern, text) and (' ' in text or ';' in text)
+
 # Common Patterns
 PROBE_PATTERN = r'\b(what|which|who|why|how|is|are|do|differ|wrong|best|better|worse|superior|bad)\b'
 BIAS_PATTERN = r'\b(better|worse|best|worst|superior|weak|strong|lazy|smart|stupid|good|bad|' \
                r'hate|wrong|dangerous|rich|poor|aggressive|useless|differ|problem|judge)\b'
 
-# Category-Specific Keywords
 # Category-Specific Keywords with Expanded Lists
 
 # Region/Nationality
@@ -147,14 +203,14 @@ def lf_religion_probe(row):
 def lf_religion_keywords(row):
     text = row["text"].lower()
     if detect_keywords(text, RELIGION_KEYWORDS):
-        return " This query mentions a religious topic not relevant to the dataset. Please focus on data-related queries."
+        return "This query mentions a religious topic not relevant to the dataset. Please focus on data-related queries."
     return None
 
 @labeling_function()
 def lf_religion_bias(row):
     text = row["text"].lower()
     if detect_bias(text, RELIGION_GROUPS, BIAS_PATTERN):
-        return " This query suggests bias about a religion, which is inappropriate for this dataset. Please rephrase."
+        return "This query suggests bias about a religion, which is inappropriate for this dataset. Please rephrase."
     return None
 
 # Racial/Ethnicity
@@ -162,21 +218,21 @@ def lf_religion_bias(row):
 def lf_racial_probe(row):
     text = row["text"].lower()
     if detect_probe(text, PROBE_PATTERN, RACIAL_KEYWORDS):
-        return " This query involves a racial or ethnic topic irrelevant to the dataset. Please ask a data-related question."
+        return "This query involves a racial or ethnic topic irrelevant to the dataset. Please ask a data-related question."
     return None
 
 @labeling_function()
 def lf_racial_keywords(row):
     text = row["text"].lower()
     if detect_keywords(text, RACIAL_KEYWORDS):
-        return " This query mentions a racial or ethnic topic not relevant to the dataset. Please focus on data-related queries."
+        return "This query mentions a racial or ethnic topic not relevant to the dataset. Please focus on data-related queries."
     return None
 
 @labeling_function()
 def lf_racial_bias(row):
     text = row["text"].lower()
     if detect_bias(text, RACIAL_GROUPS, BIAS_PATTERN):
-        return " This query suggests bias about race or ethnicity, which is inappropriate for this dataset. Please rephrase."
+        return "This query suggests bias about race or ethnicity, which is inappropriate for this dataset. Please rephrase."
     return None
 
 # Gender
@@ -184,21 +240,21 @@ def lf_racial_bias(row):
 def lf_gender_probe(row):
     text = row["text"].lower()
     if detect_probe(text, PROBE_PATTERN, GENDER_KEYWORDS):
-        return " This query involves a gender or sexuality topic irrelevant to the dataset. Please ask a data-related question."
+        return "This query involves a gender or sexuality topic irrelevant to the dataset. Please ask a data-related question."
     return None
 
 @labeling_function()
 def lf_gender_keywords(row):
     text = row["text"].lower()
     if detect_keywords(text, GENDER_KEYWORDS):
-        return " This query mentions a gender or sexuality topic not relevant to the dataset. Please focus on data-related queries."
+        return "This query mentions a gender or sexuality topic not relevant to the dataset. Please focus on data-related queries."
     return None
 
 @labeling_function()
 def lf_gender_bias(row):
     text = row["text"].lower()
     if detect_bias(text, GENDER_GROUPS, BIAS_PATTERN):
-        return " This query suggests bias about gender or sexuality, which is inappropriate for this dataset. Please rephrase."
+        return "This query suggests bias about gender or sexuality, which is inappropriate for this dataset. Please rephrase."
     return None
 
 # Politics
@@ -206,14 +262,14 @@ def lf_gender_bias(row):
 def lf_politics_probe(row):
     text = row["text"].lower()
     if detect_probe(text, PROBE_PATTERN, POLITICS_KEYWORDS):
-        return " This query involves a political topic irrelevant to the dataset. Please ask a data-related question."
+        return "This query involves a political topic irrelevant to the dataset. Please ask a data-related question."
     return None
 
 @labeling_function()
 def lf_politics_keywords(row):
     text = row["text"].lower()
     if detect_keywords(text, POLITICS_KEYWORDS):
-        return " This query mentions a political topic not relevant to the dataset. Please focus on data-related queries."
+        return "This query mentions a political topic not relevant to the dataset. Please focus on data-related queries."
     return None
 
 # Terrorism
@@ -221,14 +277,14 @@ def lf_politics_keywords(row):
 def lf_terrorism_probe(row):
     text = row["text"].lower()
     if detect_probe(text, PROBE_PATTERN, TERRORISM_KEYWORDS):
-        return " This query relates to violence or terrorism, which is inappropriate for this dataset. I can’t assist."
+        return "This query relates to violence or terrorism, which is inappropriate for this dataset. I can't assist."
     return None
 
 @labeling_function()
 def lf_harmful_intent(row):
     text = row["text"].lower()
     if re.search(ACTION_PATTERN, text) and re.search(HARM_PATTERN, text):
-        return " This query suggests harmful intent (e.g., violence, hate), which is inappropriate for this dataset. I can’t assist."
+        return "This query suggests harmful intent (e.g., violence, hate), which is inappropriate for this dataset. I can't assist."
     return None
 
 # Other Categories (Age, Miscellaneous, Obscene, SQL)
@@ -236,28 +292,28 @@ def lf_harmful_intent(row):
 def lf_age_probe(row):
     text = row["text"].lower()
     if detect_probe(text, PROBE_PATTERN, AGE_KEYWORDS):
-        return " This query involves an age-related topic irrelevant to the dataset. Please ask a data-related question."
+        return "This query involves an age-related topic irrelevant to the dataset. Please ask a data-related question."
     return None
 
 @labeling_function()
 def lf_age_keywords(row):
     text = row["text"].lower()
     if detect_keywords(text, AGE_KEYWORDS):
-        return " This query mentions an age-related topic not relevant to the dataset. Please focus on data-related queries."
+        return "This query mentions an age-related topic not relevant to the dataset. Please focus on data-related queries."
     return None
 
 @labeling_function()
 def lf_misc_bias(row):
     text = row["text"].lower()
     if detect_bias(text, MISC_GROUPS, BIAS_PATTERN):
-        return " This query suggests bias about a social group (e.g., wealth, ability), which is inappropriate for this dataset. Please rephrase."
+        return "This query suggests bias about a social group (e.g., wealth, ability), which is inappropriate for this dataset. Please rephrase."
     return None
 
 @labeling_function()
 def lf_obscene_language(row):
     text = row["text"].lower()
     if re.search(OBSCENE_PATTERN, text):
-        return " This query contains inappropriate language not suitable for this dataset. Please rephrase."
+        return "This query contains inappropriate language not suitable for this dataset. Please rephrase."
     return None
 
 @labeling_function()
@@ -265,12 +321,51 @@ def lf_sql_injection(row):
     text = row["text"].upper()
     sql_blacklist = ["DROP", "DELETE", "ALTER", "INSERT", "TRUNCATE", "UPDATE"]
     if any(word in text for word in sql_blacklist):
-        return " This query contains restricted SQL operations. Please use valid data queries."
+        return "This query contains restricted SQL operations. Please use valid data queries."
     return None
 
-# Centralized Sensitivity Filter
+# New functions for integration with Detoxify
+def detect_sensitive_content(text: str) -> Optional[str]:
+    """Detect and respond to sensitive content using Detoxify."""
+    results = analyze_with_detoxify(text)
+    if results and is_sensitive(text, results):
+        return "🤝 This query might touch on a sensitive topic (e.g., religion, gender). Let's focus on neutral questions."
+    return None
+
+def block_inappropriate_query(text: str) -> Optional[str]:
+    """Block queries with harmful intent using Detoxify."""
+    results = analyze_with_detoxify(text)
+    if results and is_harmful(text, results):
+        return "This query suggests harmful intent (e.g., terrorism, violence). I can't assist with that."
+    return None
+
+def check_sql_safety(text: str) -> Optional[str]:
+    """Ensure SQL safety using improved pattern matching."""
+    if is_sql_command(text):
+        return "Restricted SQL operation detected."
+    return None
+
+# Centralized Sensitivity Filter - Combined approach
 def sensitivity_filter(user_query: str) -> Optional[str]:
-    """Check query and return specific comments if inappropriate for the dataset."""
+    """
+    Check query and return specific comments if inappropriate using both 
+    pattern-based detection and Detoxify (when available).
+    """
+    # First try Detoxify-based detection (if available)
+    if DETOXIFY_AVAILABLE:
+        # Check with Detoxify first for more accurate detection
+        detoxify_checks = [
+            detect_sensitive_content,
+            block_inappropriate_query,
+            check_sql_safety
+        ]
+        
+        for check in detoxify_checks:
+            result = check(user_query)
+            if result:
+                return result
+    
+    # Fall back to pattern-based labeling functions
     lfs = [
         # Prioritize bias detection, then probes, then keywords
         lf_region_bias, lf_region_probe, lf_region_keywords,

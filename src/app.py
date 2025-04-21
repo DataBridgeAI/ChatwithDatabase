@@ -19,16 +19,12 @@ from feedback.vector_search import retrieve_similar_query
 from feedback.chroma_setup import download_and_extract_chromadb
 from monitoring.mlflow_config import QueryTracker
 from query_checks.content_checker import sensitivity_filter
-from promptfilter.semantic_search import download_and_prepare_embeddings, check_query_relevance
+from promptfilter.semantic_search import download_and_prepare_embeddings, check_query_relevance, get_vector_db
 from ai.data_formatter import dataframe_to_json
 from monitoring.input_tracker import InputTracker
-from monitoring_utils import GCPMonitoring
 
 # Load environment variables from .env file
 load_dotenv('src/.env')
-
-project_id = os.environ.get('PROJECT_ID')
-monitor = GCPMonitoring(project_id)
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
@@ -68,26 +64,30 @@ def setup_credentials():
         return False
 
 # Initialize schema embeddings at startup
-try:
-    schema_embeddings = download_and_prepare_embeddings()
-    if not schema_embeddings:
-        print("Failed to load schema embeddings")
-        monitor.log_event("Failed to load schema embeddings", severity="ERROR")
-       
-except Exception as e:
-    print(f"Failed to initialize schema embeddings: {str(e)}")
+# try:
+#     data = request.json
+#     project_id = data.get('project_id') or os.environ.get('PROJECT_ID')
+#     dataset_id = data.get('dataset_id') or os.environ.get('DATASET_ID')
+#     if dataset_id:
+#         schema_embeddings = download_and_prepare_embeddings(dataset_id=dataset_id)
+#         if schema_embeddings:
+#             print(f"✅ Successfully loaded schema embeddings for dataset: {dataset_id}")
+#         else:
+#             print(f"❌ Failed to load schema embeddings for dataset: {dataset_id}")
+#     else:
+#         print("❌ No dataset_id provided in environment variables")
+# except Exception as e:
+#     print(f"Failed to initialize schema embeddings: {str(e)}")
 
 # Setup ChromaDB at startup
 try:
     download_and_extract_chromadb()
-    monitor.log_event("ChromaDB setup successful", severity="INFO")
 except Exception as e:
     print(f"Failed to setup ChromaDB: {str(e)}")
 
 # Load prompt template at startup
 try:
     load_prompt_template()
-    monitor.log_event("Prompt template loaded ", severity="INFO")
 except Exception as e:
     print(f"Failed to load prompt template: {str(e)}")
 
@@ -95,10 +95,8 @@ except Exception as e:
 try:
     if setup_credentials():
         print("Credentials setup successfully")
-        monitor.log_event("Credentials setup completed", severity="INFO")
     else:
         print("Warning: Credentials not fully configured")
-        monitor.log_event("Failed to setup credentials", severity="ERROR")
 except Exception as e:
     print(f"Failed to setup credentials: {str(e)}")
 
@@ -111,10 +109,27 @@ try:
     print("Chat history database initialized")
 except Exception as e:
     print(f"Failed to initialize chat history database: {str(e)}")
-    monitor.log_event("Failed to initialize chat history database", severity="ERROR")
 
 # Initialize the tracker
 input_tracker = InputTracker()  # Remove the parameters since we're not using them anymore
+
+# # Initialize ChromaDB for available datasets at startup
+# try:
+#     from promptfilter.semantic_search import list_available_datasets, get_vector_db
+    
+#     available_datasets = list_available_datasets()
+#     if available_datasets:
+#         default_dataset = os.environ.get('DATASET_ID') or available_datasets[0]
+#         print(f"Initializing vector DB for default dataset: {default_dataset}")
+#         vector_db = get_vector_db(default_dataset)
+#         if vector_db:
+#             print(f"✅ Successfully initialized vector DB for dataset: {default_dataset}")
+#         else:
+#             print(f"❌ Failed to initialize vector DB for dataset: {default_dataset}")
+#     else:
+#         print("❌ No datasets available for ChromaDB initialization")
+# except Exception as e:
+#     print(f"Failed to initialize ChromaDB: {str(e)}")
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
@@ -136,11 +151,9 @@ def set_credentials():
             os.environ["OPENAI_API_KEY"] = openai_api_key
             response["messages"].append("OpenAI API key set successfully")
             response["openai_success"] = True
-            monitor.log_event("OpenAI API key set successfully", severity="INFO")
         except Exception as e:
             response["messages"].append(f"Failed to set OpenAI API key: {str(e)}")
             response["openai_success"] = False
-            monitor.log_event("Failed to set OpenAI API key", severity="ERROR")
 
     # Handle Google credentials
     if google_credentials:
@@ -154,26 +167,30 @@ def set_credentials():
             os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = temp_path
             response["messages"].append("Google credentials set successfully")
             response["google_success"] = True
-            monitor.log_event("Google credentials loaded", severity="INFO")
         except Exception as e:
             response["messages"].append(f"Failed to set Google credentials: {str(e)}")
             response["google_success"] = False
-            monitor.log_event("Error setting Google credentials", severity="ERROR")
 
     response["success"] = response.get("openai_success", False) or response.get("google_success", False)
     return jsonify(response)
 
 @app.route('/api/schema', methods=['POST'])
 def fetch_schema():
+    data = request.json
+    project_id = data.get('project_id')
+    dataset_id = data.get('dataset_id')
+    
+    if not project_id or not dataset_id:
+        return jsonify({'error': 'Project ID and Dataset ID are required'}), 400
+        
     try:
-        data = request.json
-        project_id = data.get('project_id') or os.environ.get('PROJECT_ID')
-        dataset_id = data.get('dataset_id') or os.environ.get('DATASET_ID')
-        
+        # Initialize vector DB when schema is first requested
+        vector_db = get_vector_db(dataset_id)
+        if not vector_db:
+            print(f"Warning: Could not initialize vector DB for dataset {dataset_id}")
+            
+        # Rest of your schema fetching logic... (keep the existing code)
         app.logger.info(f"Received schema request for project: {project_id}, dataset: {dataset_id}")
-        
-        if not project_id or not dataset_id:
-            return jsonify({'error': 'Project ID and Dataset ID are required'}), 400
         
         try:
             app.logger.info("Calling get_bigquery_schema function")
@@ -181,17 +198,14 @@ def fetch_schema():
             app.logger.info(f"Schema retrieved: {bool(schema)}")
             
             if schema:
-                monitor.log_event("Loaded schema successfully", severity="INFO")
                 return jsonify({'schema': schema})
             else:
                 app.logger.error("Schema is empty or None")
-                monitor.log_event("Loaded schema is empty or not found", severity="ERROR")
                 return jsonify({'error': 'Failed to fetch schema - empty result'}), 500
         except Exception as e:
             app.logger.error(f"Error in get_bigquery_schema: {str(e)}")
             import traceback
             app.logger.error(traceback.format_exc())
-            monitor.log_event("Failed to fetch schema", severity="ERROR")
             return jsonify({'error': f"Schema fetch error: {str(e)}"}), 500
     except Exception as e:
         app.logger.error(f"General endpoint error: {str(e)}")
@@ -201,18 +215,35 @@ def fetch_schema():
 
 @app.route('/api/query/validate', methods=['POST'])
 def validate_user_query():
+    print("\n=== Query Validation Request ===")
     data = request.json
+    print("Request data:", data)
+    
     user_query = data.get('query')
+    project_id = data.get('project_id') or os.environ.get('PROJECT_ID')
+    dataset_id = data.get('dataset_id') or os.environ.get('DATASET_ID')
+    
+    print(f"Processing validation:")
+    print(f"- User Query: {user_query}")
+    print(f"- Project ID: {project_id}")
+    print(f"- Dataset ID: {dataset_id}")
 
     if not user_query:
+        print("Error: Missing query")
         return jsonify({'error': 'Query is required'}), 400
+    
+    if not dataset_id:
+        print("Error: Missing dataset ID")
+        return jsonify({'error': 'Dataset ID is required'}), 400
 
     try:
         validation_details = {}
         
         # Check for sensitive content
+        print("Checking for sensitive content...")
         validation_error = sensitivity_filter(user_query)
         if validation_error:
+            print(f"Sensitivity check failed: {validation_error}")
             validation_details["error_type"] = "sensitivity"
             validation_details["details"] = validation_error
             input_tracker.track_invalid_input(
@@ -220,15 +251,20 @@ def validate_user_query():
                 error_type="bias",
                 validation_details=validation_details
             )
-            monitor.log_event("Query validation failed", severity="ERROR")
             return jsonify({'error': validation_error}), 400
-        monitor.log_event("Query validation passed", severity="INFO")
+
         # Check query relevance
+        print(f"Checking query relevance for dataset: {dataset_id}")
         query_relevance_flag = check_query_relevance(
-            user_query,
-            schema_embeddings=schema_embeddings
+            user_input=user_query,
+            dataset_id=dataset_id,
+            project_id=project_id
         )
+        
+        print(f"Relevance check result: {query_relevance_flag}")
+        
         if not query_relevance_flag:
+            print("Query failed relevance check")
             validation_details["error_type"] = "relevance"
             validation_details["details"] = "Query unrelated to schema"
             input_tracker.track_invalid_input(
@@ -236,11 +272,12 @@ def validate_user_query():
                 error_type="relevance",
                 validation_details=validation_details
             )
-            monitor.log_event("Query appears unrelated to the database schema", severity="ERROR")
-            return jsonify({'error': ' Query appears unrelated to the database schema'}), 400
+            return jsonify({'error': '❌ Query appears unrelated to the database schema'}), 400
 
+        print("Validation successful")
         return jsonify({'valid': True})
     except Exception as e:
+        print(f"Validation error: {str(e)}")
         validation_details = {
             "error_type": "system_error",
             "details": str(e)
@@ -250,7 +287,6 @@ def validate_user_query():
             error_type="system_error",
             validation_details=validation_details
         )
-        monitor.log_event("Exception encountered during query validation", severity="ERROR")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/query/similar', methods=['POST'])
@@ -304,12 +340,10 @@ def generate_query():
                 project_id=project_id,
                 dataset_id=dataset_id
             )
-            monitor.log_event(" SQL Query generated successfully", severity="INFO")
         except ValueError as ve:
-            monitor.log_event("Error generating SQL", severity="ERROR")
             return jsonify({
-                'error': str(ve),
-                'conversation_id': conversation_id
+                'error': "I'm having trouble with that request. Can you try asking in a different way?",
+                'error_type': 'comprehension'
             }), 400
 
         # Execute SQL
@@ -402,6 +436,7 @@ def execute_sql_query():
     sql_query = data.get('sql')
     conversation_id = data.get('conversation_id')
     user_query = data.get('user_query', 'Custom SQL execution')
+    dataset_id = data.get('dataset_id') or os.environ.get('DATASET_ID')
 
     if not sql_query:
         return jsonify({'error': 'SQL query is required'}), 400
@@ -432,7 +467,6 @@ def execute_sql_query():
                 return jsonify({
                     'error': 'No data returned'
                 }), 400
-            
         else:
             # Convert to list of dicts for JSON serialization
             result_data = result_df.to_dict(orient='records')
@@ -449,9 +483,7 @@ def execute_sql_query():
                 'execution_time': query_execution_time
             })
     except Exception as e:
-        monitor.log_event("Error encountered during query execution", severity="ERROR")
         return jsonify({'error': str(e)}), 500
-    
 
 @app.route('/api/feedback', methods=['POST'])
 def submit_feedback():
@@ -466,21 +498,20 @@ def submit_feedback():
 
     try:
         store_feedback(user_query, generated_sql, feedback, execution_success=execution_success)
-        monitor.log_event("Stored the feedback successfully", severity="INFO")
         return jsonify({'success': True})
     except Exception as e:
-        monitor.log_event("Error encountered during feedback submission", severity="ERROR")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/chat/history', methods=['GET'])
 def get_chat_history():
     user_id = request.args.get('user_id')
     limit = request.args.get('limit', 5, type=int)
+    dataset_id = request.args.get('dataset_id') or os.environ.get('DATASET_ID')
     
     try:
         db = get_chat_history_db()
         conversations = db.get_recent_conversations(user_id, limit)
-        monitor.log_event("Fetched chat history successfully", severity="INFO")
+        
         return jsonify({
             'success': True,
             'conversations': conversations
@@ -489,7 +520,6 @@ def get_chat_history():
         app.logger.error(f"Error fetching chat history: {str(e)}")
         import traceback
         app.logger.error(traceback.format_exc())
-        monitor.log_event("Error encountered during chat history retrieval", severity="ERROR")
         return jsonify({
             'success': False,
             'error': str(e),
@@ -510,7 +540,7 @@ def get_conversation(conversation_id):
                 'messages': [],
                 'details': {}
             }), 404
-        monitor.log_event("Chat conversation retrieved successfully", severity="INFO")
+            
         return jsonify({
             'success': True,
             'details': details,
@@ -520,7 +550,6 @@ def get_conversation(conversation_id):
         app.logger.error(f"Error fetching conversation: {str(e)}")
         import traceback
         app.logger.error(traceback.format_exc())
-        monitor.log_event("Error encountered during conversation retrieval", severity="ERROR")
         return jsonify({
             'success': False,
             'error': str(e),

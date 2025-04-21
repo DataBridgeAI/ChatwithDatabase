@@ -14,7 +14,7 @@ const QueryInput = () => {
     setUserQuery,
     schema,
     projectId,
-    datasetId,
+    datasetId,  
     setGeneratedSql,
     setQueryResults,
     resetStates,
@@ -32,6 +32,11 @@ const QueryInput = () => {
     showVisualization,
     setShowVisualization
   } = useAppContext();
+
+  // Add debug logging for dataset ID
+  useEffect(() => {
+    console.log("[QueryInput] Current dataset ID:", datasetId);
+  }, [datasetId]);
 
   const [showSimilarQuery, setShowSimilarQuery] = useState(false);
   const [useSuggested, setUseSuggested] = useState(null);
@@ -56,6 +61,8 @@ const QueryInput = () => {
   // Core execution logic from the original component
   const executeNewQuery = useCallback(async () => {
     try {
+      console.log("[executeNewQuery] Executing with dataset ID:", datasetId);
+      
       const result = await generateAndExecuteQuery(
         userQuery,
         schema,
@@ -109,7 +116,7 @@ const QueryInput = () => {
     setChatHistory,
   ]);
 
-  // Logic for handling similar query suggestion
+  // similar query suggestion
   const handleSuggestedQueryChoice = useCallback(async () => {
     if (useSuggested === "yes") {
       setLoading(true);
@@ -173,6 +180,8 @@ const QueryInput = () => {
 
   // Main query generation handler
   const handleGenerateQuery = async () => {
+    console.log("[handleGenerateQuery] Starting with dataset:", datasetId);
+    
     // Reset all states to ensure a fresh start
     resetStates();
     
@@ -193,10 +202,18 @@ const QueryInput = () => {
     }
 
     try {
-      // Validate the query
-      const validationResult = await validateQuery(userQuery);
+      console.log("[handleGenerateQuery] Validating query with:", {
+        query: userQuery,
+        datasetId: datasetId,
+        projectId: projectId
+      });
+
+      // Validate the query with dataset ID parameter
+      const validationResult = await validateQuery(userQuery, datasetId, projectId);
+      console.log("[handleGenerateQuery] Validation result:", validationResult);
+      
       if (validationResult.error) {
-        setError(validationResult.error);
+        setError(validationResult.error); // Use the exact error from backend
         setLoading(false);
         return;
       }
@@ -216,7 +233,7 @@ const QueryInput = () => {
         executeNewQuery();
       }
     } catch (error) {
-      setError(error.message || "An error occurred");
+      setError(error.message); // Use the exact error message
       setLoading(false);
     }
   };

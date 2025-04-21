@@ -6,45 +6,76 @@ from datetime import timedelta, datetime
 
 # Import the processing functions
 from schema_embeddings_processor import (
-    generate_schema_embeddings,
-    upload_embeddings_to_gcs,
-    generate_and_store_embeddings
+    generate_and_store_embeddings,
+    get_all_datasets,
+    PROJECT_ID
 )
 
-# Configuration (matching processor.py)
-PROJECT_ID = "chatwithdata-451800"
-DATASET_ID = "RetailDataset"
-BUCKET_NAME = "bigquery-embeddings-store"
-VERTEX_MODEL = "textembedding-gecko@003"
+default_args = {
+    'owner': 'airflow',
+    'depends_on_past': False,
+    'email_on_failure': False,
+    'email_on_retry': False,
+    'retries': 1,
+    'retry_delay': timedelta(minutes=5),
+    'pool': 'embedding_pool',  # Create this pool in Airflow UI
+    'max_active_runs': 1
+}
 
 # Define the DAG
 with DAG(
     dag_id="schema_embeddings_dag",
-    schedule_interval=timedelta(days=1),  # Set as needed
+    default_args=default_args,
+    description='Generate and store schema embeddings for all datasets',
+    schedule_interval=timedelta(days=1),
     start_date=datetime(2025, 3, 1),
     catchup=False,
     tags=['schema', 'embeddings']
 ) as dag:
     
-    # Task 1: Generate embeddings and store locally
+    def process_datasets(**context):
+        """Process all datasets and store their embeddings."""
+        try:
+            success = generate_and_store_embeddings()
+            if not success:
+                raise Exception("Failed to generate and store embeddings")
+            
+            # Get count of processed datasets for logging
+            datasets = get_all_datasets(PROJECT_ID)
+            context['task_instance'].xcom_push(
+                key='processed_datasets_count', 
+                value=len(datasets)
+            )
+            return success
+        except Exception as e:
+            print(f"Error in process_datasets: {str(e)}")
+            raise
+    
+    # Task 1: Generate and store embeddings for all datasets
     generate_embeddings_task = PythonOperator(
-        task_id="generate_embeddings",
-        python_callable=generate_schema_embeddings,
+        task_id="generate_and_store_embeddings",
+        python_callable=process_datasets,
+        provide_context=True,
         dag=dag
     )
     
-    # Task 2: Upload embeddings to GCS
-    upload_to_gcs_task = PythonOperator(
-        task_id="upload_to_gcs",
-        python_callable=upload_embeddings_to_gcs,
-        dag=dag
-    )
+    def get_slack_message(**context):
+        """Generate success message with dataset count."""
+        try:
+            datasets_count = context['task_instance'].xcom_pull(
+                task_ids='generate_and_store_embeddings',
+                key='processed_datasets_count'
+            )
+            return (f"✅ Schema embeddings generation completed successfully!\n"
+                   f"Processed {datasets_count} datasets in project {PROJECT_ID}")
+        except Exception:
+            return "✅ Schema embeddings generation completed successfully!"
 
-    # Task 3: Send Slack notification
+    # Task 2: Send Slack notification
     send_slack_notification = SlackWebhookOperator(
         task_id='send_slack_notification',
         slack_webhook_conn_id='slack_webhook',
-        message="✅ Schema embeddings generation and upload completed successfully!",
+        message=get_slack_message,
         channel="#airflow-notifications",
         username="airflow-bot",
         dag=dag

@@ -1,12 +1,13 @@
 // API service for BigQuery Analytics
-const API_BASE_URL = window._env_?.REACT_APP_API_URL || 'http://34.10.210.167/api';
+const API_BASE_URL = process.env.NODE_ENV === 'development' 
+  ? 'http://localhost:5001/api'  // Local development
+  : window._env_?.REACT_APP_API_URL || 'http://34.10.210.167/api';  // Production
 
 if (!API_BASE_URL) {
   throw new Error('API URL is not configured');
 }
 
 export { API_BASE_URL };
-
 
 export const fetchSchema = async (projectId, datasetId) => {
   try {
@@ -33,7 +34,9 @@ export const fetchSchema = async (projectId, datasetId) => {
   }
 };
 
-export const validateQuery = async (query) => {
+export const validateQuery = async (query, datasetId, projectId) => {
+  console.log("[validateQuery] Called with:", { query, datasetId, projectId });
+  
   try {
     const response = await fetch(`${API_BASE_URL}/query/validate`, {
       method: "POST",
@@ -42,13 +45,24 @@ export const validateQuery = async (query) => {
       },
       body: JSON.stringify({
         query,
+        dataset_id: datasetId,
+        project_id: projectId
       }),
     });
 
-    return await response.json();
+    const data = await response.json();
+    console.log("[validateQuery] Response:", data);
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Validation failed');
+      // throw new Error(data.error || "I'm having trouble understanding your question. Could you try phrasing it differently?");
+    }
+
+    return data;
   } catch (error) {
-    console.error("Error validating query:", error);
-    throw new Error("I'm having trouble understanding your question. Could you try phrasing it differently?");
+    console.error("[validateQuery] Error:", error);
+    throw error;
+    // throw new Error("I'm having trouble understanding your question. Could you try phrasing it differently?");
   }
 };
 
