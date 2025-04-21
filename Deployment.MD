@@ -27,7 +27,14 @@ Our application uses a microservices architecture with separate frontend and bac
 - **Infrastructure**: Google Kubernetes Engine with autoscaling
 - **Monitoring**: GCP monitoring and Slack notifications
 
-![Architecture Diagram Placeholder]
+### System Architecture Diagram
+![MLOps Architecture](/src/assets/architecture_mlops.png)
+
+The architecture consists of four key layers:
+1. **User Interaction Layer**: Handles frontend, authentication, and data visualization
+2. **Backend Processing Layer**: Manages query processing, AI operations (GPT-4/LangChain), and SQL generation
+3. **Data Pipeline Layer**: Orchestrates data workflows using Apache Airflow for schema management and model operations
+4. **Infrastructure Layer**: Provides foundational services through GKE, BigQuery, Vertex AI, and CI/CD pipelines
 
 ## Infrastructure Components
 
