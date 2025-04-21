@@ -453,6 +453,34 @@ kubectl top pods
    - Error alerts
    - Scaling events
 
+5. **Google Cloud Monitoring Integration**:
+   - Implemented via `GCPMonitoring` class from `src/monitoring_utils.py`
+   - Provides comprehensive application monitoring:
+     ```python
+     # Example from app.py
+     monitor.log_event("Query validation passed", severity="INFO")
+     monitor.log_event("Query validation failed", severity="ERROR")
+     ```
+   - Metrics tracked:
+     - Query execution success/failure rates
+     - API response times
+     - System performance metrics
+     - Resource utilization
+   - Custom dashboards in Google Cloud Console for:
+     - Application performance
+     - System health
+     - Error tracking
+   - Alert policies configured for:
+     - Error rate thresholds
+     - Performance degradation
+     - Resource utilization warnings
+
+   ### Cloud Monitoring Visualizations
+   These are some of the cloud monitoring visuals for tracking database or API query performance metrics with visualization of execution times, query volume, and related logs to help identify performance issues or anomalies:
+
+   ![](/src/assets/gcloud_monitoring1.jpg)
+   ![](/src/assets/gcloud_monitoring2.jpg)
+
 ## Troubleshooting
 
 ### Common Issues and Solutions
