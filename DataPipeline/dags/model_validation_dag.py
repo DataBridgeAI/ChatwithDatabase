@@ -2,7 +2,7 @@ from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.providers.slack.operators.slack_webhook import SlackWebhookOperator
 from datetime import datetime, timedelta
-from Model_validation.model_validation import evaluate_model
+from scripts.model_validation import evaluate_model
 
 # Define default arguments
 default_args = {

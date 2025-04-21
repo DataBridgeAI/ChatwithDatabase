@@ -23,7 +23,7 @@ export const fetchSchema = async (projectId, datasetId) => {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error || "I couldn't connect to your dataset. Please check your credentials and try again.");
+      throw new Error(error.error || "Failed to fetch schema");
     }
 
     return await response.json();
@@ -48,7 +48,7 @@ export const validateQuery = async (query) => {
     return await response.json();
   } catch (error) {
     console.error("Error validating query:", error);
-    throw new Error("I'm having trouble understanding your question. Could you try phrasing it differently?");
+    throw error;
   }
 };
 
@@ -67,7 +67,7 @@ export const findSimilarQuery = async (query) => {
     return await response.json();
   } catch (error) {
     console.error("Error finding similar query:", error);
-    throw new Error("I encountered an issue while checking for similar questions you've asked before.");
+    throw error;
   }
 };
 
@@ -96,7 +96,7 @@ export const generateAndExecuteQuery = async (
     return await response.json();
   } catch (error) {
     console.error("Error generating and executing query:", error);
-    throw new Error("I'm having trouble processing your question right now. Let's try a different approach.");
+    throw error;
   }
 };
 
@@ -117,7 +117,7 @@ export const executeSqlQuery = async (sql, conversationId = null, userQuery = nu
     return await response.json();
   } catch (error) {
     console.error("Error executing SQL query:", error);
-    throw new Error("I wasn't able to run that SQL query. There might be an issue with the syntax or the data.");
+    throw error;
   }
 };
 
@@ -144,7 +144,7 @@ export const submitFeedback = async (
     return await response.json();
   } catch (error) {
     console.error("Error submitting feedback:", error);
-    throw new Error("I couldn't save your feedback. Please try again in a moment.");
+    throw error;
   }
 };
 
@@ -153,10 +153,10 @@ export const getChatHistory = async (userId = null, limit = 5) => {
     const url = new URL(`${API_BASE_URL}/chat/history`);
     if (userId) url.searchParams.append('user_id', userId);
     url.searchParams.append('limit', limit);
-    
+
     const response = await fetch(url);
     const data = await response.json();
-    
+
     // Even if there's a 500 error, we still get JSON back with success: false
     return {
       success: data.success || false,
@@ -169,7 +169,7 @@ export const getChatHistory = async (userId = null, limit = 5) => {
     return {
       success: false,
       conversations: [],
-      error: "I couldn't retrieve your chat history right now. Please try again later."
+      error: "Failed to connect to the server"
     };
   }
 };
@@ -178,7 +178,7 @@ export const getConversation = async (conversationId) => {
   try {
     const response = await fetch(`${API_BASE_URL}/chat/conversation/${conversationId}`);
     const data = await response.json();
-    
+
     return {
       success: data.success || false,
       details: data.details || {},
@@ -191,7 +191,7 @@ export const getConversation = async (conversationId) => {
       success: false,
       details: {},
       messages: [],
-      error: "I couldn't load that conversation right now. The server might be temporarily unavailable."
+      error: "Failed to connect to the server"
     };
   }
 };
@@ -202,6 +202,6 @@ export const checkHealth = async () => {
     return await response.json();
   } catch (error) {
     console.error("Error checking API health:", error);
-    throw new Error("I'm having trouble connecting to the server. Please check your connection and try again.");
+    throw error;
   }
 };

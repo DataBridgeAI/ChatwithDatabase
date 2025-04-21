@@ -26,7 +26,7 @@ const LandingPage = ({ onNavigateToFrontPage }) => {
 
   const handleLoadSchema = async () => {
     if (!projectId.trim() || !datasetId.trim()) {
-      setError("I need both the Project ID and Dataset ID to connect to your data. Please fill in both fields.");
+      setError("Please enter both Project ID and Dataset ID");
       return;
     }
 
@@ -39,10 +39,10 @@ const LandingPage = ({ onNavigateToFrontPage }) => {
         setSchema(response.schema);
         setIsSchemaLoaded(true); // This will trigger navigation to the chat page
       } else if (response.error) {
-        setError("I couldn't connect to this dataset. Please check your Project ID and Dataset ID and try again.");
+        setError(response.error);
       }
     } catch (error) {
-      setError("I had trouble connecting to your data. Please verify your credentials and try again.");
+      setError(error.message || "Failed to load schema");
       console.error("Error loading schema:", error);
     } finally {
       setLoading(false);
@@ -56,7 +56,7 @@ const LandingPage = ({ onNavigateToFrontPage }) => {
         {/* Background gradient overlay */}
         <div className="bg-landing-gradient"></div>
         <div className="bg-texture"></div>
-        
+
         {/* Abstract line patterns */}
         <div className="abstract-lines">
           <div className="line-h line-h-1"></div>
@@ -72,14 +72,14 @@ const LandingPage = ({ onNavigateToFrontPage }) => {
           <div className="line-d line-d-3"></div>
           <div className="line-d line-d-4"></div>
         </div>
-        
+
         {/* Animated glow spots */}
         <div className="glow-spot-1"></div>
         <div className="glow-spot-2"></div>
         <div className="glow-spot-3"></div>
         <div className="glow-spot-4"></div>
         <div className="glow-spot-5"></div>
-        
+
         {/* Animated particles effect */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden">
           <div className="particle particle-1"></div>
@@ -91,7 +91,7 @@ const LandingPage = ({ onNavigateToFrontPage }) => {
           <div className="particle particle-7"></div>
         </div>
       </div>
-      
+
       {/* Back button to front page */}
       <div className="absolute top-4 left-4 z-20">
         <button
@@ -104,7 +104,7 @@ const LandingPage = ({ onNavigateToFrontPage }) => {
           Back
         </button>
       </div>
-      
+
       <div 
         className={`w-full max-w-md p-8 glass-card mt-16 relative z-10 transition-all duration-1000 transform ${
           animateIn ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'
@@ -123,7 +123,7 @@ const LandingPage = ({ onNavigateToFrontPage }) => {
                 Veltrix
               </h1>
             </div>
-            
+
             <p className="text-blue-200 mt-3 text-lg">
               Connect to your dataset and explore with natural language
             </p>
@@ -224,7 +224,7 @@ const LandingPage = ({ onNavigateToFrontPage }) => {
               </button>
             </div>
           </div>
-          
+
           <div className={`mt-6 text-center text-xs text-blue-300/80 transition-all duration-700 delay-900 transform ${
             animateIn ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'
           }`}>
@@ -232,7 +232,7 @@ const LandingPage = ({ onNavigateToFrontPage }) => {
           </div>
         </div>
       </div>
-      
+
       <footer className={`mt-8 text-center transition-all duration-1000 delay-1000 transform ${
         animateIn ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'
       }`}>
@@ -243,5 +243,3 @@ const LandingPage = ({ onNavigateToFrontPage }) => {
     </div>
   );
 };
-
-export default LandingPage;

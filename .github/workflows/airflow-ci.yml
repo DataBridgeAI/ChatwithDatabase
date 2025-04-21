@@ -74,4 +74,7 @@ jobs:
         run: gsutil -m cp -r DataPipeline/dags/* gs://${{ secrets.CLOUD_COMPOSER_BUCKET }}/dags/
 
       - name: Upload Scripts
-        run: gsutil -m cp -r DataPipeline/scripts/* gs://${{ secrets.CLOUD_COMPOSER_BUCKET }}/dags/scripts/
+        run: |
+          gsutil -m cp -r DataPipeline/scripts/* gs://${{ secrets.CLOUD_COMPOSER_BUCKET }}/dags/scripts/
+          gsutil -m cp -r Model_validation/model_validation.py gs://${{ secrets.CLOUD_COMPOSER_BUCKET }}/dags/scripts/
+          gsutil -m cp -r PromptValidation/* gs://${{ secrets.CLOUD_COMPOSER_BUCKET }}/dags/PromptValidation/

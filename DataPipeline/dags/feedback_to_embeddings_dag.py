@@ -2,7 +2,7 @@ from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from datetime import datetime, timedelta
 from airflow.providers.slack.operators.slack_webhook import SlackWebhookOperator
-from feedback_helper import fetch_user_queries, update_query_embeddings, zip_directory, upload_zip_to_gcs
+from scripts.feedback_helper import fetch_user_queries, update_query_embeddings, zip_directory, upload_zip_to_gcs
 
 default_args = {
     'owner': 'airflow',
