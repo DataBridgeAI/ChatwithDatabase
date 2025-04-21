@@ -13,7 +13,9 @@ This guide provides detailed instructions for deploying our chat application on 
 - [Verification and Testing](#verification-and-testing)
 - [Scaling and Performance](#scaling-and-performance)
 - [Monitoring](#monitoring)
+- [Model Monitoring and Retraining](#model-monitoring-and-retraining)
 - [Troubleshooting](#troubleshooting)
+- [Video Demonstration](#video-demonstration)
 - [Additional Resources](#additional-resources)
 
 ## Architecture Overview
@@ -70,101 +72,149 @@ Our application uses a microservices architecture with separate frontend and bac
 
 ## Prerequisites
 
-1. **Required Accounts**:
-   - Google Cloud Platform account
-   - GitHub account (for CI/CD)
-   - Slack workspace (for notifications)
-   - OpenAI API key
+### 1. Required Tools and Versions
+- Google Cloud SDK (v400.0.0 or later)
+- kubectl (v1.25.0 or later)
+- Docker (v20.10.0 or later)
+- Git (v2.30.0 or later)
+- Node.js (v16.x or later) for frontend development
+- Python (v3.9 or later) for backend development
 
-2. **Required Tools**:
-   ```bash
-   # Install Google Cloud SDK
-   curl https://sdk.cloud.google.com | bash
-   
-   # Install kubectl
-   gcloud components install kubectl
-   
-   # Verify installations
-   gcloud --version
-   kubectl version
-   ```
+### 2. Access Requirements
+- Google Cloud Platform Account with:
+  - Owner or Editor role
+  - Billing enabled
+  - Following APIs activated:
+    - Container Registry API
+    - Kubernetes Engine API
+    - Cloud Build API
+    - Secret Manager API
+
+### 3. Required Credentials
+- GCP Service Account with:
+  - Kubernetes Engine Admin
+  - Storage Admin
+  - Secret Manager Admin
+  - Service Account User
+- OpenAI API key
+- Slack Webhook URL (for notifications)
+
+### 4. Local Environment Variables
+```bash
+# Required Environment Variables
+export PROJECT_ID="chatwithdata-451800"
+export REGION="us-central1"
+export CLUSTER_NAME="chatapp-cluster"
+export GITHUB_REPO="your-repo-name"
+```
 
 ## Setting Up Your Environment
 
-### GCP Configuration
+### 1. GCP Project Configuration
+```bash
+# Login to Google Cloud
+gcloud auth login
 
-1. **Authentication Setup**:
-   ```bash
-   # Login to Google Cloud
-   gcloud auth login
-   
-   # Set your project
-   gcloud config set project chatwithdata-451800
-   ```
+# Set project and region
+gcloud config set project ${PROJECT_ID}
+gcloud config set compute/region ${REGION}
 
-2. **Enable Required APIs**:
-   ```bash
-   gcloud services enable \
-     container.googleapis.com \
-     containerregistry.googleapis.com \
-     compute.googleapis.com \
-     iam.googleapis.com
-   ```
+# Enable required APIs
+gcloud services enable \
+  container.googleapis.com \
+  containerregistry.googleapis.com \
+  cloudbuild.googleapis.com \
+  secretmanager.googleapis.com
+```
 
-3. **Create GKE Cluster**:
-   ```bash
-   gcloud container clusters create chat-cluster \
-     --zone us-central1 \
-     --num-nodes 2 \
-     --machine-type e2-standard-2 \
-     --enable-autoscaling \
-     --min-nodes 2 \
-     --max-nodes 6
-   ```
+### 2. Kubernetes Cluster Setup
+```bash
+# Create GKE cluster
+gcloud container clusters create ${CLUSTER_NAME} \
+  --region ${REGION} \
+  --num-nodes 3 \
+  --machine-type e2-standard-2 \
+  --enable-autoscaling \
+  --min-nodes 3 \
+  --max-nodes 6
 
-4. **Configure kubectl**:
-   ```bash
-   gcloud container clusters get-credentials chat-cluster --zone us-central1
-   ```
+# Get cluster credentials
+gcloud container clusters get-credentials ${CLUSTER_NAME} \
+  --region ${REGION}
+```
 
-### Service Account Setup
+### 3. Container Registry Setup
+```bash
+# Configure Docker authentication
+gcloud auth configure-docker
 
-1. **Create Service Account**:
-   ```bash
-   gcloud iam service-accounts create gke-deploy-sa \
-     --display-name="GKE Deployment Service Account"
-   ```
+# Grant required permissions
+gcloud projects add-iam-policy-binding ${PROJECT_ID} \
+  --member serviceAccount:${SERVICE_ACCOUNT} \
+  --role roles/storage.admin
+```
 
-2. **Assign Roles**:
-   ```bash
-   gcloud projects add-iam-policy-binding chatwithdata-451800 \
-     --member="serviceAccount:gke-deploy-sa@chatwithdata-451800.iam.gserviceaccount.com" \
-     --role="roles/container.developer"
-   
-   gcloud projects add-iam-policy-binding chatwithdata-451800 \
-     --member="serviceAccount:gke-deploy-sa@chatwithdata-451800.iam.gserviceaccount.com" \
-     --role="roles/storage.admin"
-   ```
+### 4. Secret Management Setup
+```bash
+# Create Kubernetes secrets
+kubectl create secret generic app-secrets \
+  --from-literal=openai-api-key=${OPENAI_API_KEY} \
+  --from-literal=slack-webhook-url=${SLACK_WEBHOOK_URL}
 
-3. **Create Key**:
-   ```bash
-   gcloud iam service-accounts keys create key.json \
-     --iam-account=gke-deploy-sa@chatwithdata-451800.iam.gserviceaccount.com
-   ```
+# Create service account key secret
+kubectl create secret generic gcp-credentials \
+  --from-file=key.json=/path/to/service-account-key.json
+```
 
-### Secrets Management
+### 5. Development Environment Setup
 
-1. **Create Kubernetes Secrets**:
-   ```bash
-   # Create OpenAI API key and Slack webhook secret
-   kubectl create secret generic app-secrets \
-     --from-literal=openai-api-key=YOUR_OPENAI_API_KEY \
-     --from-literal=slack-webhook-url=YOUR_SLACK_WEBHOOK_URL
-   
-   # Create GCP credentials secret
-   kubectl create secret generic gcp-credentials \
-     --from-file=key.json=/path/to/your/service-account-key.json
-   ```
+#### Frontend Setup
+```bash
+# Navigate to frontend directory
+cd frontend
+
+# Install dependencies
+npm install
+
+# Create environment file
+cat << EOF > .env
+REACT_APP_API_URL=http://localhost:5001
+EOF
+```
+
+#### Backend Setup
+```bash
+# Navigate to backend directory
+cd backend
+
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # or `venv\Scripts\activate` on Windows
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Create environment file
+cat << EOF > .env
+OPENAI_API_KEY=${OPENAI_API_KEY}
+GOOGLE_APPLICATION_CREDENTIALS=path/to/key.json
+EOF
+```
+
+### 6. Verification Steps
+```bash
+# Verify GCP configuration
+gcloud config list
+
+# Verify kubectl configuration
+kubectl config current-context
+
+# Verify cluster access
+kubectl get nodes
+
+# Test Docker configuration
+docker pull gcr.io/google-samples/hello-app:1.0
+```
 
 ## Deployment Process
 
@@ -481,6 +531,90 @@ kubectl top pods
    ![](/src/assets/gcloudmonitoring_1.jpg)
    ![](/src/assets/gcloudmonitoring_2.jpg)
 
+## Model Monitoring and Retraining
+
+### 1. Automated Monitoring System
+
+Our monitoring system leverages both MLflow and GCP's monitoring capabilities to track model performance and trigger retraining when necessary.
+
+#### MLflow Implementation
+The core monitoring logic is implemented in `src/monitoring/mlflow_config.py` through the `QueryTracker` class. This system:
+- Tracks query execution metrics including processing times, complexity scores, and success rates
+- Maintains experiment versioning and parameter tracking
+- Stores performance metrics for historical analysis
+- Enables A/B testing of different prompt versions
+
+#### GCP Monitoring Integration
+Implemented via `src/monitoring_utils.py`, our GCP monitoring:
+- Provides real-time performance tracking through custom metrics
+- Integrates with Cloud Monitoring for visualization
+- Manages alert policies for performance degradation
+- Maintains audit logs for compliance
+
+### 2. Prompt Learning System
+
+Our prompt learning system, implemented in `PromptValidation/prompt_monitor.py`, continuously improves prompt performance through:
+
+#### Feedback Analysis Pipeline
+The feedback analysis system (`feedback/feedback_manager.py`):
+- Collects and processes user feedback
+- Analyzes query patterns and failure modes
+- Maintains a feedback database for continuous learning
+- Generates improvement suggestions
+
+#### Automated Detection Systems
+Pattern recognition is handled by `promptfilter/semantic_search.py`, which:
+- Identifies common failure patterns
+- Detects schema changes
+- Analyzes query complexity
+- Monitors for potential biases
+
+### 3. Vector Embeddings System
+
+Our dual embedding approach (`src/embeddings/`) uses:
+1. Schema embeddings via Vertex AI
+2. Feedback embeddings via sentence-transformers
+
+This system enables:
+- Semantic understanding of database structure
+- Efficient query similarity matching
+- Historical pattern analysis
+- Continuous learning from user interactions
+
+### 4. Performance Monitoring
+
+The monitoring dashboard (`src/monitoring/dashboard.py`) provides:
+- Real-time performance metrics
+- Historical trend analysis
+- Resource utilization tracking
+- Alert management
+
+### 5. Bias Detection and Mitigation
+
+Implemented in `PromptValidation/bias_checker.py`, our system:
+- Performs automated bias detection
+- Implements content filtering
+- Maintains fairness metrics
+- Provides mitigation strategies
+
+### 6. Continuous Improvement Pipeline
+
+Our improvement pipeline (`DataPipeline/dags/prompt_learning_dag.py`):
+- Runs daily analysis of performance metrics
+- Generates optimization recommendations
+- Updates prompt templates automatically
+- Maintains version control of prompts
+
+### 7. Validation and Testing
+
+The validation system (`src/validation/`) ensures:
+- Semantic accuracy of generated queries
+- Performance benchmarking
+- Security compliance
+- Resource optimization
+
+For detailed implementation examples and configuration options, refer to the respective source files in our codebase.
+
 ## Troubleshooting
 
 ### Common Issues and Solutions
@@ -545,4 +679,23 @@ kubectl top pods
    ```bash
    kubectl scale deployment/backend --replicas=3
    ```
+
+## Video Demonstration
+
+### Deployment Walkthrough Video
+Watch our comprehensive deployment walkthrough: [Deployment Demo Video](https://drive.google.com/file/d/1OaEGRmYXp21n4vjQHc4T1E_A-K1mrI5f/view?usp=sharing)
+
+The video covers:
+
+1. **Deployment Process**
+   - Kubernetes cluster setup
+   - Secret configuration
+   - Pipeline trigger
+   - Deployment verification
+
+2. **Validation Steps**
+   - Health checks
+   - Testing
+   - Monitoring setup
+   - Log verification
 
