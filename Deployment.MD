@@ -546,10 +546,3 @@ kubectl top pods
    kubectl scale deployment/backend --replicas=3
    ```
 
-## Additional Resources
-
-- [GKE Documentation](https://cloud.google.com/kubernetes-engine/docs)
-- [GitHub Actions Documentation](https://docs.github.com/en/actions)
-- [Kubernetes Cheat Sheet](https://kubernetes.io/docs/reference/kubectl/cheatsheet/)
-- [OpenAI API Documentation](https://platform.openai.com/docs/api-reference)
-- Internal documentation in `docs/` directory
