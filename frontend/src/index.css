@@ -13,6 +13,8 @@
   --text-light: #edf2ff;
   --text-medium: #b8c7e0;
   --text-dark-accent: #8aabff;
+  --toggle-active: linear-gradient(135deg, var(--primary-color), #8a63d2);
+  --toggle-inactive: rgba(24, 49, 83, 0.5);
 }
 
 body {
@@ -201,6 +203,93 @@ input:focus, textarea:focus, select:focus, button:focus {
   background: rgba(79, 133, 229, 0.4);
 }
 
+/* ===== VISUALIZATION TOGGLE STYLES ===== */
+.viz-toggle-container {
+  background: rgba(24, 49, 83, 0.45);
+  border: 1px solid rgba(79, 133, 229, 0.3);
+  border-radius: 9999px;
+  transition: all 0.3s ease;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 50, 0.3), 
+              0 1px 2px rgba(96, 165, 250, 0.2);
+}
+
+.viz-toggle-container:hover {
+  border-color: rgba(79, 133, 229, 0.5);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 50, 0.4), 
+              0 1px 3px rgba(96, 165, 250, 0.3),
+              0 0 5px 1px var(--primary-glow);
+}
+
+.viz-toggle-slider {
+  position: relative;
+  background: rgba(5, 15, 30, 0.5);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.viz-toggle-pill {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+  background: var(--toggle-inactive);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.viz-toggle-pill.active {
+  background: var(--toggle-active);
+}
+
+.viz-toggle-text {
+  user-select: none;
+  font-weight: 500;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+/* Visualization Animation */
+@keyframes togglePulse {
+  0% { box-shadow: 0 0 0 0 rgba(79, 133, 229, 0.7); }
+  70% { box-shadow: 0 0 0 6px rgba(79, 133, 229, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(79, 133, 229, 0); }
+}
+
+.viz-toggle-pill.animate-pulse {
+  animation: togglePulse 1.5s;
+}
+
+/* Hover effect for the toggle */
+.viz-toggle-container:hover .viz-toggle-pill:not(.active) {
+  background: rgba(24, 49, 83, 0.7);
+}
+
+.viz-toggle-container:hover .viz-toggle-pill.active {
+  box-shadow: 0 0 10px 2px var(--primary-glow);
+}
+
+/* Tooltip for visualization toggle */
+.viz-tooltip {
+  position: absolute;
+  top: -30px;
+  right: 0;
+  background: rgba(5, 15, 30, 0.9);
+  color: var(--text-medium);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.2s ease;
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 
+              0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(79, 133, 229, 0.2);
+  z-index: 20;
+}
+
+.viz-toggle-container:hover .viz-tooltip {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .md\:grid-cols-2 {
@@ -208,6 +297,10 @@ input:focus, textarea:focus, select:focus, button:focus {
   }
   
   .glass, .glass-dark, .glass-light {
+    border-width: 1px;
+  }
+  
+  .viz-toggle-container {
     border-width: 1px;
   }
 }
@@ -223,6 +316,10 @@ input:focus, textarea:focus, select:focus, button:focus {
   }
   
   .text-xs {
+    font-size: 0.65rem;
+  }
+  
+  .viz-toggle-text {
     font-size: 0.65rem;
   }
 }

@@ -4,7 +4,10 @@ import QueryInput from './QueryInput';
 import Feedback from './Feedback';
 import TabContainer from './TabContainer';
 import ChatHistory from './ChatHistory';
+import FloatingNewChatButton from './FloatingNewChatButton';
 import '../styles/glassmorphism.css';
+// Import the logo image
+import veltrixLogo from "../assets/veltrix-logo.png";
 
 const ChatPage = ({ onNavigateBack }) => {
   const { schema, loading, error, projectId, datasetId } = useAppContext();
@@ -106,11 +109,13 @@ const ChatPage = ({ onNavigateBack }) => {
                   Back
                 </button>
                 <div className="w-10 h-10 glass-glow rounded-full flex items-center justify-center shadow-lg pulse-glow">
-                  <span className="text-xl text-white">📊</span>
+                  {/* Replace the emoji with the Veltrix logo */}
+                  <img src={veltrixLogo} alt="Veltrix Logo" width={28} height={28} />
                 </div>
                 <h1 className="text-2xl font-bold bg-gradient-text">Veltrix</h1>
               </div>
             </div>
+            
             <div className="flex items-center space-x-4">
               <div className="glass-card-light px-4 py-2 rounded-full text-sm text-blue-200 flex items-center space-x-2">
                 <svg className="w-4 h-4 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -131,7 +136,7 @@ const ChatPage = ({ onNavigateBack }) => {
         </div>
       </header>
       
-      <main className="flex-grow flex overflow-hidden z-10 relative">
+      <main className="flex-grow flex overflow-hidden z-10 relative chat-page-main-content">
         {/* Left Sidebar for Chat History */}
         <div 
           className={`${
@@ -222,6 +227,9 @@ const ChatPage = ({ onNavigateBack }) => {
           </div>
         </div>
       </footer>
+      
+      {/* Floating Full-Width New Chat Button */}
+      <FloatingNewChatButton />
     </div>
   );
 };

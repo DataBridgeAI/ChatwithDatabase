@@ -1,484 +1,653 @@
-/* Enhanced Light mode front page styles */
+/* Add these import statements at the top of your CSS file */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&display=swap');
 
+/* Update the body or root element styling */
 .frontpage {
-    min-height: 100vh;
-    background: #f8fafc;
-    color: #334155;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    overflow-x: hidden;
+  min-height: 100vh;
+  background: #f8fafc;
+  color: #334155;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Headline container for better alignment and spacing */
+.headline-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.frontpage-title {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 3.5rem;
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: 0.75rem;
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  letter-spacing: -0.025em;
+  text-shadow: 0px 2px 20px rgba(37, 99, 235, 0.2);
+  position: relative;
+}
+
+.frontpage-title-secondary {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 3.5rem;
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: 1.5rem;
+  background: linear-gradient(135deg, #6366f1, #9333ea);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  letter-spacing: -0.025em;
+  text-shadow: 0px 2px 20px rgba(99, 102, 241, 0.2);
+  position: relative;
+}
+
+/* Add decorative elements */
+.frontpage-title::after {
+  content: '';
+  position: absolute;
+  bottom: -0.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 50%;
+  height: 3px;
+  background: linear-gradient(to right, transparent, rgba(37, 99, 235, 0.5), transparent);
+  border-radius: 2px;
+}
+
+/* Add this to your existing CSS file (index.css or glassmorphism.css) */
+
+@keyframes pulse-subtle {
+  0%, 100% {
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15), 0 0 0 1px rgba(96, 165, 250, 0.3);
   }
-  
-  .frontpage-hero {
-    position: relative;
-    padding: 8rem 0;
-    background: linear-gradient(135deg, #f0f9ff, #e0f2fe, #dbeafe);
-    overflow: hidden;
+  50% {
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.25), 0 0 0 1px rgba(96, 165, 250, 0.4);
   }
-  
-  .frontpage-content {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 1.5rem;
-    position: relative;
-    z-index: 10;
+}
+
+.pulse-subtle {
+  animation: pulse-subtle 3s infinite ease-in-out;
+}
+
+/* Enhanced button hover effect */
+.glass-button {
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: 0.5s;
+}
+
+.glass-button:hover::before {
+  left: 100%;
+}
+
+/* Background gradient for headings */
+.bg-gradient-text {
+  background: linear-gradient(to right, #3b82f6, #8b5cf6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Update subtitle styling */
+.frontpage-subtitle {
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: #475569;
+  margin-bottom: 2rem;
+  max-width: 36rem;
+  line-height: 1.4;
+}
+
+/* Base styles */
+.frontpage-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  position: relative;
+  z-index: 10;
+}
+
+.frontpage-description {
+  font-size: 1.125rem;
+  line-height: 1.8;
+  margin-bottom: 2.5rem;
+  max-width: 40rem;
+  color: #475569;
+}
+
+/* Add a new animation delay */
+.delay-05 {
+  animation-delay: 0.1s;
+}
+
+.delay-1 {
+  animation-delay: 0.2s;
+}
+
+.delay-2 {
+  animation-delay: 0.4s;
+}
+
+.delay-3 {
+  animation-delay: 0.6s;
+}
+
+/* Enhanced animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
   }
-  
-  /* Enhanced Decorative Elements */
-  .frontpage-blob {
-    position: absolute;
-    border-radius: 70% 30% 50% 50% / 30% 60% 40% 70%;
-    z-index: 1;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
-  
-  .blob-1 {
-    top: -15%;
-    right: -10%;
-    width: 55vw;
-    height: 55vw;
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(59, 130, 246, 0.12));
-    animation: move-slow 30s ease-in-out infinite alternate;
-    transform-origin: center center;
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.8s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+  opacity: 0;
+}
+
+/* Enhanced Hero Section Background */
+.frontpage-hero {
+  position: relative;
+  padding: 8rem 0;
+  background: radial-gradient(ellipse at top, #f0f9ff, transparent),
+              radial-gradient(ellipse at bottom, #e0f7fa, transparent),
+              linear-gradient(135deg, #f0f9ff, #e0f2fe, #dbeafe);
+  overflow: hidden;
+}
+
+/* Enhanced blob styling */
+.frontpage-blob {
+  position: absolute;
+  border-radius: 70% 30% 50% 50% / 30% 60% 40% 70%;
+  filter: blur(60px);
+  opacity: 0.6;
+  z-index: 1;
+}
+
+.blob-1 {
+  top: -15%;
+  right: -10%;
+  width: 55vw;
+  height: 55vw;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(79, 70, 229, 0.15));
+  animation: move-slow 30s ease-in-out infinite alternate;
+  transform-origin: center center;
+}
+
+.blob-2 {
+  bottom: -20%;
+  left: -15%;
+  width: 65vw;
+  height: 65vw;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(147, 51, 234, 0.15));
+  animation: move-slow 25s ease-in-out infinite alternate-reverse;
+  transform-origin: center center;
+}
+
+.blob-3 {
+  top: 20%;
+  right: 30%;
+  width: 15vw;
+  height: 15vw;
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(147, 51, 234, 0.15));
+  border-radius: 60% 40% 70% 30% / 40% 50% 50% 60%;
+  animation: move-blob 20s ease-in-out infinite;
+  transform-origin: center center;
+}
+
+@keyframes move-slow {
+  0% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
   }
-  
-  .blob-2 {
-    bottom: -20%;
-    left: -15%;
-    width: 65vw;
-    height: 65vw;
-    background: linear-gradient(135deg, rgba(168, 85, 247, 0.05), rgba(168, 85, 247, 0.12));
-    animation: move-slow 25s ease-in-out infinite alternate-reverse;
-    transform-origin: center center;
+  100% {
+    transform: translate(2%, 2%) scale(1.05) rotate(5deg);
   }
-  
-  .blob-3 {
-    top: 20%;
-    right: 30%;
-    width: 15vw;
-    height: 15vw;
-    background: linear-gradient(135deg, rgba(244, 114, 182, 0.05), rgba(244, 114, 182, 0.12));
+}
+
+@keyframes move-blob {
+  0%, 100% {
     border-radius: 60% 40% 70% 30% / 40% 50% 50% 60%;
-    animation: move-blob 20s ease-in-out infinite;
-    transform-origin: center center;
   }
-  
-  @keyframes move-slow {
-    0% {
-      transform: translate(0, 0) scale(1) rotate(0deg);
-    }
-    100% {
-      transform: translate(2%, 2%) scale(1.05) rotate(5deg);
-    }
+  50% {
+    border-radius: 40% 60% 30% 70% / 60% 40% 60% 40%;
   }
-  
-  @keyframes move-blob {
-    0%, 100% {
-      border-radius: 60% 40% 70% 30% / 40% 50% 50% 60%;
-    }
-    50% {
-      border-radius: 40% 60% 30% 70% / 60% 40% 60% 40%;
-    }
+}
+
+/* Enhanced geometric elements */
+.geo-element {
+  position: absolute;
+  opacity: 0.15;
+  z-index: 2;
+}
+
+.geo-circle {
+  width: 8rem;
+  height: 8rem;
+  border-radius: 50%;
+  border: 2px solid rgba(59, 130, 246, 0.5);
+  top: 15%;
+  left: 10%;
+  animation: float-element 15s ease-in-out infinite;
+}
+
+.geo-square {
+  width: 5rem;
+  height: 5rem;
+  border: 2px solid rgba(168, 85, 247, 0.5);
+  transform: rotate(45deg);
+  bottom: 20%;
+  right: 15%;
+  animation: float-element 18s ease-in-out infinite 1s;
+}
+
+.geo-dots {
+  position: absolute;
+  width: 12rem;
+  height: 12rem;
+  background-image: radial-gradient(rgba(59, 130, 246, 0.3) 1px, transparent 1px);
+  background-size: 15px 15px;
+  top: 60%;
+  right: 5%;
+  border-radius: 30%;
+  transform: rotate(-15deg);
+  opacity: 0.1;
+  animation: float-element 20s ease-in-out infinite 2s;
+}
+
+@keyframes float-element {
+  0%, 100% {
+    transform: translate(0, 0);
   }
-  
-  /* Enhanced geometric elements */
-  .geo-element {
-    position: absolute;
-    opacity: 0.15;
-    z-index: 2;
+  50% {
+    transform: translate(10px, 15px);
   }
-  
-  .geo-circle {
-    width: 8rem;
-    height: 8rem;
-    border-radius: 50%;
-    border: 2px solid rgba(59, 130, 246, 0.5);
-    top: 15%;
-    left: 10%;
-    animation: float-element 15s ease-in-out infinite;
-  }
-  
-  .geo-square {
-    width: 5rem;
-    height: 5rem;
-    border: 2px solid rgba(168, 85, 247, 0.5);
-    transform: rotate(45deg);
-    bottom: 20%;
-    right: 15%;
-    animation: float-element 18s ease-in-out infinite 1s;
-  }
-  
-  .geo-dots {
-    position: absolute;
-    width: 12rem;
-    height: 12rem;
-    background-image: radial-gradient(rgba(59, 130, 246, 0.3) 1px, transparent 1px);
-    background-size: 15px 15px;
-    top: 60%;
-    right: 5%;
-    border-radius: 30%;
-    transform: rotate(-15deg);
-    opacity: 0.1;
-    animation: float-element 20s ease-in-out infinite 2s;
-  }
-  
-  @keyframes float-element {
-    0%, 100% {
-      transform: translate(0, 0);
-    }
-    50% {
-      transform: translate(10px, 15px);
-    }
-  }
-  
-  /* Typography */
-  .frontpage-title {
-    font-size: 4rem;
-    font-weight: 800;
-    line-height: 1.1;
-    margin-bottom: 1.5rem;
-    background: linear-gradient(to right, #2563eb, #7c3aed);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    letter-spacing: -0.025em;
+}
+
+/* Enhanced buttons */
+.frontpage-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 2rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.4);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: none;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  font-family: 'Poppins', sans-serif;
+  letter-spacing: 0.02em;
+}
+
+.frontpage-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 30px -5px rgba(59, 130, 246, 0.5);
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
+}
+
+.frontpage-button:active {
+  transform: translateY(1px);
+}
+
+.frontpage-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: 0.6s;
+  z-index: -1;
+}
+
+.frontpage-button:hover::before {
+  left: 100%;
+}
+
+.frontpage-outline-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 2rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #3b82f6;
+  background: transparent;
+  border: 2px solid #3b82f6;
+  border-radius: 0.75rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  font-family: 'Poppins', sans-serif;
+  letter-spacing: 0.02em;
+}
+
+.frontpage-outline-button:hover {
+  background: rgba(59, 130, 246, 0.1);
+  transform: translateY(-2px);
+  color: #2563eb;
+  border-color: #2563eb;
+}
+
+.frontpage-outline-button:active {
+  transform: translateY(1px);
+}
+
+/* Enhanced Feature Section */
+.frontpage-features {
+  padding: 6rem 0;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #ffffff, #f8fafc);
+}
+
+/* Enhanced Feature Cards */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.feature-card {
+  padding: 2.5rem;
+  background: white;
+  border-radius: 1.25rem;
+  box-shadow: 
+    0 10px 25px -5px rgba(0, 0, 0, 0.05), 
+    0 10px 10px -5px rgba(0, 0, 0, 0.02);
+  transition: all 0.4s ease;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  border: 1px solid #f1f5f9;
+  font-family: 'Poppins', sans-serif;
+}
+
+.feature-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(to bottom, #3b82f6, #6366f1);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: -1;
+}
+
+.feature-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  border-color: #e2e8f0;
+}
+
+.feature-card:hover::after {
+  opacity: 1;
+}
+
+.feature-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 4rem;
+  height: 4rem;
+  border-radius: 1rem;
+  margin-bottom: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.feature-card:hover .feature-icon {
+  transform: scale(1.1);
+}
+
+.feature-icon-1 {
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+  color: #1d4ed8;
+}
+
+.feature-icon-2 {
+  background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+  color: #4338ca;
+}
+
+.feature-icon-3 {
+  background: linear-gradient(135deg, #f5f3ff, #ddd6fe);
+  color: #5b21b6;
+}
+
+.feature-title {
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: #334155;
+}
+
+.feature-description {
+  color: #64748b;
+  line-height: 1.7;
+  font-size: 1.05rem;
+}
+
+/* CTA Section Improvements */
+.frontpage-cta {
+  padding: 6rem 0;
+  background: linear-gradient(135deg, #1e40af, #4338ca);
+  color: white;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.frontpage-cta::before {
+  content: '';
+  position: absolute;
+  width: 150%;
+  height: 150%;
+  top: -25%;
+  left: -25%;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23FFFFFF' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  opacity: 0.1;
+}
+
+.cta-title {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 2.75rem;
+  font-weight: 800;
+  margin-bottom: 1.5rem;
+}
+
+.cta-description {
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.25rem;
+  max-width: 36rem;
+  margin: 0 auto 2.5rem;
+  opacity: 0.9;
+}
+
+.cta-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem 2.5rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1e40af;
+  background: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: none;
+  position: relative;
+  overflow: hidden;
+  font-family: 'Poppins', sans-serif;
+}
+
+.cta-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(29, 78, 216, 0.1), transparent);
+  transition: 0.5s;
+}
+
+.cta-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.3);
+}
+
+.cta-button:hover::before {
+  left: 100%;
+}
+
+.cta-button:active {
+  transform: translateY(1px);
+}
+
+/* Enhanced Footer */
+.frontpage-footer {
+  padding: 3rem 0;
+  background: #0f172a;
+  color: #94a3b8;
+  text-align: center;
+  font-family: 'Poppins', sans-serif;
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.footer-logo {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 1.5rem;
+  background: linear-gradient(to right, #3b82f6, #6366f1);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.footer-links {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.footer-link {
+  color: #cbd5e1;
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 500;
+}
+
+.footer-link:hover {
+  color: white;
+  background: linear-gradient(to right, #3b82f6, #6366f1);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.footer-copyright {
+  font-size: 0.875rem;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .frontpage-title,
+  .frontpage-title-secondary {
+    font-size: 2.5rem;
   }
   
   .frontpage-subtitle {
-    font-size: 1.5rem;
-    font-weight: 400;
-    color: #475569;
-    margin-bottom: 2.5rem;
-    max-width: 36rem;
-    line-height: 1.4;
-  }
-  
-  .frontpage-description {
-    font-size: 1.125rem;
-    line-height: 1.8;
-    margin-bottom: 2.5rem;
-    max-width: 40rem;
-    color: #475569;
-  }
-  
-  /* Enhanced Button */
-  .frontpage-button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 1rem 2rem;
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: white;
-    background: linear-gradient(to right, #2563eb, #7c3aed);
-    border-radius: 0.75rem;
-    box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.4);
-    transition: all 0.3s ease;
-    cursor: pointer;
-    border: none;
-    position: relative;
-    z-index: 1;
-    overflow: hidden;
-  }
-  
-  .frontpage-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 15px 30px -5px rgba(59, 130, 246, 0.5);
-  }
-  
-  .frontpage-button:active {
-    transform: translateY(1px);
-  }
-  
-  .frontpage-button::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: 0.5s;
-    z-index: -1;
-  }
-  
-  .frontpage-button:hover::before {
-    left: 100%;
-  }
-  
-  /* Feature section with enhanced design */
-  .frontpage-features {
-    padding: 8rem 0;
-    position: relative;
-    overflow: hidden;
-    background: linear-gradient(135deg, #ffffff, #f8fafc);
+    font-size: 1.25rem;
   }
   
   .features-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2.5rem;
-  }
-  
-  .feature-card {
-    padding: 2.5rem;
-    background: white;
-    border-radius: 1.25rem;
-    box-shadow: 
-      0 10px 25px -5px rgba(0, 0, 0, 0.05), 
-      0 10px 10px -5px rgba(0, 0, 0, 0.02);
-    transition: all 0.3s ease;
-    position: relative;
-    z-index: 1;
-    overflow: hidden;
-  }
-  
-  .feature-card::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 4px;
-    height: 100%;
-    background: linear-gradient(to bottom, #3b82f6, #8b5cf6);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    z-index: -1;
-  }
-  
-  .feature-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 
-      0 20px 40px -5px rgba(0, 0, 0, 0.1), 
-      0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  }
-  
-  .feature-card:hover::after {
-    opacity: 1;
-  }
-  
-  .feature-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 4rem;
-    height: 4rem;
-    border-radius: 1rem;
-    margin-bottom: 1.5rem;
-    transition: all 0.3s ease;
-  }
-  
-  .feature-card:hover .feature-icon {
-    transform: scale(1.1);
-  }
-  
-  .feature-icon-1 {
-    background: linear-gradient(135deg, #dbeafe, #bfdbfe);
-    color: #1d4ed8;
-  }
-  
-  .feature-icon-2 {
-    background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
-    color: #4338ca;
-  }
-  
-  .feature-icon-3 {
-    background: linear-gradient(135deg, #fae8ff, #f5d0fe);
-    color: #a21caf;
-  }
-  
-  .feature-title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin-bottom: 1rem;
-    color: #334155;
-  }
-  
-  .feature-description {
-    color: #64748b;
-    line-height: 1.7;
-    font-size: 1.05rem;
-  }
-  
-  /* Enhanced CTA section */
-  .frontpage-cta {
-    padding: 8rem 0;
-    background: linear-gradient(135deg, #1e40af, #4338ca);
-    color: white;
-    text-align: center;
-    position: relative;
-    overflow: hidden;
-  }
-  
-  .frontpage-cta::before {
-    content: '';
-    position: absolute;
-    width: 150%;
-    height: 150%;
-    top: -25%;
-    left: -25%;
-    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23FFFFFF' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-    opacity: 0.1;
+    grid-template-columns: 1fr;
+    padding: 0 1rem;
   }
   
   .cta-title {
-    font-size: 3rem;
-    font-weight: 800;
-    margin-bottom: 1.5rem;
+    font-size: 2rem;
+    padding: 0 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .frontpage-title,
+  .frontpage-title-secondary {
+    font-size: 2rem;
   }
   
-  .cta-description {
-    font-size: 1.25rem;
-    max-width: 36rem;
-    margin: 0 auto 2.5rem;
-    opacity: 0.9;
+  .frontpage-subtitle {
+    font-size: 1.125rem;
   }
   
-  .cta-button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 1rem 2.5rem;
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #1e40af;
-    background: white;
-    border-radius: 0.75rem;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
-    transition: all 0.3s ease;
-    cursor: pointer;
-    border: none;
-    position: relative;
-    overflow: hidden;
+  .frontpage-hero {
+    padding: 6rem 0;
   }
   
-  .cta-button::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
+  .flex.gap-4 {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .frontpage-button,
+  .frontpage-outline-button {
     width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(29, 78, 216, 0.1), transparent);
-    transition: 0.5s;
   }
-  
-  .cta-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.3);
-  }
-  
-  .cta-button:hover::before {
-    left: 100%;
-  }
-  
-  .cta-button:active {
-    transform: translateY(1px);
-  }
-  
-  /* Footer */
-  .frontpage-footer {
-    padding: 3rem 0;
-    background: #0f172a;
-    color: #94a3b8;
-    text-align: center;
-  }
-  
-  .footer-content {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 1.5rem;
-  }
-  
-  .footer-logo {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: white;
-    margin-bottom: 1.5rem;
-    background: linear-gradient(to right, #3b82f6, #8b5cf6);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-  
-  .footer-links {
-    display: flex;
-    justify-content: center;
-    gap: 2rem;
-    margin-bottom: 2rem;
-  }
-  
-  .footer-link {
-    color: #cbd5e1;
-    border: none;
-    background: none;
-    padding: 0;
-    font: inherit;
-    text-decoration: none;
-    cursor: pointer;
-    transition: color 0.2s ease;
-  }
-  
-  .footer-link:hover {
-    color: white;
-    background: linear-gradient(to right, #3b82f6, #8b5cf6);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-  
-  .footer-copyright {
-    font-size: 0.875rem;
-  }
-  
-  /* Responsive styles */
-  @media (max-width: 768px) {
-    .frontpage-title {
-      font-size: 2.5rem;
-    }
-    
-    .frontpage-subtitle {
-      font-size: 1.25rem;
-    }
-    
-    .features-grid {
-      grid-template-columns: 1fr;
-      padding: 0 1rem;
-    }
-    
-    .cta-title {
-      font-size: 2rem;
-      padding: 0 1rem;
-    }
-  }
-  
-  /* Enhanced Animations */
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(30px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  
-  .animate-fadeIn {
-    animation: fadeIn 1s ease forwards;
-    opacity: 0;
-  }
-  
-  .delay-1 {
-    animation-delay: 0.2s;
-  }
-  
-  .delay-2 {
-    animation-delay: 0.4s;
-  }
-  
-  .delay-3 {
-    animation-delay: 0.6s;
-  }
-  
-  .delay-4 {
-    animation-delay: 0.8s;
-  }
+}
+

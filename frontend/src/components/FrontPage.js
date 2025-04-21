@@ -1,47 +1,65 @@
 import React from 'react';
 import '../styles/frontpage.css';
+import veltrixLogo from "../assets/veltrix-logo.png";
 
 const FrontPage = () => {
-  // Simple function to redirect to the landing page
   const handleGetStarted = () => {
-    // Set a flag in localStorage that App.js will check
     localStorage.setItem('showLanding', 'true');
     window.location.reload();
   };
 
+  const handleScrollToFeatures = () => {
+    const featuresSection = document.getElementById('features-section');
+    if (featuresSection) {
+      featuresSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="frontpage">
-      {/* Hero section */}
       <section className="frontpage-hero">
-        {/* Enhanced decorative elements */}
         <div className="frontpage-blob blob-1"></div>
         <div className="frontpage-blob blob-2"></div>
         <div className="frontpage-blob blob-3"></div>
-        
+
         <div className="geo-element geo-circle"></div>
         <div className="geo-element geo-square"></div>
         <div className="geo-element geo-dots"></div>
-        
+
         <div className="frontpage-content">
-          <h1 className="frontpage-title animate-fadeIn">Your BigQuery Data with Veltrix</h1>
-          <h2 className="frontpage-subtitle animate-fadeIn delay-1">Ask questions in plain English and get instant SQL queries and visualizations</h2>
-          <p className="frontpage-description animate-fadeIn delay-2">
-            Veltrix transforms how you interact with your data. No more complex SQL queries—just ask questions naturally and get immediate insights through powerful visualizations and analysis. Built for data professionals who want to focus on insights, not query syntax.
-          </p>
-          <button 
-            className="frontpage-button animate-fadeIn delay-3"
-            onClick={handleGetStarted}
-          >
-            Get Started
-            <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-            </svg>
-          </button>
+          <div className="flex justify-center mb-6 animate-fadeIn">
+            <img src={veltrixLogo} alt="Veltrix Logo" width={120} height={120} />
+          </div>
+
+          <div className="headline-container">
+            <h1 className="frontpage-title animate-fadeIn">BigQuery Made Brilliantly Simple:</h1>
+            <h1 className="frontpage-title-secondary animate-fadeIn delay-05">Ask Questions, Get Actionable Insights</h1>
+            <h2 className="frontpage-subtitle animate-fadeIn delay-1">Ask questions in plain English and get instant SQL queries and visualizations</h2>
+            <p className="frontpage-description animate-fadeIn delay-2">
+              Veltrix transforms how you interact with your data. No more complex SQL queries—just ask questions naturally and get immediate insights through powerful visualizations and analysis. Built for data professionals who want to focus on insights, not query syntax.
+            </p>
+          </div>
+          <div className="flex gap-4 justify-center mt-6 animate-fadeIn delay-3">
+            <button 
+              className="frontpage-button"
+              onClick={handleGetStarted}
+            >
+              Get Started
+              <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </button>
+            <button 
+              className="frontpage-outline-button"
+              onClick={handleScrollToFeatures}
+            >
+              Explore Features
+            </button>
+          </div>
         </div>
       </section>
-      
-      {/* Features section */}
-      <section className="frontpage-features">
+
+      <section className="frontpage-features" id="features-section">
         <div className="frontpage-content">
           <div className="features-grid">
             <div className="feature-card animate-fadeIn">
@@ -53,7 +71,7 @@ const FrontPage = () => {
               <h3 className="feature-title">Natural Language to SQL</h3>
               <p className="feature-description">Ask questions in plain English and get accurate SQL queries instantly. No technical expertise required. Spend more time analyzing results and less time writing complex queries.</p>
             </div>
-            
+
             <div className="feature-card animate-fadeIn delay-1">
               <div className="feature-icon feature-icon-2">
                 <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -63,7 +81,7 @@ const FrontPage = () => {
               <h3 className="feature-title">Interactive Visualizations</h3>
               <p className="feature-description">Transform your query results into beautiful, interactive visualizations that reveal hidden insights in your data. Choose from multiple chart types to find the perfect visualization for your needs.</p>
             </div>
-            
+
             <div className="feature-card animate-fadeIn delay-2">
               <div className="feature-icon feature-icon-3">
                 <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -76,8 +94,7 @@ const FrontPage = () => {
           </div>
         </div>
       </section>
-      
-      {/* CTA section with enhanced design */}
+
       <section className="frontpage-cta">
         <div className="frontpage-content">
           <h2 className="cta-title animate-fadeIn">Ready to transform your data experience?</h2>
@@ -95,14 +112,16 @@ const FrontPage = () => {
           </button>
         </div>
       </section>
-      
-      {/* Footer */}
+
       <footer className="frontpage-footer">
         <div className="footer-content">
-          <div className="footer-logo">Veltrix</div>
+          <div className="footer-logo flex items-center justify-center">
+            <img src={veltrixLogo} alt="Veltrix Logo" width={40} height={40} className="mr-2" />
+            <span>Veltrix</span>
+          </div>
           <div className="footer-links">
             <button className="footer-link">About</button>
-            <button className="footer-link">Features</button>
+            <button className="footer-link" onClick={handleScrollToFeatures}>Features</button>
             <button className="footer-link">Pricing</button>
             <button className="footer-link">Contact</button>
           </div>
