@@ -2,7 +2,7 @@
 from datetime import timedelta, datetime
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-from drift_helper import check_schema_drift, check_data_drift, send_slack_alert
+from scripts.drift_helper import check_schema_drift, check_data_drift, send_slack_alert
 
 # Constants
 SLACK_CONN_ID = "slack_webhook"

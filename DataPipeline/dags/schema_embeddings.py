@@ -5,7 +5,7 @@ from airflow.models import Variable
 from datetime import timedelta, datetime
 
 # Import the processing functions
-from schema_embeddings_processor import (
+from scripts.schema_embeddings_processor import (
     generate_schema_embeddings,
     upload_embeddings_to_gcs,
     generate_and_store_embeddings
