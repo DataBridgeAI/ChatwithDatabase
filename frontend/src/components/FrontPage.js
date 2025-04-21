@@ -32,8 +32,8 @@ const FrontPage = () => {
           </div>
 
           <div className="headline-container">
-            <h1 className="frontpage-title animate-fadeIn">BigQuery Made Brilliantly Simple:</h1>
-            <h1 className="frontpage-title-secondary animate-fadeIn delay-05">Ask Questions, Get Actionable Insights</h1>
+            <h1 className="frontpage-title animate-fadeIn">VELTRIX</h1>
+            <h1 className="frontpage-title-secondary animate-fadeIn delay-05">BigQuery Made Brilliantly Simple</h1>
             <h2 className="frontpage-subtitle animate-fadeIn delay-1">Ask questions in plain English and get instant SQL queries and visualizations</h2>
             <p className="frontpage-description animate-fadeIn delay-2">
               Veltrix transforms how you interact with your data. No more complex SQL queries—just ask questions naturally and get immediate insights through powerful visualizations and analysis. Built for data professionals who want to focus on insights, not query syntax.
