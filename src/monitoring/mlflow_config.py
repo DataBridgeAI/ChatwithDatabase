@@ -169,6 +169,49 @@ class QueryTracker:
             if os.path.exists(artifact_path):
                 os.remove(artifact_path)
 
+# def run_test_experiments():
+#     """Run some test experiments directly from mlflow_config"""
+#     tracker = QueryTracker()
+    
+#     # Test different types of queries
+#     test_cases = [
+#         {
+#             "user_query": "Show sales by region",
+#             "generated_sql": "SELECT region, SUM(sales) as total_sales FROM sales GROUP BY region",
+#             "execution_time": 0.3,
+#             "total_time": 0.8,
+#             "metadata": {"test_type": "aggregate_query"}
+#         },
+#         {
+#             "user_query": "Find customers who spent more than 1000",
+#             "generated_sql": "SELECT customer_id, name FROM customers WHERE total_spend > 1000",
+#             "execution_time": 0.2,
+#             "total_time": 0.6,
+#             "metadata": {"test_type": "filter_query"}
+#         },
+#         {
+#             "user_query": "Get order details with customer information",
+#             "generated_sql": "SELECT o.order_id, c.name, o.amount FROM orders o JOIN customers c ON o.customer_id = c.id",
+#             "execution_time": 0.6,
+#             "total_time": 1.2,
+#             "metadata": {"test_type": "join_query"}
+#         }
+#     ]
+    
+#     for test in test_cases:
+#         print(f"\nLogging experiment for: {test['user_query']}")
+#         tracker.log_query_execution(
+#             user_query=test['user_query'],
+#             generated_sql=test['generated_sql'],
+#             execution_time=test['execution_time'],
+#             total_time=test['total_time'],
+#             metadata=test['metadata']
+#         )
+#         print(f"Successfully logged experiment with SQL:\n{test['generated_sql']}\n")
 
-
+# if __name__ == "__main__":
+#     print("Starting MLflow experiment logging...")
+#     run_test_experiments()
+#     print("\nExperiments logged successfully!")
+#     print("To view experiments, start MLflow UI with: mlflow ui --port 5001")
 
