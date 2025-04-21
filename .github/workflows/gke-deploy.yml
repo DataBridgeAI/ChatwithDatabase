@@ -4,10 +4,7 @@ on:
   push:
     branches:
       - deployment-div
-  workflow_run:
-    workflows: ["CI/CD for Airflow DAGs", "Model and User Query Relevance CI"]
-    types:
-      - completed
+      - backend-tests
 
 env:
   PROJECT_ID: chatwithdata-451800
@@ -17,7 +14,46 @@ env:
   BACKEND_IMAGE: gcr.io/chatwithdata-451800/chatapp-api
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.9'
+
+    # Add GCP Authentication steps
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+        project_id: ${{ env.PROJECT_ID }}
+      
+    - name: Set up Google Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+
+    # Initialize Vertex AI
+    - name: Initialize Vertex AI
+      run: |
+        gcloud auth configure-docker
+        gcloud config set project ${{ env.PROJECT_ID }}
+
+    - name: Install test packages
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r src/requirements.txt
+        pip install pytest pytest-cov
+
+    - name: Run tests
+      env:
+        GOOGLE_CLOUD_PROJECT: ${{ env.PROJECT_ID }}
+      run: |
+        pytest src/tests/ --cov=src --cov-report=term-missing -v
+
   deploy:
+    needs: test
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -58,13 +94,12 @@ jobs:
 
     - name: Create Secrets
       run: |
-        # Create OpenAI API key secret
         kubectl create secret generic app-secrets \
+          --from-literal=project-id=${{ env.PROJECT_ID }} \
           --from-literal=openai-api-key=${{ secrets.OPENAI_API_KEY }} \
           --from-literal=slack-webhook-url=${{ secrets.SLACK_WEBHOOK }} \
           --dry-run=client -o yaml | kubectl apply -f -
         
-        # Create GCP credentials secret by first writing the JSON to a temporary file
         echo '${{ secrets.GCP_CREDENTIALS }}' > key.json
         kubectl create secret generic gcp-credentials \
           --from-file=key.json=key.json \
@@ -76,6 +111,25 @@ jobs:
         kubectl apply -f k8s/
         kubectl set image deployment/frontend frontend=${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
         kubectl set image deployment/backend backend=${{ env.BACKEND_IMAGE }}:${{ github.sha }}
+    
+    - name: Send deployment status
+      if: success()
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        SLACK_MESSAGE: "✅ Deployment completed successfully!"
+        SLACK_COLOR: "good"
+        SLACK_TITLE: "Deployment Status"
+
+    - name: Send failure notification
+      if: failure()
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        SLACK_MESSAGE: "❌ Deployment failed! Check the logs for details."
+        SLACK_COLOR: "danger"
+        SLACK_TITLE: "Deployment Status"
+
 
 
 

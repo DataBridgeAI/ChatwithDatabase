@@ -4,12 +4,14 @@ on:
   push:
     branches:
       - main  # Run on push to main
-      - feedback-changes
+      - deployment-div
+      
       
   pull_request:
     branches:
       - main  # Run on PRs to main
-      - feedback-changes
+      - deployment-div
+      
 jobs:
   test:
     name: Run Unit Tests
@@ -37,6 +39,12 @@ jobs:
           pip install --upgrade pip
           pip install -r DataPipeline/requirements.txt
           pip install pytest coverage  # For testing
+      
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+          project_id: chatwithdata-451800
 
       - name: Run Tests with Coverage
         run: |
