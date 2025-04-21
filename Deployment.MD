@@ -478,8 +478,8 @@ kubectl top pods
    ### Cloud Monitoring Visualizations
    These are some of the cloud monitoring visuals for tracking database or API query performance metrics with visualization of execution times, query volume, and related logs to help identify performance issues or anomalies:
 
-   ![](/src/assets/gcloud_monitoring1.jpg)
-   ![](/src/assets/gcloud_monitoring2.jpg)
+   ![](/src/assets/gcloudmonitoring_1.jpg)
+   ![](/src/assets/gcloudmonitoring_2.jpg)
 
 ## Troubleshooting
 
