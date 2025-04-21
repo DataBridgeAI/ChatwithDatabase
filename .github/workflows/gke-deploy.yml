@@ -5,6 +5,7 @@ on:
     branches:
       - deployment-div
       - backend-tests
+      - main
 
 env:
   PROJECT_ID: chatwithdata-451800
