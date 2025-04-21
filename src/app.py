@@ -19,7 +19,7 @@ from feedback.vector_search import retrieve_similar_query
 from feedback.chroma_setup import download_and_extract_chromadb
 from monitoring.mlflow_config import QueryTracker
 from query_checks.content_checker import sensitivity_filter
-from promptfilter.semantic_search import download_and_prepare_embeddings, check_query_relevance
+from promptfilter.semantic_search import download_and_prepare_embeddings, check_query_relevance, get_vector_db
 from ai.data_formatter import dataframe_to_json
 from monitoring.input_tracker import InputTracker
 
@@ -113,23 +113,23 @@ except Exception as e:
 # Initialize the tracker
 input_tracker = InputTracker()  # Remove the parameters since we're not using them anymore
 
-# Initialize ChromaDB for available datasets at startup
-try:
-    from promptfilter.semantic_search import list_available_datasets, get_vector_db
+# # Initialize ChromaDB for available datasets at startup
+# try:
+#     from promptfilter.semantic_search import list_available_datasets, get_vector_db
     
-    available_datasets = list_available_datasets()
-    if available_datasets:
-        default_dataset = os.environ.get('DATASET_ID') or available_datasets[0]
-        print(f"Initializing vector DB for default dataset: {default_dataset}")
-        vector_db = get_vector_db(default_dataset)
-        if vector_db:
-            print(f"✅ Successfully initialized vector DB for dataset: {default_dataset}")
-        else:
-            print(f"❌ Failed to initialize vector DB for dataset: {default_dataset}")
-    else:
-        print("❌ No datasets available for ChromaDB initialization")
-except Exception as e:
-    print(f"Failed to initialize ChromaDB: {str(e)}")
+#     available_datasets = list_available_datasets()
+#     if available_datasets:
+#         default_dataset = os.environ.get('DATASET_ID') or available_datasets[0]
+#         print(f"Initializing vector DB for default dataset: {default_dataset}")
+#         vector_db = get_vector_db(default_dataset)
+#         if vector_db:
+#             print(f"✅ Successfully initialized vector DB for dataset: {default_dataset}")
+#         else:
+#             print(f"❌ Failed to initialize vector DB for dataset: {default_dataset}")
+#     else:
+#         print("❌ No datasets available for ChromaDB initialization")
+# except Exception as e:
+#     print(f"Failed to initialize ChromaDB: {str(e)}")
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
@@ -176,15 +176,21 @@ def set_credentials():
 
 @app.route('/api/schema', methods=['POST'])
 def fetch_schema():
+    data = request.json
+    project_id = data.get('project_id')
+    dataset_id = data.get('dataset_id')
+    
+    if not project_id or not dataset_id:
+        return jsonify({'error': 'Project ID and Dataset ID are required'}), 400
+        
     try:
-        data = request.json
-        project_id = data.get('project_id') or os.environ.get('PROJECT_ID')
-        dataset_id = data.get('dataset_id') or os.environ.get('DATASET_ID')
-        
+        # Initialize vector DB when schema is first requested
+        vector_db = get_vector_db(dataset_id)
+        if not vector_db:
+            print(f"Warning: Could not initialize vector DB for dataset {dataset_id}")
+            
+        # Rest of your schema fetching logic... (keep the existing code)
         app.logger.info(f"Received schema request for project: {project_id}, dataset: {dataset_id}")
-        
-        if not project_id or not dataset_id:
-            return jsonify({'error': 'Project ID and Dataset ID are required'}), 400
         
         try:
             app.logger.info("Calling get_bigquery_schema function")
