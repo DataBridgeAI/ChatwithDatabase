@@ -26,7 +26,7 @@ const LandingPage = ({ onNavigateToFrontPage }) => {
 
   const handleLoadSchema = async () => {
     if (!projectId.trim() || !datasetId.trim()) {
-      setError("Please enter both Project ID and Dataset ID");
+      setError("I need both the Project ID and Dataset ID to connect to your data. Please fill in both fields.");
       return;
     }
 
@@ -39,10 +39,10 @@ const LandingPage = ({ onNavigateToFrontPage }) => {
         setSchema(response.schema);
         setIsSchemaLoaded(true); // This will trigger navigation to the chat page
       } else if (response.error) {
-        setError(response.error);
+        setError("I couldn't connect to this dataset. Please check your Project ID and Dataset ID and try again.");
       }
     } catch (error) {
-      setError(error.message || "Failed to load schema");
+      setError("I had trouble connecting to your data. Please verify your credentials and try again.");
       console.error("Error loading schema:", error);
     } finally {
       setLoading(false);

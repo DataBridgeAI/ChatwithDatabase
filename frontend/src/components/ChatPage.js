@@ -36,6 +36,27 @@ const ChatPage = ({ onNavigateBack }) => {
     };
   }, [onNavigateBack]);
 
+  // Helper function to get a more friendly error message
+  const getFriendlyErrorMessage = (errorMsg) => {
+    if (!errorMsg) return null;
+    
+    const lowerCaseError = errorMsg.toLowerCase();
+    
+    if (lowerCaseError.includes('syntax') || lowerCaseError.includes('sql')) {
+      return "I'm having trouble understanding that query. Could you try rephrasing your question?";
+    }
+    
+    if (lowerCaseError.includes('schema') || lowerCaseError.includes('table')) {
+      return "I can't find some of the data elements you're referring to. Could you check table or column names?";
+    }
+    
+    if (lowerCaseError.includes('permission') || lowerCaseError.includes('access')) {
+      return "I don't have the right permissions to access that data. Can you check the project settings?";
+    }
+    
+    return "I'm having trouble with that request. Can you try asking in a different way?";
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-glass-gradient relative overflow-hidden">
       {/* Background with enhanced visual elements */}
@@ -165,12 +186,32 @@ const ChatPage = ({ onNavigateBack }) => {
             )}
             
             {error && (
-              <div className="glass-card-dark bg-red-900/30 border-2 border-red-500/50 text-red-300 px-6 py-4 rounded-xl mb-6 shadow-lg">
-                <div className="flex items-center">
-                  <svg className="w-6 h-6 mr-3 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <p><strong>Error:</strong> {error}</p>
+              <div className="glass-card-dark bg-blue-900/10 border border-blue-300/30 text-blue-100 px-6 py-4 rounded-xl mb-6 shadow-lg">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0 mt-0.5">
+                    <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <p className="font-medium mb-2">{getFriendlyErrorMessage(error)}</p>
+                    <div className="mt-3">
+                      <p className="text-sm font-medium text-blue-300">Suggestions:</p>
+                      <ul className="text-sm text-blue-200 list-disc pl-5 space-y-1">
+                        <li>Try being more specific about what you want to know</li>
+                        <li>Include table names if you know them</li>
+                        <li>Break complex questions into simpler ones</li>
+                      </ul>
+                    </div>
+                    {error !== getFriendlyErrorMessage(error) && (
+                      <details className="mt-3">
+                        <summary className="text-xs text-blue-400 cursor-pointer hover:text-blue-300 transition-colors">
+                          Technical details
+                        </summary>
+                        <p className="mt-1 text-xs text-blue-400 italic">{error}</p>
+                      </details>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
@@ -228,7 +269,7 @@ const ChatPage = ({ onNavigateBack }) => {
         </div>
       </footer>
       
-      {/* Floating Full-Width New Chat Button */}
+      {/* Floating New Chat Button */}
       <FloatingNewChatButton />
     </div>
   );

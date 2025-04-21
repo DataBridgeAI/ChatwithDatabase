@@ -1,11 +1,5 @@
 // API service for BigQuery Analytics
-const API_BASE_URL = window._env_?.REACT_APP_API_URL || 'http://34.10.210.167/api';
-
-if (!API_BASE_URL) {
-  throw new Error('API URL is not configured');
-}
-
-export { API_BASE_URL };
+const API_BASE_URL = "http://localhost:5001/api";
 
 export const fetchSchema = async (projectId, datasetId) => {
   try {
@@ -22,7 +16,7 @@ export const fetchSchema = async (projectId, datasetId) => {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error || "Failed to fetch schema");
+      throw new Error(error.error || "I couldn't connect to your dataset. Please check your credentials and try again.");
     }
 
     return await response.json();
@@ -47,7 +41,7 @@ export const validateQuery = async (query) => {
     return await response.json();
   } catch (error) {
     console.error("Error validating query:", error);
-    throw error;
+    throw new Error("I'm having trouble understanding your question. Could you try phrasing it differently?");
   }
 };
 
@@ -66,7 +60,7 @@ export const findSimilarQuery = async (query) => {
     return await response.json();
   } catch (error) {
     console.error("Error finding similar query:", error);
-    throw error;
+    throw new Error("I encountered an issue while checking for similar questions you've asked before.");
   }
 };
 
@@ -95,7 +89,7 @@ export const generateAndExecuteQuery = async (
     return await response.json();
   } catch (error) {
     console.error("Error generating and executing query:", error);
-    throw error;
+    throw new Error("I'm having trouble processing your question right now. Let's try a different approach.");
   }
 };
 
@@ -116,7 +110,7 @@ export const executeSqlQuery = async (sql, conversationId = null, userQuery = nu
     return await response.json();
   } catch (error) {
     console.error("Error executing SQL query:", error);
-    throw error;
+    throw new Error("I wasn't able to run that SQL query. There might be an issue with the syntax or the data.");
   }
 };
 
@@ -143,7 +137,7 @@ export const submitFeedback = async (
     return await response.json();
   } catch (error) {
     console.error("Error submitting feedback:", error);
-    throw error;
+    throw new Error("I couldn't save your feedback. Please try again in a moment.");
   }
 };
 
@@ -168,7 +162,7 @@ export const getChatHistory = async (userId = null, limit = 5) => {
     return {
       success: false,
       conversations: [],
-      error: "Failed to connect to the server"
+      error: "I couldn't retrieve your chat history right now. Please try again later."
     };
   }
 };
@@ -190,7 +184,7 @@ export const getConversation = async (conversationId) => {
       success: false,
       details: {},
       messages: [],
-      error: "Failed to connect to the server"
+      error: "I couldn't load that conversation right now. The server might be temporarily unavailable."
     };
   }
 };
@@ -201,6 +195,6 @@ export const checkHealth = async () => {
     return await response.json();
   } catch (error) {
     console.error("Error checking API health:", error);
-    throw error;
+    throw new Error("I'm having trouble connecting to the server. Please check your connection and try again.");
   }
 };
