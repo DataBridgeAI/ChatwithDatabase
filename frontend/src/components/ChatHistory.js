@@ -39,11 +39,11 @@ const ChatHistory = () => {
         if (response.success) {
           setChatHistory(response.conversations || []);
         } else if (response.error) {
-          setErrorMessage(`Error loading chat history: ${response.error}`);
+          setErrorMessage("I'm having trouble retrieving your conversation history right now.");
           console.error("Chat history error:", response.error);
         }
       } catch (error) {
-        setErrorMessage("Failed to load chat history. Please try again later.");
+        setErrorMessage("I can't reach the conversation server at the moment. You can still chat normally though.");
         console.error("Failed to fetch chat history:", error);
       } finally {
         setLoadingHistory(false);
@@ -93,10 +93,10 @@ const ChatHistory = () => {
           }
         }
       } else {
-        setErrorMessage(`Error loading conversation: ${response.error || 'Unknown error'}`);
+        setErrorMessage("I'm having trouble loading that conversation right now. Could you try again in a moment?");
       }
     } catch (error) {
-      setErrorMessage("Failed to load conversation. Please try again later.");
+      setErrorMessage("I'm having trouble connecting to the server. Please check your connection and try again.");
       console.error("Error loading conversation:", error);
     } finally {
       setLoadingHistory(false);
@@ -199,17 +199,18 @@ const ChatHistory = () => {
       <div className="p-6">
         <div className="flex items-center mb-4">
           <svg className="w-5 h-5 mr-2 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <h2 className="text-lg font-semibold bg-gradient-to-r from-blue-300 to-purple-300 bg-clip-text text-transparent">Recent Conversations</h2>
         </div>
-        <div className="glass-card-dark bg-red-900/20 border border-red-400/50 text-red-300 px-4 py-3 rounded-xl">
-          <div className="flex items-center">
-            <svg className="w-5 h-5 mr-2 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <div className="glass-card-light p-5 rounded-xl">
+          <div className="flex items-center text-blue-200">
+            <svg className="w-5 h-5 mr-2 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <p>{errorMessage}</p>
           </div>
+          <p className="mt-2 text-sm text-blue-300">You can still ask new questions while I work on retrieving your past conversations.</p>
         </div>
       </div>
     );
