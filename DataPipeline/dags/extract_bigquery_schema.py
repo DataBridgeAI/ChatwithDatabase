@@ -7,7 +7,7 @@ from airflow.utils.dates import days_ago
 import json
 import logging
 
-from schema_processor import get_table_schema, upload_to_gcs
+from scripts.schema_processor import get_table_schema, upload_to_gcs
 
 # Define default args
 default_args = {

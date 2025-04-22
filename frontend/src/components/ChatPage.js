@@ -14,7 +14,7 @@ const ChatPage = ({ onNavigateBack }) => {
   const [showHistory, setShowHistory] = useState(true);
   const [showSchema, setShowSchema] = useState(true);
   const [animateIn, setAnimateIn] = useState(false);
-  
+
   // Animation effect when component mounts
   useEffect(() => {
     setAnimateIn(true);
@@ -30,32 +30,32 @@ const ChatPage = ({ onNavigateBack }) => {
     };
 
     window.addEventListener('popstate', handleBackButton);
-    
+
     return () => {
       window.removeEventListener('popstate', handleBackButton);
     };
   }, [onNavigateBack]);
 
-  // Helper function to get a more friendly error message
-  const getFriendlyErrorMessage = (errorMsg) => {
-    if (!errorMsg) return null;
-    
-    const lowerCaseError = errorMsg.toLowerCase();
-    
-    if (lowerCaseError.includes('syntax') || lowerCaseError.includes('sql')) {
-      return "I'm having trouble understanding that query. Could you try rephrasing your question?";
-    }
-    
-    if (lowerCaseError.includes('schema') || lowerCaseError.includes('table')) {
-      return "I can't find some of the data elements you're referring to. Could you check table or column names?";
-    }
-    
-    if (lowerCaseError.includes('permission') || lowerCaseError.includes('access')) {
-      return "I don't have the right permissions to access that data. Can you check the project settings?";
-    }
-    
-    return "I'm having trouble with that request. Can you try asking in a different way?";
-  };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   return (
     <div className="flex flex-col min-h-screen bg-glass-gradient relative overflow-hidden">
@@ -63,10 +63,10 @@ const ChatPage = ({ onNavigateBack }) => {
       <div className="absolute inset-0 z-0">
         {/* Background gradient overlay */}
         <div className="bg-chat-gradient"></div>
-        
+
         {/* Add subtle noise texture for depth */}
         <div className="bg-texture"></div>
-        
+
         {/* Abstract line patterns */}
         <div className="abstract-lines">
           {/* Horizontal lines */}
@@ -74,27 +74,27 @@ const ChatPage = ({ onNavigateBack }) => {
           <div className="line-h line-h-2"></div>
           <div className="line-h line-h-3"></div>
           <div className="line-h line-h-4"></div>
-          
+
           {/* Vertical lines */}
           <div className="line-v line-v-1"></div>
           <div className="line-v line-v-2"></div>
           <div className="line-v line-v-3"></div>
           <div className="line-v line-v-4"></div>
-          
+
           {/* Diagonal lines */}
           <div className="line-d line-d-1"></div>
           <div className="line-d line-d-2"></div>
           <div className="line-d line-d-3"></div>
           <div className="line-d line-d-4"></div>
         </div>
-        
+
         {/* Animated background glow spots - enhanced with varied colors */}
         <div className="glow-spot-1"></div>
         <div className="glow-spot-2"></div>
         <div className="glow-spot-3"></div>
         <div className="glow-spot-4"></div>
         <div className="glow-spot-5"></div>
-        
+
         {/* Animated particles effect - enhanced with more particles and colors */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden">
           <div className="particle particle-1"></div>
@@ -106,7 +106,7 @@ const ChatPage = ({ onNavigateBack }) => {
           <div className="particle particle-7"></div>
         </div>
       </div>
-      
+
       <header className="glass-card border-b border-blue-500/20 shadow-lg z-10 transition-all duration-500 transform backdrop-blur-lg">
         <div className="w-full px-6 py-4">
           <div className="flex justify-between items-center">
@@ -136,7 +136,7 @@ const ChatPage = ({ onNavigateBack }) => {
                 <h1 className="text-2xl font-bold bg-gradient-text">Veltrix</h1>
               </div>
             </div>
-            
+
             <div className="flex items-center space-x-4">
               <div className="glass-card-light px-4 py-2 rounded-full text-sm text-blue-200 flex items-center space-x-2">
                 <svg className="w-4 h-4 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -156,7 +156,7 @@ const ChatPage = ({ onNavigateBack }) => {
           </div>
         </div>
       </header>
-      
+
       <main className="flex-grow flex overflow-hidden z-10 relative chat-page-main-content">
         {/* Left Sidebar for Chat History */}
         <div 
@@ -166,7 +166,7 @@ const ChatPage = ({ onNavigateBack }) => {
         >
           {showHistory && <ChatHistory />}
         </div>
-        
+
         {/* Main Content Area */}
         <div className={`flex-grow overflow-y-auto transition-all duration-500 ease-in-out ${
           animateIn ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
@@ -175,7 +175,7 @@ const ChatPage = ({ onNavigateBack }) => {
             <div className="mb-6">
               <QueryInput />
             </div>
-            
+
             {loading && (
               <div className="flex justify-center items-center py-10">
                 <div className="relative w-16 h-16">
@@ -184,44 +184,44 @@ const ChatPage = ({ onNavigateBack }) => {
                 </div>
               </div>
             )}
-            
+
             {error && (
-              <div className="glass-card-dark bg-blue-900/10 border border-blue-300/30 text-blue-100 px-6 py-4 rounded-xl mb-6 shadow-lg">
-                <div className="flex items-start">
-                  <div className="flex-shrink-0 mt-0.5">
-                    <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <div className="ml-3">
-                    <p className="font-medium mb-2">{getFriendlyErrorMessage(error)}</p>
-                    <div className="mt-3">
-                      <p className="text-sm font-medium text-blue-300">Suggestions:</p>
-                      <ul className="text-sm text-blue-200 list-disc pl-5 space-y-1">
-                        <li>Try being more specific about what you want to know</li>
-                        <li>Include table names if you know them</li>
-                        <li>Break complex questions into simpler ones</li>
-                      </ul>
-                    </div>
-                    {error !== getFriendlyErrorMessage(error) && (
-                      <details className="mt-3">
-                        <summary className="text-xs text-blue-400 cursor-pointer hover:text-blue-300 transition-colors">
-                          Technical details
-                        </summary>
-                        <p className="mt-1 text-xs text-blue-400 italic">{error}</p>
-                      </details>
-                    )}
-                  </div>
+              <div className="glass-card-dark bg-red-900/30 border-2 border-red-500/50 text-red-300 px-6 py-4 rounded-xl mb-6 shadow-lg">
+                <div className="flex items-center">
+                  <svg className="w-6 h-6 mr-3 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <p><strong>Error:</strong> {error}</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                 </div>
               </div>
             )}
-            
+
             {/* TabContainer for results and visualization */}
             <TabContainer />
             <Feedback />
           </div>
         </div>
-        
+
         {/* Right Sidebar for Schema Overview */}
         <div 
           className={`${
@@ -252,7 +252,7 @@ const ChatPage = ({ onNavigateBack }) => {
           )}
         </div>
       </main>
-      
+
       <footer className="glass-card border-t border-blue-500/20 shadow-lg z-10 backdrop-blur-lg">
         <div className="w-full px-4 py-3">
           <div className="flex justify-between items-center">
@@ -268,11 +268,9 @@ const ChatPage = ({ onNavigateBack }) => {
           </div>
         </div>
       </footer>
-      
-      {/* Floating New Chat Button */}
+
+      {/* Floating Full-Width New Chat Button */}
       <FloatingNewChatButton />
     </div>
   );
 };
-
-export default ChatPage;

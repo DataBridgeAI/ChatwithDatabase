@@ -17,7 +17,7 @@ const ChatHistory = () => {
     setDatasetId,
     setError
   } = useAppContext();
-  
+
   const [errorMessage, setErrorMessage] = useState(null);
   const [animateIn, setAnimateIn] = useState(false);
 
@@ -31,19 +31,19 @@ const ChatHistory = () => {
     const fetchHistory = async () => {
       setLoadingHistory(true);
       setErrorMessage(null);
-      
+
       try {
         // Request exactly 5 conversations
         const response = await getChatHistory(null, 5);
-        
+
         if (response.success) {
           setChatHistory(response.conversations || []);
         } else if (response.error) {
-          setErrorMessage("I'm having trouble retrieving your conversation history right now.");
+          setErrorMessage(`Error loading chat history: ${response.error}`);
           console.error("Chat history error:", response.error);
         }
       } catch (error) {
-        setErrorMessage("I can't reach the conversation server at the moment. You can still chat normally though.");
+        setErrorMessage("Failed to load chat history. Please try again later.");
         console.error("Failed to fetch chat history:", error);
       } finally {
         setLoadingHistory(false);
@@ -58,28 +58,28 @@ const ChatHistory = () => {
       setLoadingHistory(true);
       setError(null);
       setErrorMessage(null);
-      
+
       const response = await getConversation(conversationId);
-      
+
       if (response.success) {
         // Set the current conversation id
         setCurrentConversationId(conversationId);
-        
+
         // Set project and dataset from the conversation
         if (response.details) {
           const { project_id, dataset_id } = response.details;
           setProjectId(project_id || '');
           setDatasetId(dataset_id || '');
         }
-        
+
         // Get the last message from the conversation
         if (response.messages && response.messages.length > 0) {
           const lastMessage = response.messages[response.messages.length - 1];
-          
+
           // Set the UI with the last message data
           setUserQuery(lastMessage.user_query || '');
           setGeneratedSql(lastMessage.generated_sql || '');
-          
+
           // Set the results if they exist
           if (lastMessage.results) {
             try {
@@ -93,10 +93,10 @@ const ChatHistory = () => {
           }
         }
       } else {
-        setErrorMessage("I'm having trouble loading that conversation right now. Could you try again in a moment?");
+        setErrorMessage(`Error loading conversation: ${response.error || 'Unknown error'}`);
       }
     } catch (error) {
-      setErrorMessage("I'm having trouble connecting to the server. Please check your connection and try again.");
+      setErrorMessage("Failed to load conversation. Please try again later.");
       console.error("Error loading conversation:", error);
     } finally {
       setLoadingHistory(false);
@@ -106,18 +106,18 @@ const ChatHistory = () => {
   // Format the timestamp for display
   const formatTimestamp = (timestamp) => {
     if (!timestamp) return 'Unknown time';
-    
+
     try {
       const date = new Date(timestamp);
-      
+
       // Get today's date
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
+
       // Get yesterday's date
       const yesterday = new Date(today);
       yesterday.setDate(yesterday.getDate() - 1);
-      
+
       // Format date based on when it occurred
       if (date >= today) {
         return `Today, ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
@@ -135,7 +135,7 @@ const ChatHistory = () => {
   // Get a suitable icon for the conversation type
   const getConversationIcon = (query) => {
     const query_lower = (query || '').toLowerCase();
-    
+
     if (query_lower.includes('top') || query_lower.includes('rank') || query_lower.includes('highest')) {
       return (
         <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -199,18 +199,18 @@ const ChatHistory = () => {
       <div className="p-6">
         <div className="flex items-center mb-4">
           <svg className="w-5 h-5 mr-2 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <h2 className="text-lg font-semibold bg-gradient-to-r from-blue-300 to-purple-300 bg-clip-text text-transparent">Recent Conversations</h2>
         </div>
-        <div className="glass-card-light p-5 rounded-xl">
-          <div className="flex items-center text-blue-200">
-            <svg className="w-5 h-5 mr-2 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <div className="glass-card-dark bg-red-900/20 border border-red-400/50 text-red-300 px-4 py-3 rounded-xl">
+          <div className="flex items-center">
+            <svg className="w-5 h-5 mr-2 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <p>{errorMessage}</p>
           </div>
-          <p className="mt-2 text-sm text-blue-300">You can still ask new questions while I work on retrieving your past conversations.</p>
+
         </div>
       </div>
     );
@@ -248,7 +248,7 @@ const ChatHistory = () => {
           </h2>
         </div>
       </div>
-      
+
       <div className="flex-grow overflow-y-auto">
         <div className={`space-y-2 p-3 transition-all duration-700 transform ${
           animateIn ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'
@@ -288,7 +288,7 @@ const ChatHistory = () => {
           ))}
         </div>
       </div>
-      
+
       {/* Footer with hint */}
       <div className="p-3 border-t border-blue-500/20 bg-blue-500/5">
         <div className="text-center text-xs text-blue-400 flex items-center justify-center">
@@ -301,5 +301,3 @@ const ChatHistory = () => {
     </div>
   );
 };
-
-export default ChatHistory;
