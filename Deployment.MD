@@ -276,7 +276,7 @@ Our deployment process is fully automated using GitHub Actions workflow (`.githu
 ## 3. Connection to Repository
 
 ### GitHub Integration
-- Automated deployments triggered on push to `deployment-div` branch
+- Automated deployments triggered on push to `main` branch
 - GitHub Actions workflow configured for CI/CD pipeline
 - Secrets managed through GitHub Secrets:
   - `GCP_CREDENTIALS`
@@ -342,7 +342,7 @@ Our deployment process is fully automated using GitHub Actions workflow (`.githu
 ### Deployment Process
 1. Trigger deployment:
    ```bash
-   git push origin deployment-div
+   git push origin main
    ```
    This will automatically:
    - Run tests
@@ -417,9 +417,9 @@ Our deployment process is fully automated using GitHub Actions. The workflow is 
    - `SLACK_WEBHOOK`: Slack webhook URL for notifications
 
 2. **Trigger Deployment**:
-   - Push to the `deployment-div` branch
+   - Push to the `main` branch
    ```bash
-   git push origin deployment-div
+   git push origin main
    ```
    - GitHub Actions workflow will automatically run
 
